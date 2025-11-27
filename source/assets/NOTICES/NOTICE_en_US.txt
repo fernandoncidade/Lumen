@@ -1,0 +1,46 @@
+Version 2025.11.26.0, November 26, 2025
+
+Third‑Party Software Licenses and Attribution Notice — Lúmen
+
+This document lists the main third‑party libraries and tools used in the Lúmen project and provides references to their licenses. The purpose is to meet distribution requirements and provide useful information to users and integrators. For additional dependencies, consult requirements.txt (when present) and the full license texts included in the distribution package.
+
+Primary dependencies (used in the project)
+- PySide6 (Qt for Python) — Graphical interface (widgets, dialogs, .qm translations, etc.)
+  - License: GNU Lesser General Public License (LGPL) v3 (as packaged with PySide6)
+  - Repository / documentation: https://github.com/qt/pyside / https://doc.qt.io/qtforpython/
+  - Note: translations (.ts → .qm) may be generated with pyside6-lrelease (per build scripts).
+
+Packaging tools (optional)
+- PyInstaller, Nuitka — optionally used to generate Windows executables from the source code
+  - Site: https://www.pyinstaller.org/
+  - Check the PyInstaller and Nuitka licenses used in the build process.
+
+Notes about other components
+- The project may use additional libraries in the development environment (e.g., packaging utilities, test tools, file handling). Those dependencies and their licenses, when present, are listed in requirements.txt and/or the installer.
+- If the project includes external TTS libraries or SDKs (for remote voices), review the terms and licenses of those providers separately; some providers may impose usage conditions, authentication requirements, or costs.
+
+Obtaining full license texts
+- Full texts of third‑party licenses and the component list are included in the distribution package (assets/EULA, assets/NOTICES and/or LICENSES.txt when applicable).
+- Useful links:
+  - LGPL v3: https://www.gnu.org/licenses/lgpl-3.0.html.en
+  - PySide (Qt for Python): https://github.com/qt/pyside
+
+Statement on data transmission and privacy
+- The default executable of this application does not send telemetry automatically to external servers.
+- User data (tasks, maps, history, settings, exported files) remain under the user's control and are stored locally at:
+  %LOCALAPPDATA%\TEA_TDAH_Dislexia
+- For details on personal data handling, see the Privacy Policy included in the package:
+  assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt
+
+Distribution / component replacement procedures
+- If the application is packaged as an executable (PyInstaller, Nuitka or similar), include the assets/, language/translations/ and EULA/NOTICES files as instructed by the packager.
+- To replace dynamic libraries (DLLs) distributed with the executable (e.g., PySide6), replace the corresponding binaries in the executable folder with compatible versions and keep build documentation updated to meet licensing obligations (e.g., providing source code for LGPL components when applicable).
+
+Contact for license or source code requests
+- To request a copy of source code for LGPL components used in the executable, clarifications about licenses, or compliance instructions, contact:
+  - Author/Responsible: Fernando Nillsson Cidade
+  - E‑mail: linceu_lighthouse@outlook.com
+
+Final notes
+- This document has been adapted to reflect the dependencies and compliance requirements of the Lúmen project. If new components are added, the license documentation must be updated in the distribution package.
+- Back up your data before updating the application or replacing executable libraries.

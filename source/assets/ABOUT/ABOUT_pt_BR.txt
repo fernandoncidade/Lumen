@@ -1,0 +1,68 @@
+Projeto: Lúmen
+Versão: 2025.11.26.0
+Autores: Fernando Nillsson Cidade
+
+Descrição resumida:
+Aplicativo desktop voltado para apoiar jovens e adultos neurodivergentes (TEA, TDAH, Dislexia) em estudo e organização. Integra leitor acessível com vozes neurais, ferramentas de priorização de tarefas, timers Pomodoro, mapas mentais e recursos para explicação ativa (Método Feynman).
+
+Descrição detalhada:
+Este projeto foi concebido a partir da experiência pessoal do autor diante da combinação de Dislexia, TDAH e Transtorno do Espectro Autista (TEA). O foco é reduzir barreiras cognitivas que tornam atividades acadêmicas extenuantes — como leitura extensiva, manutenção de atenção e organização de ideias — oferecendo recursos configuráveis que se adaptam a perfis com alta variabilidade cognitiva (picos e vales de desempenho). O sistema prioriza leitura assistida, controle de velocidade, ajustes tipográficos, régua de foco para acompanhamento visual, organização de tarefas (Matriz de Eisenhower), timers (Pomodoro), criação e revisão de mapas mentais e suporte ao Método Feynman para consolidar conhecimento.
+
+Principais funcionalidades:
+- Leitor acessível com seleção de voz, controle de velocidade e volume.
+- Ajustes de fonte persistentes (tamanho, família) para melhor legibilidade.
+- Régua de foco (highlight móvel) para facilitar leitura linha a linha.
+- Reprodutor de áudio integrado para textos sintetizados.
+- Matriz de Eisenhower para priorização de tarefas com salvamento local.
+- Temporizador Pomodoro e gerenciador de tempo.
+- Ferramentas de criação de mapas mentais e espaço para Método Feynman.
+- Importação/exportação local de dados (tarefas, mapas).
+- Localização / traduções (pt-BR e en-US).
+- Opções de privacidade: armazenamento local por padrão.
+
+Instalação e distribuição (Windows):
+Pré-requisitos: Python 3.10+ instalado.
+1. Clonar repositório:
+   git clone <repositório>
+2. Criar e ativar ambiente virtual (PowerShell):
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+3. Instalar dependências:
+   pip install -r requirements.txt
+4. Executar:
+   python main.py
+Distribuição: Empacotar com PyInstaller, Nuitka ou similar para gerar executável Windows (opcional).
+
+Requisitos do sistema:
+- Windows 10 ou superior (x64 recomendado).
+- Python 3.10+ (se executando a partir do código).
+- 200 MB livres para instalação e dependências; espaço adicional para arquivos de áudio temporários.
+- Conexão à internet somente para downloads de vozes remotas (se utilizado); funcionalidades básicas funcionam offline.
+
+Como usar (rápido):
+1. Abra o aplicativo (main.py ou executável).
+2. Carregue um PDF ou cole texto na área do leitor.
+3. Ajuste fonte e tamanho no painel de leitura.
+4. Selecione voz e velocidade; pressione "Ler" para iniciar a leitura assistida.
+5. Use a régua de foco para acompanhar linhas; ative/desative conforme necessidade.
+6. Acesse a Matriz de Eisenhower para adicionar e priorizar tarefas; salve localmente.
+7. Utilize Pomodoro para sessões de estudo e o módulo Feynman/Mapas Mentais para revisão ativa.
+
+Contatos e suporte:
+Autor: Fernando Nillsson Cidade
+E-mail: linceu_lighthouse@outlook.com
+Relatar problemas: abrir issue no repositório Git ou enviar e‑mail com logs anexos.
+
+Licença e avisos:
+Licença: (inserir licença aqui, ex.: MIT). Ver arquivo LICENSE para termos completos.
+Avisos:
+- Ferramenta desenvolvida para apoio e não substitui avaliações ou tratamentos clínicos.
+- Dados pessoais permanecem em armazenamento local por padrão; revise políticas em Privacy_Policy_pt_BR.txt.
+- Alguns recursos de TTS podem requerer serviços externos; custos e permissões dependem do provedor.
+
+Notas finais:
+O desenvolvimento foi guiado por relatórios neuropsicológicos e médicos que descrevem perfil de comorbidade (Dislexia, TDAH, TEA) do autor. O objetivo é fornecer recursos práticos e configuráveis que aumentem autonomia e eficiência no estudo. Contribuições são bem‑vindas — abra uma issue ou um pull request no repositório para sugestões e correções.
+
+Referências de documentação inclusas:
+- History_APP_pt_BR.txt / History_APP_en_US.txt (histórico e justificativa)
+- LICENSE, NOTICE e Privacy_Policy (quando presentes no diretório assets/ABOUT)

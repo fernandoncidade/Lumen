@@ -1,0 +1,64 @@
+Política de Privacidade — Lúmen
+Última atualização: 26 de novembro de 2025
+Versão: 2025.11.26.0
+
+Sumário
+Esta Política descreve como o aplicativo Lúmen trata, armazena e protege dados do usuário. O aplicativo foi projetado para operar localmente e, por padrão, não envia telemetria ou dados do usuário a servidores externos.
+
+1. Escopo e princípios
+- Operação local: todos os dados gerados ou manipulados pelo aplicativo permanecem no dispositivo do usuário, salvo ação explícita de exportação/compartilhamento.
+- Minimização: somente são processados os dados necessários para as funcionalidades (tarefas, mapas, configurações, histórico).
+- Transparência: usuário tem controle total sobre criação, edição, exportação e exclusão de seus dados.
+
+2. Dados processados
+2.1 Dados inseridos pelo usuário
+- Textos, notas, títulos de tarefas, etiquetas, e configurações personalizadas.
+2.2 Arquivos escolhidos pelo usuário
+- Arquivos abertos/selecionados para importação ou leitura são lidos apenas mediante ação do usuário.
+- Exportações (PDF/JSON) são gravadas no local escolhido pelo usuário.
+2.3 Dados técnicos locais
+- Arquivos de configuração, histórico e logs podem ser gravados localmente (ex.: settings.json, history.json, audio temp files, logs gerados por utils/LogManager.py).
+
+3. Local de armazenamento e retenção
+- Local padrão de persistência: %LOCALAPPDATA%\TEA_TDAH_Dislexia
+- O usuário pode excluir manualmente arquivos de histórico, configurações e logs. Dados permanecem enquanto o usuário não os remover.
+
+4. Telemetria, relatórios e diagnóstico
+- O aplicativo não envia telemetria automaticamente.
+- Se houver opção de enviar relatórios de erro ou diagnósticos, isso será apresentado claramente e requer consentimento explícito do usuário antes do envio.
+- Relatórios do sistema operacional (ex.: Windows Error Reporting) são gerados conforme configurações do sistema e não controlados pelo desenvolvedor.
+
+5. Compartilhamento de dados
+- Nenhum compartilhamento automático. Qualquer envio de dados a terceiros depende de ação explícita do usuário (por exemplo: enviar um PDF ou um JSON exportado por e-mail).
+- Bibliotecas de terceiros usadas localmente (por exemplo PySide6) não são utilizadas pelo aplicativo para transmitir dados do usuário a servidores externos.
+
+6. Segurança
+- Os dados estão sob controle do usuário e protegidos pelo sistema operacional do dispositivo.
+- O aplicativo adota medidas básicas (escrita atômica de arquivos, tratamento de erros) para reduzir risco de corrupção de dados, mas não substitui backups. Recomenda-se backup regular dos arquivos importantes.
+- Não há armazenamento de credenciais remotas ou mecanismos de autenticação por padrão.
+
+7. Bases legais e direitos (LGPD)
+- O tratamento de dados ocorre para execução das funcionalidades solicitadas pelo usuário (consentimento implícito no uso local).
+- Direitos do titular: acesso, correção, exclusão e portabilidade. O usuário pode exportar seus dados (PDF/JSON) e excluir arquivos locais manualmente.
+
+8. Terceiros, bibliotecas e licenças
+- O aplicativo usa bibliotecas de terceiros para funcionalidades locais (ex.: PySide6 para UI). Essas bibliotecas permanecem sujeitas às suas licenças.
+- Textos de licença e avisos estão incluídos em assets/NOTICES e assets/EULA quando presentes.
+
+9. Retenção e eliminação
+- Dados permanecem enquanto o usuário não os apaga. Para remoção completa, delete os arquivos no %LOCALAPPDATA%\TEA_TDAH_Dislexia.
+- Logs e arquivos temporários podem ser rotacionados ou limpos por funcionalidades internas, se implementadas; isso será informado ao usuário quando aplicado.
+
+10. Crianças
+- O aplicativo não é direcionado a crianças menores de 13 anos e não coleta intencionalmente dados de menores.
+
+11. Alterações nesta política
+- Atualizações desta Política serão registradas com nova data e versão. Mudanças significativas poderão ser comunicadas no próprio aplicativo quando aplicável.
+
+12. Contato
+- Autor / Controlador dos dados: Fernando Nillsson Cidade
+- E-mail para questões relacionadas à privacidade: linceu_lighthouse@outlook.com
+- Para solicitações de eliminação de dados ou dúvidas sobre tratamento local, contate o e-mail acima.
+
+Observação final
+Use o Lúmen sabendo que os dados ficam sob seu controle localmente. Para qualquer integração que envolva envio de dados, o aplicativo exigirá consentimento explícito e instruções claras antes de proceder.

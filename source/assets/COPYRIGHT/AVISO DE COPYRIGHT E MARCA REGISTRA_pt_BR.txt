@@ -1,0 +1,50 @@
+AVISO DE COPYRIGHT E MARCA REGISTRADA — Lúmen
+Versão 2025.11.26.0, 26 de novembro de 2025
+======================================
+
+Copyright (C) 2025–2026 Fernando Nillsson Cidade. Todos os direitos reservados.
+
+Propriedade intelectual
+- O software "Lúmen" e toda a documentação associada — incluindo código‑fonte, interface gráfica, textos, manuais, ativos visuais (ícones, logos) e demais recursos fornecidos com o projeto — são propriedade intelectual de Fernando Nillsson Cidade, salvo indicação expressa em contrário para componentes de terceiros.
+
+Marcas
+- "Lúmen" é marca de titularidade de Fernando Nillsson Cidade.
+- Uso não autorizado do nome comercial, logotipo ou quaisquer elementos distintivos do projeto é proibido sem autorização por escrito do titular.
+
+Permissões e restrições de uso
+- O uso do Software é permitido para fins pessoais, educacionais e profissionais conforme os termos do EULA incluído:
+  assets/EULA/EULA_pt_BR.txt
+- Redistribuição do executável ou do código‑fonte (original ou modificado) deve observar as restrições do EULA; em particular:
+  - Não reivindicar autoria alheia.
+  - Não remover ou alterar avisos de copyright, marcas ou avisos de licença.
+  - Atender obrigações de licença de componentes de terceiros (por exemplo LGPL) quando aplicável.
+- Para reutilização de partes do código em outros projetos, mantenha os avisos de copyright e atribuição originais e siga os termos de licença aplicáveis.
+
+Componentes de terceiros e conformidade de licenças
+- Bibliotecas e ferramentas de terceiros usadas pelo projeto (ex.: PySide6 e demais dependências listadas em requirements.txt) permanecem sujeitas às suas licenças originais.
+- Lista e informações resumidas encontram‑se em:
+  assets/NOTICES/NOTICE_pt_BR.txt
+- Textos completos das licenças de terceiros e obrigações de redistribuição (ex.: fornecimento de código‑fonte ou notices para componentes LGPL) acompanham o pacote de distribuição em assets/NOTICES, assets/EULA e/ou LICENSES.txt quando aplicável.
+
+Transmissão de dados e privacidade
+- O executável padrão não envia telemetria automática a servidores externos.
+- Dados do usuário (tarefas, mapas, histórico, configurações, arquivos temporários de áudio e logs) permanecem sob controle do usuário e são armazenados localmente no caminho padrão:
+  %LOCALAPPDATA%\TEA_TDAH_Dislexia
+- Para detalhes sobre tratamento de dados, exportação, exclusão e contatos, consulte:
+  assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt
+
+Solicitações de código‑fonte e pedidos de licença
+- Para solicitação de cópia de código‑fonte de componentes licenciados sob LGPL usados no executável, esclarecimentos sobre licenças de terceiros, pedidos de licença comercial, autorização de redistribuição diferenciada ou uso da marca, contate:
+  - Autor / Responsável: Fernando Nillsson Cidade
+  - E‑mail: linceu_lighthouse@outlook.com
+
+Avisos e recomendações finais
+- Antes de redistribuir ou modificar o software, reveja o EULA, a Política de Privacidade e os avisos de terceiros incluídos no pacote.
+- Realize backup dos seus dados antes de atualizar o aplicativo ou modificar bibliotecas do executável.
+- O software é uma ferramenta de apoio e não substitui avaliação, diagnóstico ou tratamento clínico. Verifique decisões críticas com profissionais adequados.
+
+Referências internas
+- EULA: assets/EULA/EULA_pt_BR.txt
+- Política de Privacidade: assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt
+- Notices / Licenças de terceiros: assets/NOTICES/NOTICE_pt_BR.txt
+- Contrato comercial (quando aplicável): assets/CLC/CLC_pt_BR.txt

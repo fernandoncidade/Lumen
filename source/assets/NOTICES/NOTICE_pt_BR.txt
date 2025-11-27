@@ -1,0 +1,46 @@
+Versão 2025.11.26.0, 26 de novembro de 2025
+
+Aviso de Licenças e Atribuições de Software de Terceiros — Lúmen
+
+Este documento lista as principais bibliotecas e ferramentas de terceiros utilizadas no projeto Lúmen e fornece referências às suas licenças. O objetivo é cumprir requisitos de distribuição e oferecer informações úteis a usuários e integradores. Para dependências adicionais consulte requirements.txt (quando presente) e os textos completos de licença incluídos no pacote de distribuição.
+
+Dependências principais (uso no projeto)
+- PySide6 (Qt for Python) — Interface gráfica (widgets, dialogs, tradução .qm, etc.)
+  - Licença: GNU Lesser General Public License (LGPL) v3 (conforme empacotamento do PySide6)
+  - Repositório / documentação: https://github.com/qt/pyside / https://doc.qt.io/qtforpython/
+  - Observação: traduções (.ts → .qm) podem ser geradas com pyside6-lrelease (conforme scripts de build).
+
+Ferramentas de empacotamento (opcionais)
+- PyInstaller, Nuitka — usada opcionalmente para gerar executáveis Windows a partir do código-fonte
+  - Site: https://www.pyinstaller.org/
+  - Consulte a licença do PyInstaller, Nuitka utilizada no processo de build.
+
+Observações sobre outros componentes
+- O projeto pode utilizar bibliotecas adicionais em ambiente de desenvolvimento (por exemplo utilitários de packaging, testes ou manipulação de arquivos). Essas dependências e suas licenças, quando presentes, são listadas em requirements.txt e/ou no instalador.
+- Caso o projeto incorpore bibliotecas TTS ou SDKs externos (para vozes remotas), revise termos e licenças desses provedores separadamente; alguns provedores podem impor condições de uso, autenticação ou custos.
+
+Obtenção dos textos de licença completos
+- Os textos completos das licenças de terceiros e lista de componentes estão incluídos no pacote de distribuição (pasta assets/EULA, assets/NOTICES e/ou arquivo LICENSES.txt quando aplicável).
+- Links úteis:
+  - LGPL v3: https://www.gnu.org/licenses/lgpl-3.0.html.en
+  - PySide (Qt for Python): https://github.com/qt/pyside
+
+Declaração sobre transmissão de dados e privacidade
+- O executável padrão desta aplicação não envia telemetria automática a servidores externos.
+- Dados do usuário (tarefas, mapas, histórico, configurações, arquivos exportados) permanecem sob controle do usuário e são armazenados localmente em:
+  %LOCALAPPDATA%\TEA_TDAH_Dislexia
+- Para detalhes sobre tratamento de dados pessoais, consulte a Política de Privacidade incluída no pacote:
+  assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt
+
+Procedimentos para distribuição / substituição de componentes
+- Se o aplicativo for empacotado em executável (PyInstaller, Nuitka ou similar), inclua as pastas assets/, language/translations/ e arquivos EULA/NOTICES conforme instruções do empacotador.
+- Para substituição de bibliotecas dinâmicas (DLLs) distribuídas com o executável (por exemplo PySide6), substitua os binários correspondentes na pasta do executável por versões compatíveis e mantenha documentação de build atualizada para atender às obrigações de licenciamento (ex.: disponibilização de código-fonte para componentes LGPL, quando aplicável).
+
+Contato para pedidos de licença ou código‑fonte
+- Para solicitação de cópia de código-fonte de componentes LGPL usados no executável, esclarecimentos sobre licenças ou instruções de conformidade, contate:
+  - Autor/Responsável: Fernando Nillsson Cidade
+  - E-mail: linceu_lighthouse@outlook.com
+
+Notas finais
+- Este documento foi adaptado para refletir as dependências e requisitos de conformidade do projeto Lúmen. Caso novos componentes sejam adicionados, a documentação de licenças deve ser atualizada no pacote de distribuição.
+- Mantenha backups dos seus dados antes de atualizar o aplicativo ou substituir bibliotecas do executável.

@@ -1,0 +1,28 @@
+História e Justificativa do Desenvolvimento
+
+História
+Este projeto, Lúmen, nasceu da experiência pessoal do autor, Fernando Nillsson Cidade, após o diagnóstico recente de Transtorno do Espectro Autista (TEA) e a constatação pré‑existente de Dislexia, somados ao diagnóstico de TDAH. Ao confrontar, na prática acadêmica, as dificuldades de leitura, atenção sustentada e organização do raciocínio — apesar de um funcionamento intelectual acima da média — emergiu a necessidade de ferramentas que acomodem essas diferenças cognitivas e apoiem jovens e adultos na rotina de estudo e organização.
+
+Justificativa
+Relatórios clínicos e neuropsicológicos indicam uma comorbidade que afeta de forma específica a velocidade de processamento, a memória de trabalho e as funções executivas. Estas fragilidades tornam tarefas acadêmicas rotineiras (leitura de textos longos, organização de ideias, planejamento de tarefas) mais custosas, mesmo quando a compreensão verbal e o raciocínio não‑verbal estão preservados ou elevados. O aplicativo foi concebido para mitigar esses obstáculos por meio de recursos práticos: leitor acessível com vozes neurais e ajustes tipográficos, régua de foco, organizadores de tarefas (Matriz de Eisenhower), temporizadores Pomodoro e ferramentas para explicação ativa (Método Feynman e mapas mentais).
+
+Objetivos
+- Reduzir a carga cognitiva associada à leitura por meio de leitura assistida, controle de velocidade e configuração de fontes.
+- Apoiar a gestão de tempo e priorização de tarefas com interfaces simples e adaptáveis.
+- Favorecer a explicitação e revisão do conhecimento (método Feynman; mapas mentais) para melhorar produção textual e organização do pensamento.
+- Oferecer um ambiente configurável que respeite perfis com alta variabilidade cognitiva (picos e vales de desempenho).
+
+Público‑alvo
+Jovens e adultos neurodivergentes (TEA, TDAH, Dislexia) e seus educadores, familiares ou profissionais de apoio, especialmente estudantes do ensino médio e superior que necessitem de adaptações cognitivas para otimizar estudo e produção acadêmica.
+
+Princípios de design
+- Clareza e previsibilidade: interfaces com textos legíveis, sinais visuais e feedback claro.
+- Flexibilidade: múltiplas formas de acesso à informação (voz, texto, agrupamento por horário).
+- Minimização de esforço executivo: automatizações e fluxos que reduzam a necessidade de planejar passos finos.
+- Privacidade e simplicidade: armazenamento local e opções de exportação/importação de dados.
+
+Impacto esperado
+Melhor foco nas atividades de estudo, aumento da autonomia na organização pessoal e redução do tempo desperdiçado em tarefas administrativas, com reflexo positivo no desempenho acadêmico e na qualidade de vida dos usuários.
+
+Referências clínicas
+O desenvolvimento foi orientado pelos laudos e recomendações neuropsicológicas anexados ao projeto, que descrevem o perfil de tripla comorbidade (Dislexia, TDAH, TEA) e destacam a utilidade de medidas compensatórias e avaliações complementares (por exemplo, GAI/GAI‑equivalentes e Matriz de Raven) ao interpretar desempenho cognitivo heterogêneo.
