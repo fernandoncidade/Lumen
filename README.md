@@ -20,6 +20,8 @@
 Versão: v2025.11.26.0  
 Autor: Fernando Nillsson Cidade
 
+- Manual de Utilização (PT‑BR): [MANUAL.md — Português](./MANUAL.md#ptbr)
+
 Aplicativo de estudo personalizado para pessoas neurodivergentes (Dislexia, TDAH, TEA).
 
 ## 🎯 Objetivo
@@ -137,6 +139,8 @@ Consulte assets/RELEASE/RELEASE\ NOTES_pt_BR.txt e assets/RELEASE/RELEASE\ NOTES
 
 Version: v2025.11.26.0  
 Author: Fernando Nillsson Cidade
+
+- User Manual (EN‑US): [MANUAL.md — English](./MANUAL.md#enus)
 
 Personalized study application for neurodivergent people (Dyslexia, ADHD, ASD).
 
