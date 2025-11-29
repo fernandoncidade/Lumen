@@ -1,6 +1,6 @@
 COMMERCIAL LICENSE AGREEMENT — Lúmen
-Version: 2025.11.26.0
-Date: November 26, 2025
+Version: 2025.11.29.0
+Date: November 29, 2025
 
 This Commercial License Agreement ("Agreement") is entered into between:
 
