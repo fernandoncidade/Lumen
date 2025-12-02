@@ -85,6 +85,11 @@
     </message>
 
     <message>
+      <source>🔤 Fonte...</source>
+      <translation>🔤 Font...</translation>
+    </message>
+
+    <message>
       <source>12pt</source>
       <translation>12pt</translation>
     </message>
@@ -1053,11 +1058,6 @@ Let's go to the next focus cycle! 💪</translation>
     </message>
 
     <message>
-        <source>Salvar</source>
-        <translation>Save</translation>
-    </message>
-
-    <message>
         <source>Limpar</source>
         <translation>Clear</translation>
     </message>
@@ -1424,6 +1424,66 @@ Let's go to the next focus cycle! 💪</translation>
     <message>
         <source>html</source>
         <translation>HTML</translation>
+    </message>
+
+    <!-- Diálogo do Seletor de Alarme -->
+    <message>
+        <source>🔔 Configurar Som do Pomodoro</source>
+        <translation>🔔 Configure Pomodoro Sound</translation>
+    </message>
+
+    <message>
+        <source>Selecione a campainha para tocar ao final do Pomodoro / Pausa:</source>
+        <translation>Select the bell to ring at the end of the Pomodoro / Break:</translation>
+    </message>
+
+    <message>
+        <source>▶️ Tocar</source>
+        <translation>▶️ Play</translation>
+    </message>
+
+    <message>
+        <source>🔔 Som...</source>
+        <translation>🔔 Sound...</translation>
+    </message>
+
+    <message>
+        <source>🔊 Campainha</source>
+        <translation>🔊 Bell</translation>
+    </message>
+
+    <message>
+        <source>⏱️ Repetição do Alarme</source>
+        <translation>⏱️ Alarm Repeat</translation>
+    </message>
+
+    <message>
+        <source> segundos</source>
+        <translation> seconds</translation>
+    </message>
+
+    <message>
+        <source>Intervalo entre repetições:</source>
+        <translation>Interval between repeats:</translation>
+    </message>
+
+    <message>
+        <source>💡 O alarme tocará por completo e, após o intervalo definido,
+repetirá até você fechar a janela de alerta.
+Defina 0 para repetir imediatamente após o áudio terminar.</source>
+        <translation>💡 The alarm will play completely and, after the set interval,
+it will repeat until you close the alert window.
+Set 0 to repeat immediately after the audio finishes.</translation>
+    </message>
+
+    <message>
+        <source>⏱️ Duração do áudio: {duration} segundos</source>
+        <translation>⏱️ Audio Duration: {duration} seconds</translation>
+    </message>
+
+    <message>
+        <source>🔄 Repetição a cada: {total} segundos</source>
+        <translation>🔄 Repeat every: {total} seconds</translation>
     </message>
 
   </context>

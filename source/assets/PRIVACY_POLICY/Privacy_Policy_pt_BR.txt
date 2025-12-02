@@ -1,6 +1,6 @@
 Política de Privacidade — Lúmen
-Última atualização: 29 de novembro de 2025
-Versão: 2025.11.29.0
+Última atualização: 2 de dezembro de 2025
+Versão: 2025.12.2.0
 
 Sumário
 Esta Política descreve como o aplicativo Lúmen trata, armazena e protege dados do usuário. O aplicativo foi projetado para operar localmente e, por padrão, não envia telemetria ou dados do usuário a servidores externos.

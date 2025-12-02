@@ -65,6 +65,9 @@ def atualizar_menu(self):
         if hasattr(self, 'action_config_font'):
             self.action_config_font.setText(QCoreApplication.translate("App", "🔤 Fonte..."))
 
+        if hasattr(self, 'action_config_sound'):
+            self.action_config_sound.setText(QCoreApplication.translate("App", "🔔 Som..."))
+
         self.action_pt_br.setText(QCoreApplication.translate("App", "🇧🇷 Português (Brasil)"))
         self.action_en_us.setText(QCoreApplication.translate("App", "🇺🇸 English (United States)"))
 

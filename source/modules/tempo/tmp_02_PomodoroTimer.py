@@ -4,6 +4,7 @@ from PySide6.QtGui import QFont, QIcon
 from source.utils.LogManager import LogManager
 from source.utils.GerenciadorBotoesUI import GerenciadorBotoesUI
 from source.utils.IconUtils import get_icon_path
+from source.utils.SoundManager import SoundManager
 
 
 class PomodoroTimer(QWidget):
@@ -21,6 +22,8 @@ class PomodoroTimer(QWidget):
             self.ciclos_completados = 0
             self.timer_ativo = False
             self.gerenciador_botoes = GerenciadorBotoesUI(self)
+
+            self._sound_mgr = SoundManager.instance()
 
             self.timer = QTimer()
             self.timer.timeout.connect(self.atualizar_timer)
@@ -210,14 +213,33 @@ class PomodoroTimer(QWidget):
         except Exception as e:
             self.logger.error(f"Erro ao atualizar display do timer: {str(e)}", exc_info=True)
 
+    def _executar_alerta(self, titulo, texto):
+        try:
+            self._sound_mgr.play_looping()
+
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Information)
+            msg.setWindowTitle(titulo)
+            msg.setText(texto)
+            msg.finished.connect(lambda _: self._sound_mgr.stop())
+            msg.exec()
+
+        except Exception as e:
+            self.logger.error(f"Erro ao executar alerta com som: {e}", exc_info=True)
+            QMessageBox.information(self, titulo, texto)
+            try:
+                self._sound_mgr.stop()
+
+            except Exception as e:
+                self.logger.error(f"Erro ao parar som do alerta: {e}", exc_info=True)
+
     def finalizar_ciclo(self):
         try:
             if self.em_foco:
                 self.ciclos_completados += 1
                 self.ciclo_completado.emit("foco")
 
-                QMessageBox.information(
-                    self,
+                self._executar_alerta(
                     QCoreApplication.translate("App", "🎉 Ciclo Completo!"),
                     QCoreApplication.translate("App",
                         "Parabéns! Você completou um ciclo de foco.\n"
@@ -242,10 +264,10 @@ class PomodoroTimer(QWidget):
 
             else:
                 self.ciclo_completado.emit("descanso")
-                QMessageBox.information(
-                    self,
+
+                self._executar_alerta(
                     QCoreApplication.translate("App", "✅ Descanso Completo"),
-                    QCoreApplication.translate("App", 
+                    QCoreApplication.translate("App",
                         "Descanso finalizado!\n"
                         "Vamos para o próximo ciclo de foco! 💪"
                     )

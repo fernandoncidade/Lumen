@@ -3,6 +3,7 @@ from PySide6.QtGui import QAction
 from PySide6.QtCore import QCoreApplication
 from source.utils.LogManager import LogManager
 from source.gui.gui_22_font_config_dialog import FontConfigDialog
+from source.gui.gui_23_sound_config_dialog import SoundConfigDialog
 
 logger = LogManager.get_logger()
 
@@ -186,6 +187,29 @@ def setup_menubar(self):
 
         self.action_config_font.triggered.connect(_open_font_dialog)
         self.menu_config.addAction(self.action_config_font)
+
+        self.action_config_sound = QAction(QCoreApplication.translate("App", "🔔 Som..."), self)
+        self.action_config_sound.setShortcut("Ctrl+Shift+S")
+        def _open_sound_dialog():
+            try:
+                dlg = SoundConfigDialog(self)
+                result_sound = dlg.exec()
+                if result_sound == QDialog.Accepted:
+                    try:
+                        if hasattr(self, 'atualizar_modulos'):
+                            self.atualizar_modulos()
+
+                        else:
+                            logger.info("atualizar_modulos não encontrada; configurações de som aplicadas via diálogo")
+
+                    except Exception as e:
+                        logger.error(f"Erro ao aplicar configurações de som nos módulos: {e}", exc_info=True)
+
+            except Exception as e:
+                logger.error(f"Erro ao abrir SoundConfigDialog: {e}", exc_info=True)
+
+        self.action_config_sound.triggered.connect(_open_sound_dialog)
+        self.menu_config.addAction(self.action_config_sound)
 
         self.menu_vozes = self.menu_config.addMenu(QCoreApplication.translate("App", "🗣️ Vozes"))
         self.actions_vozes = []

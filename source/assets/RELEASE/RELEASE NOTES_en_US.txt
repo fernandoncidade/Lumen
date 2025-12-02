@@ -1,4 +1,88 @@
 RELEASE NOTES — Lúmen
+Version: 2025.12.2.0
+Date: December 2, 2025
+Author: Fernando Nillsson Cidade
+
+Quick summary
+- Pomodoro alarm system improved: selectable bell sound, preview, persistence, configurable repetition, and more robust playback.
+- Fixes and improvements in alarm playback: repetition respects the audio file duration + configured interval; alarm sounds immediately at cycle end and repeats until the user closes the alert dialog.
+- Sound configuration interface added to the Settings menu with duration preview and calculation of total time between repetitions.
+- Improved reliability of sound playback (recreating QSoundEffect) to avoid failures after stop/preview.
+
+Detailed changes
+- Modified file: source/utils/SoundManager.py
+  - New centralized sound manager (singleton) exposing: instance(), play(), play_repeating(), stop(), preview(), get_duration_for_path(), get_available_sounds(), get_alarm_interval(), set_alarm_interval().
+  - WAV duration detection using Python's wave module (method _get_wav_duration_ms) to obtain a reliable duration in ms.
+  - Repetition logic: play_repeating() plays the audio, computes the next trigger as (audio duration) + (configured interval) and schedules it with QTimer.
+  - Clean recreation of QSoundEffect in _prepare_effect() before each playback to avoid the behavior where the sound only plays once.
+  - Persistence of selected bell and interval in QSettings (keys: "pomodoro/sound_path" and "pomodoro/alarm_interval").
+  - Improved preview and stop methods; default fallback duration (3000ms) when detection fails.
+
+- Modified file: source/gui/gui_23_sound_config_dialog.py
+  - New dialog "🔔 Configure Pomodoro Sound" with:
+    - Combobox to select bell (list of WAVs in assets/sound).
+    - ▶️ Play button for preview.
+    - SpinBox to set the repetition interval (seconds) between repeats (0–60).
+    - Display of selected file duration and total time until next repetition (duration + interval).
+  - On save, stores bell and interval in QSettings via SoundManager.
+
+- Modified file: source/gui/gui_03_setup_menubar.py
+  - Added action "🔔 Sound..." in the "⚙️ Settings" menu to open the sound configuration dialog.
+  - Updates modules after dialog confirmation (calls atualizar_modulos when available).
+
+- Modified file: source/modules/tempo/tmp_02_PomodoroTimer.py
+  - Integrated with SoundManager.instance() to play alarms when focus/rest periods end.
+  - Method _executar_alerta shows a QMessageBox and starts the repeating alarm (play_repeating) before showing the dialog; connects dialog close to stop the alarm.
+  - Fix so the sound plays immediately when the cycle ends and continues repeating until the alert dialog is manually closed.
+  - Added logging and exception handling.
+
+- Modified file: source/gui/gui_08_atualizar_menu.py
+  - Ensures the "🔔 Sound..." label/action is updated when the language changes.
+
+Impact and expected behavior
+- When a focus or rest cycle ends:
+  - The alert dialog (QMessageBox) appears immediately.
+  - The alarm plays immediately and repeats until the user closes the dialog.
+  - Repetition respects the audio file duration: the next play occurs only after (audio duration) + (user-configured interval).
+- Selected bell and interval are persisted in local settings (QSettings).
+- Preview allows listening to the bell without enabling repetition.
+
+How to test (quick steps)
+1. Open the application and go to ⚙️ Settings → 🔔 Sound...
+2. Select a bell (WAV) and use ▶️ Play for preview.
+3. Adjust "Interval between repetitions" (e.g., 5s) and check the label "Repetition every: X.XX seconds" (file duration + interval).
+4. Save and run a short Pomodoro (or skip a cycle) until finalizar_ciclo fires.
+5. Confirm that:
+   - The sound plays immediately with the alert dialog.
+   - The sound repeats after (WAV duration) + (configured interval).
+   - Closing the alert dialog stops the sound immediately.
+6. Repeat for rest cycle; test changing bell between cycles.
+
+Technical notes
+- Implementation uses PySide6.QtMultimedia.QSoundEffect for local playback (WAV-compatible). WAV duration is measured with Python's standard wave module (no external dependencies).
+- Settings persisted via QSettings under namespace "Lumen"/"LumenApp".
+- Recommended to have PySide6 with multimedia (FFmpeg) support in the environment.
+- For non‑WAV files, duration detection falls back (3s). Full support for MP3/other formats may require QMediaPlayer or additional libraries.
+
+Main files changed
+- source/utils/SoundManager.py (new / modified)
+- source/gui/gui_23_sound_config_dialog.py (new config dialog)
+- source/gui/gui_03_setup_menubar.py (dialog integration in menu)
+- source/modules/tempo/tmp_02_PomodoroTimer.py (alarm integration and control)
+- source/gui/gui_08_atualizar_menu.py (menu translations)
+
+Known issues
+- Exact duration is only calculated for WAV files via wave; other formats may fall back. For full format support (MP3, OGG), consider using QMediaPlayer metadata or external libraries (pydub, mutagen).
+- Very large WAV files may increase read cost; the routine is simple and synchronous.
+- Translations: dialog strings and labels must be recompiled into .qm (pyside6-lrelease) after .ts changes to take effect.
+
+Support and contact
+- Author: Fernando Nillsson Cidade
+- Issues/PRs: open in the project repository.
+
+_________________________________________________
+
+RELEASE NOTES — Lúmen
 Version: 2025.11.29.0
 Date: November 29, 2025
 Author: Fernando Nillsson Cidade
