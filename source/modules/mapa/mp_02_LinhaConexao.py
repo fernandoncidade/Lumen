@@ -11,11 +11,13 @@ class LinhaConexao(QGraphicsLineItem):
         try:
             self.no_inicio = no_inicio
             self.no_fim = no_fim
-            self.setPen(QPen(QColor("#666666"), 3, Qt.SolidLine))
+            pen = QPen(QColor(180, 180, 180, 150), 2, Qt.SolidLine)
+            pen.setCosmetic(True)
+            self.setPen(pen)
+            self.setZValue(-1)
 
             self.no_inicio.conexoes.append(self)
             self.no_fim.conexoes.append(self)
-
             self.atualizar_posicao()
 
         except Exception as e:

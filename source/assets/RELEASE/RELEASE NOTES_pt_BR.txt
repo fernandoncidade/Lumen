@@ -1,4 +1,279 @@
 NOTAS DE LANÇAMENTO — Lúmen
+Versão: 2025.12.13.0
+Data: 13 de dezembro de 2025
+Autor: Fernando Nillsson Cidade
+
+Resumo rápido
+- Integração completa entre Mapa Mental e Método Feynman via EventBus: conceitos criados no mapa agora podem ser enviados automaticamente para revisão no Método Feynman.
+- Novo botão "➕ Integrar ao Método Feynman" no diálogo de edição de conceitos do Mapa Mental, permitindo envio direto de notas e contextos.
+- Sistema de badges visuais (🟡) nos nós do Mapa Mental indicando presença de notas/informações associadas.
+- Processamento IA aprimorado (ProcessadorIA) com análise hierárquica profunda, extração contextual de conceitos, geração de resumos multinível e identificação de relações semânticas.
+- Layout em árvore otimizado para visualização hierárquica de documentos importados no Mapa Mental, com cálculo dinâmico de larguras e posicionamento recursivo.
+- Melhorias na interface do Mapa Mental: grid visual, snap-to-grid, zoom suave, animações de foco, gradientes de fundo e sombras nos nós.
+- Suporte completo à tradução dinâmica (pt_BR/en_US) em todos os diálogos, labels e botões dos módulos Mapa Mental e Método Feynman.
+- Reorganização arquitetural: código modularizado em packages (source/modules/mapa, source/modules/feynman, source/gui) para melhor manutenibilidade.
+- Correções de bugs relacionados a movimentação de nós, sincronização de status de tarefas no Gerenciador de Tarefas (Kanban) e aplicação de tema dinâmico.
+
+Detalhamento das mudanças
+
+📋 Integração Mapa Mental ↔ Método Feynman
+
+- Arquivo alterado: source/modules/mapa/mp_01_NoConceito.py
+  - Adicionado botão "➕ Integrar ao Método Feynman" no diálogo de edição de conceitos (mouseDoubleClickEvent).
+  - Integração com EventBus: emite sinal conceito_atualizado com dados {titulo, notas} ao clicar no botão de integração.
+  - Badge visual (círculo amarelo 🟡) exibido no topo do nó quando há notas ou informações associadas (self._badge).
+  - Validação de campos: aviso ao usuário caso título ou notas estejam vazios antes de integrar.
+  - Mensagem de confirmação (QMessageBox.information) após integração bem-sucedida.
+  - Armazenamento de informações associadas (self.info_associada: list[str]) provenientes da análise IA de documentos.
+  - Display de informações associadas em modo somente leitura no diálogo de edição (QTextEdit read-only).
+
+- Arquivo alterado: source/modules/mod_05_metodo_feynman.py
+  - Novo método receber_conceito_mapa_mental(dados: dict) conectado ao sinal conceito_atualizado do EventBus.
+  - Lógica de mesclagem inteligente: se o conceito já existe, atualiza campo 'revisao'; caso contrário, cria novo conceito com explicacao=notas.
+  - Salvamento automático (salvar_conceitos) e atualização da lista (atualizar_lista) após recepção de conceito do Mapa Mental.
+  - Logging detalhado de eventos de integração para rastreabilidade.
+  - Conexão ao EventBus estabelecida no __init__ do MetodoFeynman.
+
+- Arquivo criado: source/utils/EventBus.py
+  - Implementação de singleton QObject para comunicação desacoplada entre módulos.
+  - Sinal conceito_atualizado = Signal(dict) para transmitir dados de conceitos.
+  - Função auxiliar get_event_bus() para facilitar acesso global à instância única.
+  - Thread-safe: evita recriação de instância após inicialização.
+
+🗺️ Processamento IA e Análise Hierárquica
+
+- Arquivo alterado: source/modules/mapa/mp_04_ProcessadorIA.py
+  - Novo método analisar_estrutura(texto) com pipeline completo de análise hierárquica:
+    1. Detecção automática de idioma (pt/en) via palavras-chave.
+    2. Extração de seções estruturais (_detectar_secoes_avancado) com suporte a padrões PARTE/Parte, CAPÍTULO/Chapter, numeração decimal (1.0, 1.1.1).
+    3. Construção de árvore hierárquica recursiva (_construir_arvore_hierarquica) preservando relações pai-filho.
+    4. Processamento completo de cada nó (_processar_hierarquia_completa):
+       - Extração de conceitos semânticos via NER (Named Entity Recognition), noun chunks e análise de frequência.
+       - Extração de ideias principais com scoring baseado em posição, densidade semântica, palavras indicadoras e comprimento de sentença.
+       - Geração de resumos contextuais multinível (_gerar_resumo_contextual) com TF-IDF local, diversidade semântica e priorização por posição.
+    5. Aplicação de TF-IDF global (_aplicar_tfidf_global) para refinar importâncias de conceitos em todo o documento.
+    6. Identificação de relações semânticas (_identificar_relacoes_semanticas) via análise de dependências sintáticas (nsubj, dobj, verb).
+
+  - Método _gerar_resumo_contextual aprimorado:
+    - Configurações diferenciadas por nível hierárquico (número de sentenças e max_chars).
+    - Scoring sofisticado considerando: posição no texto, TF-IDF local, densidade de substantivos/verbos, overlap com título, palavras-chave de resumo.
+    - Deduplicação semântica: evita sentenças com alto overlap de lemmas já utilizados.
+    - Fallback robusto para textos curtos ou sem estrutura clara.
+
+  - Métodos auxiliares adicionados:
+    - _extrair_conceitos_semanticos: combina NER, noun chunks e análise de frequência; retorna conceitos com tipo, importância, frequência e contextos.
+    - _extrair_ideias_principais: extrai sentenças-chave com scoring baseado em múltiplos fatores linguísticos.
+    - _extrair_conceitos_tfidf: alternativa baseada em TF-IDF com ngrams (1-3) e filtragem por noun chunks.
+    - _identificar_relacoes_avancadas: constrói triplas (sujeito, verbo, objeto) via análise sintática.
+    - _log_estrutura_completa: logging recursivo da árvore com símbolos visuais (🌳🌿🌱🍃🌾) para debug.
+
+  - Ajustes de configuração:
+    - nlp.max_length aumentado para 2.000.000 caracteres para suportar documentos extensos.
+    - Fallback de modelos spaCy: pt_core_news_lg → en_core_web_lg → pt_core_news_sm.
+    - Logging detalhado em cada etapa do pipeline para troubleshooting.
+
+🎨 Interface do Mapa Mental
+
+- Arquivo alterado: source/modules/mapa/mp_03_MapaMental.py
+  - Nova classe MapaScene(QGraphicsScene) com:
+    - Método drawBackground personalizado: gradiente linear (#121212 → #1e1e1e) + grid visual (linhas leves a cada 40px, linhas fortes a cada 200px).
+    - Método snap(pos) para snap-to-grid configurável (self._snap_enabled).
+    - Suporte a paletas dinâmicas (Qt dark/light mode).
+
+  - Nova classe SmoothGraphicsView(QGraphicsView) com:
+    - Renderização antialiased para gráficos suaves.
+    - DragMode: ScrollHandDrag para navegação por arrastar.
+    - Zoom via roda do mouse com limites (-15 a +25 níveis, fator 1.15).
+    - Método animate_focus_on(item) para destacar item temporariamente com borda branca pulsante.
+
+  - Método importar_documento_ia redesenhado:
+    - QProgressDialog com feedback visual em cada etapa (carregamento modelo, extração, análise, geração).
+    - Chamada ao ProcessadorIA.analisar_estrutura para obter hierarquia completa.
+    - Geração de mapa via _gerar_mapa_de_hierarquia com layout recursivo.
+
+  - Método _gerar_mapa_de_hierarquia aprimorado:
+    - Cores diferenciadas por nível hierárquico (marrom→verde escuro→verde médio→verde claro→amarelo) para representar tronco, galhos, ramos e folhas.
+    - Escala dinâmica dos nós (decrescente com profundidade: 1.2 → 0.5).
+    - Conexões visuais (LinhaConexao) com espessura variável (4 → 1) conforme nível.
+    - Associação de informações estruturadas (resumo, conceitos, ideias) aos nós via no_principal.info_associada.
+    - Criação de sub-nós para conceitos e ideias principais (com emoji e formatação visual).
+    - Expansão automática da área do canvas (_expandir_area_se_necessario) conforme árvore cresce.
+
+  - Método reorganizar_com_ia redesenhado:
+    - Análise TF-IDF dos conceitos existentes.
+    - Construção de hierarquia baseada em conexões (_construir_hierarquia).
+    - Aplicação de layout em árvore (_aplicar_layout_arvore) com cálculo recursivo de larguras (_calcular_larguras_subarvore) e posicionamento otimizado (_posicionar_no_arvore).
+    - Snap-to-grid aplicado a todos os nós após reorganização.
+
+  - Melhorias de UX:
+    - Botão "🤖 Reorganizar com IA" adiciona reorganização automática de mapa existente.
+    - Botão "📄 Importar Documento (IA)" com suporte a PDF, DOCX, TXT.
+    - Diálogo de cores (QColorDialog) traduzido dinamicamente (Basic colors, Custom colors, OK, Cancel, etc).
+    - Instruções na label inferior (duplo-clique para editar, arrastar para mover, conectar para criar relações).
+
+  - Correções de bugs:
+    - Tema dinâmico aplicado corretamente ao QGraphicsView e scrollbars.
+    - EventFilter captura eventos de mudança de paleta/esquema de cores (PaletteChange, ColorSchemeChange, ThemeChange).
+    - Salvamento/carregamento JSON preserva notas, cor, posição e conexões.
+
+📦 Gerenciador de Tarefas (Kanban)
+
+- Arquivo alterado: source/modules/tempo/tmp_03_GerenciadorTarefas.py
+  - Novo método _on_rows_moved conectado ao sinal rowsMoved do QListWidget.model() para sincronizar status de tarefas após drag-and-drop interno.
+  - Método _sincronizar_status_pos_movimento: atualiza status das tarefas (Todo/Doing/Done) após movimento dentro da mesma coluna, garantindo persistência correta.
+  - Correção no método mover_tarefa: agora cicla entre estados (Todo → Doing → Done → Todo) em vez de avançar indefinidamente.
+  - Método resetar_contagem_botao expandido com três escopos:
+    - "🔹 Uma tarefa específica" (seleciona coluna → tarefa).
+    - "📂 Todas as tarefas de uma coluna" (seleciona coluna).
+    - "🌐 Todas as tarefas (global)".
+  - Validação de campos e exibição de QMessageBox.information quando não há tarefas.
+  - Método _ajustar_largura_combo para ajustar largura do QComboBox de prioridade dinamicamente conforme conteúdo.
+  - Método atualizar_listas aprimorado: exibe emoji de prioridade (🔴🟡🟢) + título + contagem de pomodoros (🍅) em cada item.
+  - CheckState (Qt.Unchecked) habilitado em todos os itens para suportar seleção múltipla.
+
+⏱️ Temporizador Pomodoro
+
+- Arquivo alterado: source/modules/tempo/tmp_02_PomodoroTimer.py
+  - Integração com SoundManager.instance() para reprodução de alarmes ao finalizar ciclos.
+  - Método _executar_alerta redesenhado:
+    - Inicia reprodução em loop (play_looping) ANTES de exibir QMessageBox.
+    - Conecta fechamento do diálogo (finished.connect) para parar som automaticamente.
+    - Tratamento de exceções robusto com fallback silencioso caso SoundManager falhe.
+  - Método finalizar_ciclo aprimorado:
+    - Mensagens personalizadas para foco e descanso com contagem de ciclos.
+    - Alternância automática entre descanso curto (5min) e longo (15min) a cada 4 ciclos.
+    - Sincronização perfeita entre progress bar, label de status e timer interno.
+  - Método atualizar_configuracoes: preserva tempo decorrido ao alterar duração de foco/descanso.
+  - Método resetar_ciclo: reseta contador de ciclos e volta ao estado inicial de foco.
+  - Aplicação de tema dinâmico (_aplicar_tema_dinamico) para labels de status e tempo.
+  - EventFilter captura mudanças de paleta/tema para re-renderizar interface.
+
+🎨 Utilitários e Infraestrutura
+
+- Arquivo alterado: source/utils/IconUtils.py
+  - Função get_app_base_path aprimorada:
+    - Detecção de execução via PyInstaller (sys._MEIPASS).
+    - Fallback para executável standalone (sys.executable).
+    - Modo desenvolvimento retorna parent da pasta utils.
+  - Função get_icon_path: busca em múltiplos caminhos (assets/icones, source/assets/icones, _internal/icones) com suporte a múltiplas extensões (.png, .ico, .svg, .jpg).
+  - Logging detalhado (✓/✗) para troubleshooting de ícones.
+
+- Arquivo alterado: source/modules/mod_07_exibir_public.py
+  - Função _tr_multi para fallback de traduções (App → InterfaceGrafica → fallback manual).
+  - Função _lbl para seleção de label pt_BR/en_US baseado em idioma.
+  - Traduções dinâmicas aplicadas a todos os botões do SobreDialog (show_history, hide_history, show_details, etc).
+  - Integração de notas de versão (RELEASE_NOTES_pt_BR/en_US) com botão expansível.
+  - Redimensionamento proporcional do diálogo (900x600 pixels base, 1x largura, 1.2x altura).
+
+🏗️ Arquitetura e Modularização
+
+- Arquivo criado: source/modules/mapa/__init__.py
+  - Exporta NoConceito, LinhaConexao, MapaMental, ProcessadorIA via __all__.
+  - Facilita imports (from source.modules.mapa import MapaMental).
+
+- Arquivo alterado: source/__init__.py
+  - Lazy loading via __getattr__ para EstudoAcessivel.
+  - Reduz tempo de inicialização importando apenas quando necessário.
+
+- Arquivo alterado: source/gui_01_estudo_acessivel.py
+  - Configuração centralizada de QCoreApplication (OrganizationName, ApplicationName) via CaminhoPersistenteUtils.
+  - Carregamento de ícone da janela (autismo.ico) via IconUtils com logging detalhado.
+  - Integração com GerenciadorTraducao para traduções dinâmicas.
+
+- Arquivo alterado: source/src_01_InicializadorMain.py
+  - Função configurar_windows_app_id para AppUserModelID no Windows (taskbar grouping).
+  - Função configurar_icone_aplicacao com validação de tamanhos disponíveis (availableSizes).
+  - Logging detalhado em cada etapa da inicialização (✓/✗).
+
+Impacto e comportamento esperado
+
+✅ Integração Mapa Mental → Método Feynman
+- Usuário cria conceito no Mapa Mental e adiciona notas contextuais.
+- Ao clicar em "➕ Integrar ao Método Feynman", conceito é enviado automaticamente.
+- Método Feynman recebe conceito e atualiza lista; se conceito já existe, mescla notas no campo "revisão".
+- Badge amarelo (🟡) indica visualmente que o nó possui notas/informações.
+
+📄 Importação de Documentos com IA
+- Usuário importa PDF/DOCX/TXT via botão "📄 Importar Documento (IA)".
+- ProcessadorIA analisa estrutura hierárquica, extrai conceitos, ideias e relações.
+- Mapa Mental gerado automaticamente com layout em árvore:
+  - Cores representam níveis (marrom=documento, verde=capítulos, amarelo=ideias).
+  - Nós contêm resumos contextuais, conceitos-chave e ideias principais.
+  - Conceitos e ideias aparecem como sub-nós conectados.
+- Estrutura expansível e navegável via zoom/pan suave.
+
+🔄 Reorganização Automática
+- Usuário clica em "🤖 Reorganizar com IA" em mapa existente.
+- Algoritmo analisa conexões, constrói hierarquia e aplica layout em árvore otimizado.
+- Todos os nós são reposicionados automaticamente com snap-to-grid.
+
+⏱️ Pomodoro + Tarefas
+- Alarme toca imediatamente ao finalizar ciclo e repete até fechar janela de alerta.
+- Gerenciador de Tarefas sincroniza status após drag-and-drop interno.
+- Contador de pomodoros resetável por tarefa, coluna ou globalmente.
+
+Como testar (passos rápidos)
+
+🧪 Teste 1: Integração Mapa Mental → Feynman
+1. Abrir módulo "Mapa Mental".
+2. Clicar em "➕ Adicionar Conceito" e digitar "Tensão de Cisalhamento".
+3. Duplo-clicar no nó criado.
+4. Adicionar notas no campo "Notas (Método Feynman)": "Tensão gerada por forças paralelas..."
+5. Clicar em "➕ Integrar ao Método Feynman".
+6. Confirmar mensagem de sucesso.
+7. Abrir módulo "Método Feynman" e verificar conceito na lista.
+
+🧪 Teste 2: Importação de Documento
+1. Abrir módulo "Mapa Mental".
+2. Clicar em "📄 Importar Documento (IA)".
+3. Selecionar arquivo PDF/DOCX de apostila acadêmica (ex: Resistência dos Materiais).
+4. Aguardar progresso de análise (pode levar 1-3 minutos).
+5. Verificar mapa hierárquico gerado com cores diferenciadas.
+6. Duplo-clicar em nó de capítulo e verificar resumo contextual, conceitos e ideias.
+
+🧪 Teste 3: Reorganização com IA
+1. No Mapa Mental existente, adicionar vários conceitos e conexões manualmente.
+2. Clicar em "🤖 Reorganizar com IA".
+3. Verificar que nós são reposicionados em layout hierárquico otimizado.
+
+🧪 Teste 4: Pomodoro + Tarefas
+1. Gerenciador de Tarefas: adicionar tarefa "Estudar Cap 3".
+2. Arrastar tarefa entre colunas e verificar persistência de status.
+3. Pomodoro: iniciar ciclo curto (1 min) e aguardar alarme.
+4. Verificar que alarme toca imediatamente e repete até fechar diálogo.
+
+Notas técnicas
+
+🔧 Dependências
+- spaCy 3.x: modelos pt_core_news_lg ou en_core_web_lg recomendados para análise IA completa.
+- scikit-learn: TF-IDF vectorization (TfidfVectorizer).
+- PySide6 6.x: Qt for Python com suporte a QGraphicsScene, QMediaPlayer, QtMultimedia.
+- PyMuPDF (fitz): extração de texto de PDFs.
+- python-docx: extração de texto de arquivos DOCX.
+
+🔧 Configurações persistidas
+- QSettings namespace: "Lumen"/"LumenApp".
+- Chaves relevantes:
+  - pomodoro/sound_path: caminho da campainha.
+  - pomodoro/alarm_interval: intervalo entre repetições do alarme.
+  - (demais configurações em %LOCALAPPDATA%\TEA_TDAH_Dislexia).
+
+🔧 Arquitetura modular
+- source/modules/mapa/: NoConceito, LinhaConexao, MapaMental, ProcessadorIA.
+- source/modules/feynman/: lógica do Método Feynman (carregar, salvar, atualizar).
+- source/modules/tempo/: PomodoroTimer, GerenciadorTarefas, Tarefa.
+- source/utils/: EventBus, IconUtils, LogManager, CaminhoPersistenteUtils, GerenciadorBotoesUI, SoundManager.
+- source/gui/: setup UI, menubar, traduções, atalhos.
+
+🔧 Performance
+- nlp.max_length = 2.000.000: suporta documentos de até ~400 páginas (média 5000 chars/página).
+- TF-IDF: max_features=100 para análise global; max_features=50 para resumos locais.
+- Snap-to-grid: grid_step=40px; strong grid a cada 200px.
+- Cache de ícones: get_icon_path faz busca sequencial; considere memoization para produção.
+
+_________________________________________________
+
+NOTAS DE LANÇAMENTO — Lúmen
 Versão: 2025.12.2.0
 Data: 2 de dezembro de 2025
 Autor: Fernando Nillsson Cidade
@@ -75,10 +350,6 @@ Problemas conhecidos
 - Duração exata só é calculada para arquivos WAV via wave; outros formatos poderão usar fallback. Se desejar suporte completo (MP3, OGG), recomenda-se usar QMediaPlayer para extração de metadados ou bibliotecas externas (pydub, mutagen).
 - Arquivos WAV muito grandes podem aumentar o custo de leitura; a rotina é simples e síncrona.
 - Traduções: strings do diálogo e labels devem ser recompiladas em .qm (pyside6-lrelease) após alterações no .ts para surtir efeito.
-
-Suporte e contato
-- Autor: Fernando Nillsson Cidade
-- Issues/PRs: abrir no repositório do projeto.
 
 _________________________________________________
 
