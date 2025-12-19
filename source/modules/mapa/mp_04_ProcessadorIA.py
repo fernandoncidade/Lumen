@@ -43,16 +43,15 @@ from source.modules.mapa.iaprocessador import (
 
 class ProcessadorIA:
     def __init__(self):
-        try:
-            self.nlp = None
-            self.idioma_detectado = 'pt'
-            self._carregar_modelo_nlp()
+        self._tr = lambda s: s
 
+        try:
             if QCoreApplication and QCoreApplication.instance():
                 self._tr = lambda s: QCoreApplication.translate("App", s)
 
-            else:
-                self._tr = lambda s: s
+            self.nlp = None
+            self.idioma_detectado = 'pt'
+            self._carregar_modelo_nlp()
 
         except Exception as e:
             logger.error(f"Erro ao inicializar ProcessadorIA: {e}", exc_info=True)

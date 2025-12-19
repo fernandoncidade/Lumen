@@ -1,6 +1,6 @@
 NOTAS DE LANÇAMENTO — Lúmen
-Versão: 2025.12.18.0
-Data: 18 de dezembro de 2025
+Versão: 2025.12.19.0
+Data: 19 de dezembro de 2025
 Autor: Fernando Nillsson Cidade
 
 Resumo rápido
@@ -57,11 +57,23 @@ Detalhamento das mudanças
     - Resumos contextuais multinível.
   - Aplicação de TF-IDF global para refinar importâncias de conceitos.
   - Identificação de relações semânticas por análise de dependências/contexto.
+- O pipeline de análise IA foi modularizado em funções especializadas sob source/modules/mapa/iaprocessador, facilitando manutenção e testes.
+- O carregamento do modelo spaCy agora suporta múltiplos métodos: import direto, path local, fallback para spacy.blank e modo básico, garantindo funcionamento mesmo em ambientes sem modelos completos.
+- O método _carregar_modelo_nlp implementa detecção automática do idioma e fallback seguro, com logging detalhado de erros e tentativas.
+- O método _construir_arvore_hierarquica foi aprimorado para montar árvores hierárquicas a partir de seções detectadas, preservando relações pai-filho e delimitando corretamente os textos de cada nó.
+- A extração de conceitos semânticos (_extrair_conceitos_semanticos) combina entidades nomeadas, noun chunks e análise de substantivos, com heurísticas para ambientes sem parser completo. Limites dinâmicos por nível garantem relevância dos conceitos.
+- A extração de conceitos via TF-IDF (_extrair_conceitos_tfidf) utiliza ngrams (1-3), prioriza noun chunks e termos técnicos, e faz fallback para extração semântica caso não haja resultados. Contextos relevantes são associados a cada conceito.
+- O método _identificar_relacoes_avancadas detecta relações entre conceitos usando dependências sintáticas (nsubj, dobj, etc.) quando o parser está disponível, ou por coocorrência em sentenças caso não esteja. Relações são retornadas como triplas (sujeito, verbo, objeto) ou pares genéricos.
+- Todos os métodos possuem tratamento robusto de exceções e logging detalhado via LogManager, facilitando troubleshooting e rastreabilidade.
 
 2) Robustez na extração de texto e pré-processamento
 - Extração de PDF via pdfplumber com normalização (unicodedata.normalize) e heurísticas para correção de padrões e recomposição de títulos quebrados.
 
-Impacto e comportamento esperado
+🎯 Impacto prático e comportamento esperado
+- Maior resiliência na análise de documentos extensos ou com estrutura irregular.
+- Resultados mais ricos na extração de conceitos e relações, mesmo em ambientes com recursos reduzidos.
+- Modularização facilita expansão futura (novos tipos de análise, integração com outros modelos).
+- Logging aprimorado permite identificar rapidamente falhas ou limitações do ambiente.
 
 ✅ Reorganização com IA preserva mapas importados
 - Ao importar um documento e gerar mapa, "🤖 Reorganizar com IA" reposiciona respeitando a hierarquia existente, evitando recalcular uma árvore que colapse a visualização.

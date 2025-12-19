@@ -6,11 +6,29 @@ logger = LogManager.get_logger()
 
 def animate_focus_on(self, item):
     self.centerOn(item)
-    eff_timer = QTimer(self)
+
+    timer = QTimer(self)
+    timer.setSingleShot(True)
+
     c = QColor(255, 255, 255, 60)
     pen = QPen(c, 3)
     item.setPen(pen)
-    def restore():
-        item.setPen(QPen(Qt.black, 2))
 
-    eff_timer.singleShot(420, restore)
+    if not hasattr(self, "_lumen_focus_timers"):
+        self._lumen_focus_timers = []
+
+    self._lumen_focus_timers.append(timer)
+
+    def restore():
+        try:
+            item.setPen(QPen(Qt.black, 2))
+
+        finally:
+            try:
+                self._lumen_focus_timers.remove(timer)
+
+            except Exception:
+                pass
+
+    timer.timeout.connect(restore)
+    timer.start(420)
