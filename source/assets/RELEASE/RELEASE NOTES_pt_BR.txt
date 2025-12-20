@@ -1,12 +1,19 @@
 NOTAS DE LANÇAMENTO — Lúmen
-Versão: 2025.12.19.0
-Data: 19 de dezembro de 2025
+Versão: 2025.12.20.0
+Data: 20 de dezembro de 2025
 Autor: Fernando Nillsson Cidade
 
 Resumo rápido
 - Correção no fluxo do botão "🤖 Reorganizar com IA": ao reorganizar, o mapa não é mais "destruído" quando a estrutura foi importada de documento (ex.: PDF); a hierarquia existente é preservada.
 - Ampliação da paleta de cores por nível (cores_nivel) com gradação semântica (tronco/galhos/folhas) e fallback automático por HSV para suportar profundidade ilimitada de subníveis sem erro de índice.
 - Consolidação do pipeline de importação de documentos e geração de mapa hierárquico com enriquecimento informacional (resumos, conceitos, ideias), layout recursivo e navegação hierárquica.
+- Preservação da hierarquia existente ao usar "🤖 Reorganizar com IA": mapas importados (ex.: PDF) não são destruídos; aplica-se só o layout quando apropriado.
+- Paleta de cores por nível ampliada e organizada (tronco → galhos → folhas) com fallback HSV para suportar profundidade ilimitada sem erro de índice.
+- Geração recursiva de mapa hierárquico com enriquecimento informacional: resumos, conceitos, ideias, estatísticas e badges informativos.
+- Criação de nós-ideia ligados visualmente às seções (folhas) com escala e espessura de conexão variáveis por nível.
+- Atualizações de tradução runtime para conteúdos hierárquicos e botões da UI.
+- Melhorias no desenho do canvas: grid, snap-to-grid e comportamento de zoom/pan e animação de foco.
+- Logging e tratamento de exceções reforçados nas rotinas de geração e atualização da hierarquia.
 
 Detalhamento das mudanças
 
@@ -74,12 +81,45 @@ Detalhamento das mudanças
 - Resultados mais ricos na extração de conceitos e relações, mesmo em ambientes com recursos reduzidos.
 - Modularização facilita expansão futura (novos tipos de análise, integração com outros modelos).
 - Logging aprimorado permite identificar rapidamente falhas ou limitações do ambiente.
+- Reorganização com IA preserva visualizações geradas por importação.
+- Cores mantêm distinção mesmo em árvores muito profundas.
+- Nós passam a exibir informações contextuais ricas, melhorando usabilidade e compreensão do mapa.
 
 ✅ Reorganização com IA preserva mapas importados
 - Ao importar um documento e gerar mapa, "🤖 Reorganizar com IA" reposiciona respeitando a hierarquia existente, evitando recalcular uma árvore que colapse a visualização.
 
 🎨 Cores para subníveis ilimitados
 - Níveis além da paleta recebem cor gerada automaticamente (HSV), evitando erros de índice e mantendo distinção visual.
+
+🧩 Traduções runtime do conteúdo gerado por IA (source/modules/mapa/mapamental/mm_33_atualizar_traducoes_hierarquia.py + mm_12_atualizar_traducoes.py + mm_24_gerar_mapa_de_hierarquia.py)
+- Implementado/ajustado o fluxo de atualização dinâmica de textos e metadados da hierarquia já renderizada no canvas ao trocar o idioma.
+- Nós criados a partir de documento passam a carregar “payload” interno (_lumen_hierarquia_payload / _lumen_ideia_payload) e chaves de tradução (titulo_key) para permitir re-render de título e recomposição das informações associadas sem recriar o mapa.
+- Atualização resiliente do texto do nó: tenta múltiplas estratégias (atributo texto, atualizar_texto, setText e itens internos texto_item/_texto_item/etc.), com fallback silencioso para evitar quebra do UI.
+- Regeração de info_associada via helpers (_montar_info_associadas / _montar_info_folha), mantendo badges visíveis quando há conteúdo contextual.
+
+🧠 Mapa hierárquico: enriquecimento informacional e visual (source/modules/mapa/mapamental/mm_24_gerar_mapa_de_hierarquia.py)
+- Consolidados blocos de informações associadas (resumo, conceitos, ideias, estatísticas e sub-seções) com formatação mais legível e limites práticos (ex.: top 10 conceitos, top 8 ideias, top 15 sub-seções).
+- Criação de “folhas” (nós-ideia) vinculadas visualmente ao nó-seção (quando nível >= 2), com:
+  - texto resumido, escala reduzida, conexão tracejada e informações detalhadas no diálogo (importância, localização, texto completo e vínculo).
+- Paleta de cores por nível reorganizada e ampliada; para níveis além da paleta foi adicionado fallback procedural via HSV para profundidade ilimitada (evita erro de índice e preserva distinção de cores).
+
+🧱 Setup e UX do botão “🤖 Reorganizar com IA” (source/modules/mapa/mapamental/mm_11_setup_ui.py)
+- A ação “🤖 Reorganizar com IA” passou a operar em modo “toggle” com 3 estados:
+  1) Reorganizar (layout em árvore) com snapshot do layout original.
+  2) Aplicar variação horizontal (rotação simples baseada em troca de eixos), preservando centro do conjunto.
+  3) Restaurar layout original (retorna às posições capturadas).
+- Adicionado aviso “IA em alfa” exibido uma única vez por ação (importar/reorganizar), com fallback em pt-BR caso a chave não exista em traduções.
+- Após alterações de layout, aplica snap-to-grid quando a Scene suporta snap(), e força atualização de visibilidade de conexões para coerência visual.
+- Mantida animação de foco no item (quando disponível) para feedback imediato ao usuário após reorganizações.
+
+🧹 Reset completo de estado do mapa (source/modules/mapa/mapamental/mm_20_limpar_mapa.py)
+- Limpeza reforçada para evitar estados residuais:
+  - reset de navegação hierárquica (root/parent/children/nós expandidos)
+  - reset do estado de reorganização (_lumen_reorg_layout_state) e do snapshot do layout original (_lumen_layout_original_positions)
+
+🌳 Árvore hierárquica base: raiz com chave de tradução (source/modules/mapa/iaprocessador/pia_20_construir_arvore_hierarquica.py)
+- Nó raiz (“Documento Principal”) estruturado com titulo_key para suportar tradução runtime no mapa, mantendo o título consistente entre idiomas.
+- Estrutura de árvore com relações pai-filho preservadas via stack, com texto_puro delimitado por faixa de linhas (posicao_inicio/posicao_fim), facilitando enriquecimento posterior (conceitos/ideias/resumos).
 
 Como testar (passos rápidos)
 

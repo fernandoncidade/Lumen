@@ -42,6 +42,9 @@ from .mm_30_calcular_larguras_subarvore import _calcular_larguras_subarvore
 from .mm_31_posicionar_no_arvore import _posicionar_no_arvore
 from .mm_32_expandir_area_se_necessario import _expandir_area_se_necessario
 
+# Traduções runtime do conteúdo (hierarquia)
+from .mm_33_atualizar_traducoes_hierarquia import _atualizar_traducoes_hierarquia
+
 __all__ = [
     # Scene / View
     "drawBackground",
@@ -81,4 +84,6 @@ __all__ = [
     "_calcular_larguras_subarvore",
     "_posicionar_no_arvore",
     "_expandir_area_se_necessario",
+    # Traduções runtime do conteúdo (hierarquia)
+    "_atualizar_traducoes_hierarquia",
 ]

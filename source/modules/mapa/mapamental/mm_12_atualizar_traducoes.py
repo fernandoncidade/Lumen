@@ -26,5 +26,8 @@ def atualizar_traducoes(self):
         if self.modo_conexao:
             self.btn_conectar.setText(QCoreApplication.translate("App", "🔗 Conectar (Ativo)"))
 
+        if hasattr(self, "_atualizar_traducoes_hierarquia"):
+            self._atualizar_traducoes_hierarquia()
+
     except Exception as e:
         logger.error(f"Erro ao atualizar traduções do MapaMental: {str(e)}", exc_info=True)

@@ -14,5 +14,8 @@ def limpar_mapa(self):
         self._hierarquia_children = {}
         self._nos_expandidos = set()
 
+        self._lumen_reorg_layout_state = 0
+        self._lumen_layout_original_positions = {}
+
     except Exception as e:
         logger.error(f"Erro ao limpar mapa: {str(e)}", exc_info=True)

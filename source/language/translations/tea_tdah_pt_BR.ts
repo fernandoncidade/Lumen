@@ -1633,5 +1633,130 @@ Defina 0 para repetir imediatamente após o áudio terminar.</translation>
         <translation>🔄 Repetição a cada: {total} segundos</translation>
     </message>
 
+    <message>
+      <source>{simbolo} RESUMO (Nível {nivel}):&#xa;</source>
+      <translation>{simbolo} RESUMO (Nível {nivel}):&#xa;</translation>
+    </message>
+
+    <message>
+      <source>&#xa;🎯 CONCEITOS-CHAVE ({quantidade}):&#xa;</source>
+      <translation>&#xa;🎯 CONCEITOS-CHAVE ({quantidade}):&#xa;</translation>
+    </message>
+
+    <message>
+      <source>[freq: {frequencia}]</source>
+      <translation>[freq: {frequencia}]</translation>
+    </message>
+
+    <message>
+      <source>{idx}. {icon} {texto} (importância: {importancia:.2f}) {freq}&#xa;</source>
+      <translation>{idx}. {icon} {texto} (importância: {importancia:.2f}) {freq}&#xa;</translation>
+    </message>
+
+    <message>
+      <source>   └─ Contexto: "{contexto}"&#xa;</source>
+      <translation>   └─ Contexto: "{contexto}"&#xa;</translation>
+    </message>
+
+    <message>
+      <source>&#xa;💡 IDEIAS PRINCIPAIS ({quantidade}):&#xa;&#xa;</source>
+      <translation>&#xa;💡 IDEIAS PRINCIPAIS ({quantidade}):&#xa;&#xa;</translation>
+    </message>
+
+    <message>
+      <source>{idx}. [{barra}] Importância: {importancia:.2f}&#xa;</source>
+      <translation>{idx}. [{barra}] Importância: {importancia:.2f}&#xa;</translation>
+    </message>
+
+    <message>
+      <source>   "{texto}"&#xa;&#xa;</source>
+      <translation>   "{texto}"&#xa;&#xa;</translation>
+    </message>
+
+    <message>
+      <source>&#xa;📊 ESTATÍSTICAS:&#xa;</source>
+      <translation>&#xa;📊 ESTATÍSTICAS:&#xa;</translation>
+    </message>
+
+    <message>
+      <source>   • Palavras: {valor}&#xa;</source>
+      <translation>   • Palavras: {valor}&#xa;</translation>
+    </message>
+
+    <message>
+      <source>   • Caracteres: {valor}&#xa;</source>
+      <translation>   • Caracteres: {valor}&#xa;</translation>
+    </message>
+
+    <message>
+      <source>   • Parágrafos: {valor}&#xa;</source>
+      <translation>   • Parágrafos: {valor}&#xa;</translation>
+    </message>
+
+    <message>
+      <source>   • Nível hierárquico: {valor}&#xa;</source>
+      <translation>   • Nível hierárquico: {valor}&#xa;</translation>
+    </message>
+
+    <message>
+      <source>   • Tipo: {valor}&#xa;</source>
+      <translation>   • Tipo: {valor}&#xa;</translation>
+    </message>
+
+    <message>
+      <source>&#xa;🌿 SUB-SEÇÕES ({quantidade}):&#xa;</source>
+      <translation>&#xa;🌿 SUB-SEÇÕES ({quantidade}):&#xa;</translation>
+    </message>
+
+    <message>
+      <source>   {idx}. {titulo} ({conceitos} conceitos, {ideias} ideias)&#xa;</source>
+      <translation>   {idx}. {titulo} ({conceitos} conceitos, {ideias} ideias)&#xa;</translation>
+    </message>
+
+    <message>
+      <source>💡 IDEIA PRINCIPAL #{numero}&#xa;</source>
+      <translation>💡 IDEIA PRINCIPAL #{numero}&#xa;</translation>
+    </message>
+
+    <message>
+      <source>&#xa;📊 Importância: {importancia:.2f} </source>
+      <translation>&#xa;📊 Importância: {importancia:.2f} </translation>
+    </message>
+
+    <message>
+      <source>&#xa;📍 LOCALIZAÇÃO:&#xa;</source>
+      <translation>&#xa;📍 LOCALIZAÇÃO:&#xa;</translation>
+    </message>
+
+    <message>
+      <source>   • Parágrafo: {valor}&#xa;</source>
+      <translation>   • Parágrafo: {valor}&#xa;</translation>
+    </message>
+
+    <message>
+      <source>   • Posição na sentença: {valor}&#xa;</source>
+      <translation>   • Posição na sentença: {valor}&#xa;</translation>
+    </message>
+
+    <message>
+      <source>&#xa;💬 TEXTO COMPLETO:&#xa;&#xa;</source>
+      <translation>&#xa;💬 TEXTO COMPLETO:&#xa;&#xa;</translation>
+    </message>
+
+    <message>
+      <source>"{texto}"&#xa;</source>
+      <translation>"{texto}"&#xa;</translation>
+    </message>
+
+    <message>
+      <source>&#xa;🔗 Pertence a: {titulo}&#xa;</source>
+      <translation>&#xa;🔗 Pertence a: {titulo}&#xa;</translation>
+    </message>
+
+    <message>
+      <source>aviso_ia_alpha</source>
+      <translation>Ao utilizar este recurso, considere que ele se encontra em fase inicial de desenvolvimento (versão alfa). Como todo sistema ainda em evolução, apresenta limitações conhecidas e comportamentos passíveis de ajustes. Recomenda-se, portanto, seu uso com cautela, expectativa calibrada e a devida paciência, enquanto o processo de refinamento, correção de falhas e otimização contínua está em andamento.</translation>
+    </message>
+
   </context>
 </TS>

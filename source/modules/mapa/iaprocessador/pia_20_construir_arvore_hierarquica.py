@@ -4,11 +4,12 @@ from source.utils.LogManager import LogManager
 logger = LogManager.get_logger()
 
 def _construir_arvore_hierarquica(self, texto: str, secoes_raw: List[Dict]) -> Dict:
-    tr = getattr(self, "_tr", lambda s: s)
-
     linhas = (texto or "").split("\n")
+    titulo_raiz_key = "Documento Principal"
+
     raiz = {
-        "titulo": tr("Documento Principal"),
+        "titulo": titulo_raiz_key,
+        "titulo_key": titulo_raiz_key,
         "nivel": 0,
         "posicao_inicio": 0,
         "posicao_fim": len(linhas),

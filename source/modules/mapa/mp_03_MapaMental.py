@@ -179,3 +179,7 @@ class MapaMental(QWidget):
     def eventFilter(self, obj, event):
         from source.modules.mapa.mapamental.mm_22_eventFilter import eventFilter as _impl
         return _impl(self, obj, event)
+
+    def _atualizar_traducoes_hierarquia(self):
+        from source.modules.mapa.mapamental.mm_33_atualizar_traducoes_hierarquia import _atualizar_traducoes_hierarquia as _impl
+        return _impl(self)
