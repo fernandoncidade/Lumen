@@ -53,6 +53,13 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecapSpentCounter">
+    <option name="endsOfQuotaMs" value="1766520016699" />
+    <option name="spentUsd" value="0.0026845" />
+  </component>
+  <component name="RecapUselessUpdatesCounter">
+    <option name="suspendCountdown" value="9" />
+  </component>
   <component name="RunManager">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Lumen" />
@@ -108,7 +115,7 @@
       <workItem from="1765924706479" duration="6595000" />
       <workItem from="1766065568401" duration="28121000" />
       <workItem from="1766209745061" duration="182000" />
-      <workItem from="1766210010028" duration="828000" />
+      <workItem from="1766210010028" duration="893000" />
     </task>
     <servers />
   </component>
