@@ -4,18 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="02f93f84-518f-4e9e-97ae-36ae501fd277" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/mapa/mp_04_ProcessadorIA.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/mapa/mp_04_ProcessadorIA.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teste1.py" beforeDir="false" afterPath="$PROJECT_DIR$/teste1.py" afterDir="false" />
-    </list>
+    <list default="true" id="02f93f84-518f-4e9e-97ae-36ae501fd277" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="255" />
+    <option name="cachedIndexableFilesCount" value="318" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -104,6 +100,7 @@
       <workItem from="1765616783364" duration="1458000" />
       <workItem from="1765863864522" duration="651000" />
       <workItem from="1765924706479" duration="6595000" />
+      <workItem from="1766065568401" duration="28121000" />
     </task>
     <servers />
   </component>
