@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="02f93f84-518f-4e9e-97ae-36ae501fd277" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="02f93f84-518f-4e9e-97ae-36ae501fd277" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -57,10 +55,10 @@
 }</component>
   <component name="RecapSpentCounter">
     <option name="endsOfQuotaMs" value="1766520016699" />
-    <option name="spentUsd" value="0.01363135" />
+    <option name="spentUsd" value="0.02312085" />
   </component>
   <component name="RecapUselessUpdatesCounter">
-    <option name="suspendCountdown" value="7" />
+    <option name="suspendCountdown" value="4" />
   </component>
   <component name="RunManager">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -119,6 +117,7 @@
       <workItem from="1766209745061" duration="182000" />
       <workItem from="1766210010028" duration="893000" />
       <workItem from="1766304996944" duration="2534000" />
+      <workItem from="1766329344088" duration="1966000" />
     </task>
     <servers />
   </component>
