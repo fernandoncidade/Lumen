@@ -1,4 +1,72 @@
 NOTAS DE LANÇAMENTO — Lúmen
+Versão: 2025.12.22.0
+Data: 22 de dezembro de 2025
+Autor: Fernando Nillsson Cidade
+
+Resumo rápido
+- Correções e refinamentos no módulo da Matriz de Eisenhower (svc_01_initUI.py): robustez do drag & drop, comportamento de seleção, suporte de locale para data/hora, PersonalTimeEdit, sincronização de paleta e melhor tratamento de sinais/exceções.
+- Correção específica de bug: ao arrastar tarefas entre listas não são mais removidas inadvertidamente as demais tarefas do quadrante de origem.
+- Melhorias de UX: seleção única no arraste, placeholders estáveis, atualização imediata do calendário e persistência após operações de drop.
+
+Detalhamento das mudanças principais
+
+1) Drag & Drop (DragDropTaskList)
+- Nova implementação de QListWidget customizado para drag & drop com controle refinado:
+  - Drag habilitado, aceitação de drops, indicador de drop visível e drop mode configurado.
+  - Forçado SelectionMode SingleSelection para evitar arrastes acidentais de múltiplos itens por seleção residual.
+  - mousePressEvent ajustado para garantir que apenas o item clicado seja selecionado/arrastado (setCurrentItem / clearSelection / setSelected).
+  - dragEnterEvent e dragMoveEvent aceitam a ação proposta, melhorando compatibilidade entre listas.
+  - dropEvent reescrito para:
+    - Lidar corretamente com drops vindos da mesma lista (fallback ao comportamento padrão e persistência).
+    - Validar a origem ser um QListWidget e rejeitar drops inválidos.
+    - Iterar apenas sobre os itens selecionados (garantia de seleção única) e chamar app.move_item_between_lists para movimentação consistente preservando metadados.
+    - Bloquear sinais das listas durante a operação para evitar efeitos colaterais de callbacks.
+    - Limpar seleção da origem após operação para evitar remoções adicionais pelo mecanismo do Qt.
+    - Forçar setDropAction(Qt.CopyAction) + event.accept() no final do drop para impedir que o Qt realize uma remoção automática (MoveAction) que causava exclusão de itens remanescentes no quadrante de origem.
+  - Log de erro robusto em dropEvent para facilitar diagnóstico.
+
+Impacto do fix
+- Corrige o problema onde arrastar uma tarefa removia todas as outras tarefas do quadrante de origem (dupla remoção causada por MoveAction final do Qt). A estratégia adotada garante que a aplicação controle a remoção explicitamente e que o Qt não finalize o movimento removendo indevidamente itens restantes.
+
+2) CustomTimeEdit
+- Classe CustomTimeEdit (subclasse de QTimeEdit) implementada com:
+  - Wrapping habilitado e stepBy adaptado para incremento contínuo de minutos com wrap-around 0–1439.
+  - Comportamento robusto ao navegar por seções do tempo (minuto vs outras seções).
+  - Armazenamento interno de último horário para possíveis usos futuros.
+
+3) Locale e Formato de Data/Hora
+- Aplicação de locale no QDateEdit baseada no gerenciador de tradução, com fallback seguro:
+  - Suporte explícito para pt-BR e en-US quando disponíveis.
+  - Determinação de displayFormat a partir do locale; ajuste regex para garantir ano com 4 dígitos.
+  - Conexão ao sinal idioma_alterado para reaplicar locale dinamicamente.
+- time_input (CustomTimeEdit) displayFormat mantido em "HH:mm" com handler para reaplicar locale/texto do checkbox de horário ao alterar idioma.
+
+4) Placeholders e Integração com UI
+- As listas de quadrantes e listas de concluídas são instanciadas como DragDropTaskList e recebem placeholders iniciais via app.add_placeholder.
+- Conexões de itemChanged estabelecidas para sincronizar check/uncheck com move automático (app.handle_item_checked).
+- Context menu: cada lista registra customContextMenuRequested conectando ao app.show_context_menu.
+
+5) Sincronização de Paleta / Tema
+- Funções utilitárias para aplicar a cor de fundo da janela como Base/AlternateBase nas widgets da Matriz:
+  - _apply_window_as_base aplica palette a widgets e viewports (QListWidget.viewport quando aplicável).
+  - Instalação de eventFilter (_PaletteThemeSyncFilter) para escutar ApplicationPaletteChange / PaletteChange / StyleChange / ThemeChange / ColorSchemeChange (quando disponível) e reaplicar backgrounds automaticamente.
+  - Tratamento de exceções com logging debug para evitar falhas silenciosas em ambientes restritos.
+
+6) Robustez e Logging
+- Uso consistente de LogManager para registrar falhas e exceções em pontos críticos (drag/drop, locale, conexões de sinal).
+- Bloqueio de sinais durante operações sensíveis (drop, manipulação de listas) para reduzir efeitos colaterais de callbacks.
+- Condicionais seguras (hasattr / try/except) ao invocar métodos opcionais do app (save_tasks, calendar_pane.update_task_list, gerenciador_traducao), mantendo compatibilidade com execução embarcada ou integrada.
+
+Como validar (passos rápidos)
+1. Iniciar aplicativo e criar múltiplas tarefas em um quadrante.
+2. Arrastar uma única tarefa entre quadrantes (pendente ↔ pendente, pendente ↔ concluído, concluído ↔ pendente).
+3. Confirmar que apenas a tarefa arrastada sai do quadrante de origem; demais tarefas permanecem.
+4. Verificar que a persistência (save_tasks) e atualização do calendário (quando presente) ocorrem após o drop.
+5. Testar troca de idioma e confirmar formatos de data/hora e texto do checkbox atualizados.
+
+_________________________________________________
+
+NOTAS DE LANÇAMENTO — Lúmen
 Versão: 2025.12.21.0
 Data: 21 de dezembro de 2025
 Autor: Fernando Nillsson Cidade
@@ -130,11 +198,6 @@ Notas técnicas e dependências relevantes
 - Assunções: SoundManager implementa interface instance().play_looping() / stop(); GerenciadorBotoesUI e LogManager disponíveis globalmente.
 - Arquivos de ícones e assets devem existir nos caminhos esperados (assets/icones, source/assets/icones, _internal/icones); IconUtils informa localização exata no log.
 - Locales: QLocale aplicado em QDateEdit/QCalendarWidget conforme gerenciador de tradução do app.
-
-Correções e melhorias futuras sugeridas
-- Completar e testar fluxos assíncronos de I/O (leitura/escrita de arquivos grandes) para evitar UI blocking.
-- Adicionar testes unitários para GerenciadorTarefas, PomodoroTimer e serviços de calendário.
-- Memoização adicional para get_icon_path em ambientes com grande número de ícones.
 
 _________________________________________________
 

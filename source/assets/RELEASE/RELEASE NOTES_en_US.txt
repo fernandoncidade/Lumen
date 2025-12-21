@@ -1,4 +1,72 @@
 RELEASE NOTES — Lúmen
+Version: 2025.12.22.0
+Date: December 22, 2025
+Author: Fernando Nillsson Cidade
+
+Quick summary
+- Fixes and refinements in the Eisenhower Matrix module (svc_01_initUI.py): more robust drag & drop, selection behavior, locale support for date/time, CustomTimeEdit, palette synchronization and improved signal/exception handling.
+- Specific bug fix: when dragging tasks between lists, other tasks in the source quadrant are no longer inadvertently removed.
+- UX improvements: single-selection during drag, stable placeholders, immediate calendar update and persistence after drop operations.
+
+Detailed description of main changes
+
+1) Drag & Drop (DragDropTaskList)
+- New custom QListWidget implementation for drag & drop with refined control:
+  - Drag enabled, drops accepted, visible drop indicator and configured drop mode.
+  - Forced SelectionMode SingleSelection to prevent accidental multi-item drags caused by residual selections.
+  - mousePressEvent adjusted to ensure only the clicked item is selected/dragged (setCurrentItem / clearSelection / setSelected).
+  - dragEnterEvent and dragMoveEvent accept the proposed action, improving interoperability between lists.
+  - dropEvent rewritten to:
+    - Correctly handle drops coming from the same list (fall back to default behavior and persist).
+    - Validate that the source is a QListWidget and reject invalid drops.
+    - Iterate only over selected items (single-selection guarantee) and call app.move_item_between_lists for consistent movement preserving metadata.
+    - Block signals from the lists during the operation to avoid callback side effects.
+    - Clear selection on the source after the operation to prevent additional removals by Qt's internal mechanism.
+    - Force setDropAction(Qt.CopyAction) + event.accept() at the end of the drop to prevent Qt from performing an automatic removal (MoveAction) that caused deletion of remaining items in the source quadrant.
+  - Robust error logging in dropEvent to aid diagnostics.
+
+Impact of the fix
+- Fixes the issue where dragging a task would remove all other tasks from the source quadrant (double removal caused by Qt's final MoveAction). The chosen strategy ensures the application explicitly controls removal and prevents Qt from finalizing the move by inadvertently removing remaining items.
+
+2) CustomTimeEdit
+- Implemented CustomTimeEdit (subclass of QTimeEdit) with:
+  - Wrapping enabled and stepBy adapted for continuous minute increments with wrap-around 0–1439.
+  - Robust behavior when navigating time sections (minutes vs other sections).
+  - Internal storage of the last time value for potential future uses.
+
+3) Locale and Date/Time Format
+- Applied locale to QDateEdit based on the translation manager, with a safe fallback:
+  - Explicit support for pt-BR and en-US when available.
+  - Determination of displayFormat derived from the locale; regex adjustments to ensure a 4-digit year.
+  - Connection to the idioma_alterado (language_changed) signal to reapply locale dynamically.
+- time_input (CustomTimeEdit) keeps displayFormat "HH:mm" with a handler to reapply locale / update the time-checkbox text when the language changes.
+
+4) Placeholders and UI Integration
+- Quadrant lists and completed-lists are instantiated as DragDropTaskList and receive initial placeholders via app.add_placeholder.
+- itemChanged connections established to synchronize check/uncheck with automatic moves (app.handle_item_checked).
+- Context menu: each list registers customContextMenuRequested connected to app.show_context_menu.
+
+5) Palette / Theme Synchronization
+- Utility functions to apply the window background color as Base/AlternateBase across Matrix widgets:
+  - _apply_window_as_base applies the palette to widgets and viewports (QListWidget.viewport when applicable).
+  - Installation of an eventFilter (_PaletteThemeSyncFilter) to listen for ApplicationPaletteChange / PaletteChange / StyleChange / ThemeChange / ColorSchemeChange (when available) and reapply backgrounds automatically.
+  - Exception handling with debug logging to avoid silent failures in restricted environments.
+
+6) Robustness and Logging
+- Consistent use of LogManager to record failures and exceptions at critical points (drag/drop, locale, signal connections).
+- Blocking signals during sensitive operations (drop, list manipulation) to reduce callback side effects.
+- Safe conditionals (hasattr / try/except) when invoking optional app methods (save_tasks, calendar_pane.update_task_list, gerenciador_traducao), maintaining compatibility with embedded or integrated execution.
+
+How to validate (quick steps)
+1. Start the application and create multiple tasks in a quadrant.
+2. Drag a single task between quadrants (pending ↔ pending, pending ↔ completed, completed ↔ pending).
+3. Confirm that only the dragged task leaves the source quadrant; other tasks remain.
+4. Verify that persistence (save_tasks) and calendar update (when present) occur after the drop.
+5. Test language switching and confirm date/time formats and the time-checkbox text update accordingly.
+
+_________________________________________________
+
+RELEASE NOTES — Lúmen
 Version: 2025.12.21.0
 Date: December 21, 2025
 Author: Fernando Nillsson Cidade
@@ -130,11 +198,6 @@ Technical notes and relevant dependencies
 - Assumptions: SoundManager implements interface instance().play_looping() / stop(); GerenciadorBotoesUI and LogManager are available globally.
 - Icon and asset files must exist in expected paths (assets/icones, source/assets/icones, _internal/icones); IconUtils logs the exact location found.
 - Locales: QLocale applied to QDateEdit/QCalendarWidget according to the app translation manager.
-
-Suggested fixes and future improvements
-- Complete and test asynchronous I/O flows (reading/writing large files) to avoid UI blocking.
-- Add unit tests for GerenciadorTarefas, PomodoroTimer and calendar services.
-- Additional memoization for get_icon_path in environments with a large number of icons.
 
 _________________________________________________
 

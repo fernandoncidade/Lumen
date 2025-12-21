@@ -52,6 +52,27 @@ class DragDropTaskList(QListWidget):
         self.setDefaultDropAction(Qt.MoveAction)
         self.setDragDropMode(QListWidget.DragDrop)
 
+        try:
+            from PySide6.QtWidgets import QAbstractItemView
+            self.setSelectionMode(QAbstractItemView.SingleSelection)
+
+        except Exception:
+            pass
+
+    def mousePressEvent(self, event):
+        try:
+            if event.button() == Qt.LeftButton:
+                it = self.itemAt(event.pos())
+                if it and (it.flags() & Qt.ItemIsSelectable):
+                    self.setCurrentItem(it)
+                    self.clearSelection()
+                    it.setSelected(True)
+
+        except Exception:
+            pass
+
+        return super().mousePressEvent(event)
+
     def dragEnterEvent(self, event):
         try:
             event.acceptProposedAction()
@@ -112,6 +133,12 @@ class DragDropTaskList(QListWidget):
                 self.blockSignals(False)
 
             try:
+                source.clearSelection()
+
+            except Exception:
+                pass
+
+            try:
                 if hasattr(self._app, "save_tasks"):
                     self._app.save_tasks()
 
@@ -121,7 +148,8 @@ class DragDropTaskList(QListWidget):
             except Exception:
                 pass
 
-            event.acceptProposedAction()
+            event.setDropAction(Qt.CopyAction)
+            event.accept()
 
         except Exception as e:
             logger.error(f"Erro no dropEvent (drag&drop Eisenhower): {e}", exc_info=True)
