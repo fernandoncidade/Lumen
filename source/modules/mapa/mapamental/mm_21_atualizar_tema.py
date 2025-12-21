@@ -9,7 +9,7 @@ def atualizar_tema(self):
         app = QCoreApplication.instance()
         pal = app.palette() if app else self.palette()
 
-        bg_brush = pal.brush(QPalette.Base)
+        bg_brush = pal.brush(QPalette.Window)
 
         self.scene.setBackgroundBrush(bg_brush)
         self.view.setBackgroundBrush(bg_brush)
@@ -17,6 +17,9 @@ def atualizar_tema(self):
         vp = self.view.viewport()
         vp.setPalette(pal)
         vp.setAutoFillBackground(True)
+
+        self.view.setPalette(pal)
+        self.view.setAutoFillBackground(True)
 
         for w in (self.view, vp):
             st = w.style()
@@ -34,12 +37,10 @@ def atualizar_tema(self):
                 continue
 
             sb.setPalette(pal)
-
             if sb.styleSheet():
                 sb.setStyleSheet("")
 
             st = sb.style()
-
             try:
                 st.unpolish(sb)
                 st.polish(sb)

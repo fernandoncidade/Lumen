@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTextEdit, QLabel, QComboBox, QListWidget, QSplitter, QFrame
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, QObject, QEvent
+from PySide6.QtGui import QIcon, QPalette
 from source.utils.LogManager import LogManager
 from source.utils.IconUtils import get_icon_path
 
@@ -114,8 +114,103 @@ def setup_ui(self):
         frame_principal.setLayout(layout_frame)
 
         layout.addWidget(frame_principal)
-
         self.setLayout(layout)
+
+        from PySide6.QtWidgets import QApplication
+
+        def _apply_window_as_base(widget):
+            if widget is None:
+                return
+
+            app = QApplication.instance()
+            if app is None:
+                return
+
+            app_pal = app.palette()
+            window_color = app_pal.color(QPalette.Window)
+
+            pal = widget.palette()
+            pal.setColor(QPalette.Base, window_color)
+            pal.setColor(QPalette.AlternateBase, window_color)
+
+            try:
+                is_combo = isinstance(widget, QComboBox)
+
+            except Exception:
+                is_combo = False
+
+            if is_combo:
+                pal.setColor(QPalette.Button, window_color)
+
+            widget.setPalette(pal)
+
+            vp = getattr(widget, "viewport", None)
+            if callable(vp):
+                try:
+                    widget.viewport().setAutoFillBackground(True)
+                    widget.viewport().setPalette(pal)
+
+                except Exception:
+                    pass
+
+            else:
+                widget.setAutoFillBackground(True)
+
+            view = getattr(widget, "view", None)
+            if callable(view):
+                try:
+                    v = view()
+                    if v is not None:
+                        v.setPalette(pal)
+                        try:
+                            v.viewport().setAutoFillBackground(True)
+                            v.viewport().setPalette(pal)
+
+                        except Exception:
+                            pass
+
+                except Exception:
+                    pass
+
+        def _sync_feynman_backgrounds():
+            try:
+                _apply_window_as_base(self.input_titulo)
+                _apply_window_as_base(self.texto_explicacao)
+                _apply_window_as_base(self.texto_lacunas)
+                _apply_window_as_base(self.texto_revisao)
+                _apply_window_as_base(self.combo_dominio)
+                _apply_window_as_base(self.lista_conceitos)
+
+            except Exception as e:
+                logger.debug(f"Falha ao sincronizar fundos do Método Feynman via QPalette: {e}", exc_info=True)
+
+        class _PaletteThemeSyncFilter(QObject):
+            def eventFilter(self, obj, event):
+                et = event.type()
+                tipos = (
+                    QEvent.ApplicationPaletteChange,
+                    QEvent.PaletteChange,
+                    QEvent.StyleChange,
+                    QEvent.ThemeChange,
+                )
+
+                try:
+                    tipos = tipos + (QEvent.ColorSchemeChange,)
+
+                except AttributeError:
+                    pass
+
+                if et in tipos:
+                    _sync_feynman_backgrounds()
+
+                return super().eventFilter(obj, event)
+
+        _sync_feynman_backgrounds()
+
+        self._feynman_palette_sync_filter = _PaletteThemeSyncFilter(self)
+        app = QApplication.instance()
+        if app is not None:
+            app.installEventFilter(self._feynman_palette_sync_filter)
 
         self.atualizar_traducoes()
         self.atualizar_lista()

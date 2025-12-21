@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, QGroupBox
-from PySide6.QtCore import QCoreApplication
+from PySide6.QtCore import QCoreApplication, QEvent
+from PySide6.QtGui import QPalette
 from source.utils.LogManager import LogManager
 from source.modules.tempo.tmp_01_Tarefa import Tarefa
 from source.modules.tempo.tmp_02_PomodoroTimer import PomodoroTimer
@@ -12,6 +13,12 @@ class GerenciadorTempo(QWidget):
         self.logger = LogManager.get_logger()
         try:
             self.setup_ui()
+
+            app = QCoreApplication.instance()
+            if app:
+                app.installEventFilter(self)
+
+            self._aplicar_tema_dinamico_inputs()
 
         except Exception as e:
             self.logger.error(f"Erro ao inicializar GerenciadorTempo: {str(e)}", exc_info=True)
@@ -51,6 +58,47 @@ class GerenciadorTempo(QWidget):
 
         except Exception as e:
             self.logger.error(f"Erro ao configurar interface do GerenciadorTempo: {str(e)}", exc_info=True)
+
+    def _aplicar_tema_dinamico_inputs(self):
+        try:
+            app = QCoreApplication.instance()
+            if not app:
+                return
+
+            window_color = app.palette().color(QPalette.Window)
+
+            pal = self.col_doing_timer_list.palette()
+            pal.setColor(QPalette.Base, window_color)
+            pal.setColor(QPalette.AlternateBase, window_color)
+            self.col_doing_timer_list.setPalette(pal)
+            self.col_doing_timer_list.viewport().setAutoFillBackground(True)
+
+            self.update()
+
+        except Exception as e:
+            self.logger.error(f"Erro ao aplicar tema dinâmico (lista) no GerenciadorTempo: {str(e)}", exc_info=True)
+
+    def eventFilter(self, obj, event):
+        try:
+            tipos = (
+                QEvent.ApplicationPaletteChange,
+                QEvent.PaletteChange,
+                QEvent.StyleChange,
+                QEvent.ThemeChange,
+            )
+            try:
+                tipos = tipos + (QEvent.ColorSchemeChange,)
+
+            except AttributeError:
+                pass
+
+            if event.type() in tipos:
+                self._aplicar_tema_dinamico_inputs()
+
+        except Exception as e:
+            self.logger.error(f"Erro no eventFilter do GerenciadorTempo: {str(e)}", exc_info=True)
+
+        return super().eventFilter(obj, event)
 
     def atualizar_traducoes(self):
         try:

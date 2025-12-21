@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QGroupBox, QProgressBar, QMessageBox
 from PySide6.QtCore import Qt, QTimer, Signal, QCoreApplication, QEvent
-from PySide6.QtGui import QFont, QIcon
+from PySide6.QtGui import QFont, QIcon, QPalette
 from source.utils.LogManager import LogManager
 from source.utils.GerenciadorBotoesUI import GerenciadorBotoesUI
 from source.utils.IconUtils import get_icon_path
@@ -340,11 +340,35 @@ class PomodoroTimer(QWidget):
             if not app:
                 return
 
-            pal = app.palette()
+            app_pal = app.palette()
+            window_color = app_pal.color(QPalette.Window)
 
             for lbl in (self.label_status, self.label_tempo):
-                lbl.setPalette(pal)
+                lbl.setPalette(app_pal)
                 lbl.setAutoFillBackground(False)
+
+            def _apply_combo_base_as_window(combo: QComboBox):
+                if combo is None:
+                    return
+
+                pal = combo.palette()
+                pal.setColor(QPalette.Button, window_color)
+                pal.setColor(QPalette.Base, window_color)
+                pal.setColor(QPalette.AlternateBase, window_color)
+                combo.setPalette(pal)
+                combo.setAutoFillBackground(True)
+
+                view = combo.view()
+                if view is not None:
+                    view.setPalette(pal)
+                    try:
+                        view.viewport().setAutoFillBackground(True)
+
+                    except Exception:
+                        pass
+
+            _apply_combo_base_as_window(getattr(self, "spin_foco", None))
+            _apply_combo_base_as_window(getattr(self, "spin_descanso", None))
 
             self.update()
 

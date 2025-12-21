@@ -37,10 +37,21 @@ def add_task(app):
             if lst.count() == 1 and not (lst.item(0).flags() & Qt.ItemIsSelectable):
                 lst.clear()
 
-        clear_placeholder_if_needed(app.quadrant1_list)
-        clear_placeholder_if_needed(app.quadrant2_list)
-        clear_placeholder_if_needed(app.quadrant3_list)
-        clear_placeholder_if_needed(app.quadrant4_list)
+        target_list = None
+        if selected_quadrant == 0:
+            target_list = app.quadrant1_list
+
+        elif selected_quadrant == 1:
+            target_list = app.quadrant2_list
+
+        elif selected_quadrant == 2:
+            target_list = app.quadrant3_list
+
+        elif selected_quadrant == 3:
+            target_list = app.quadrant4_list
+
+        if target_list is not None:
+            clear_placeholder_if_needed(target_list)
 
         display_text = task_text
         if date_str:

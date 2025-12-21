@@ -1,4 +1,144 @@
 RELEASE NOTES — Lúmen
+Version: 2025.12.21.0
+Date: December 21, 2025
+Author: Fernando Nillsson Cidade
+
+Quick summary
+- Adjustments and consolidations across multiple UI modules and utilities: robustness improvements, drag & drop behavior, theme/palette synchronization, localization support in date/time components, and refinements in persistence and asset lookup routines.
+- UX refinements on tabs (lazy-loading), Pomodoro panel, and integration between timer ↔ task manager.
+- Various fixes for exception handling and logging to ease production diagnostics.
+
+Detailed description of main changes
+
+1) Utilities
+- source/utils/IconUtils.py
+  - get_app_base_path: improved detection for PyInstaller execution (sys._MEIPASS) and fallback to standalone executable; detailed logging.
+  - get_icon_path: searches multiple relative paths (assets/icones, source/assets/icones, _internal/icones, etc.), supports common extensions (.png/.ico/.svg/.jpg), LRU cache and success/failure logging including file size.
+
+- source/utils/CaminhoPersistenteUtils.py
+  - obter_caminho_persistente: defaults to %LOCALAPPDATA%\Lumen with safe directory creation and error logging.
+
+2) Time Management (Pomodoro + Kanban)
+- source/modules/tempo/tmp_02_PomodoroTimer.py
+  - Refined UI with buttons managed by GerenciadorBotoesUI and icons retrieved via IconUtils.
+  - Focus/short/long break configurations tied to widgets (spin-like controls such as QComboBox) with recalculation of remaining time preserving elapsed time.
+  - Robust timer using QTimer, display/progress updates and end-of-cycle handling (_executar_alerta).
+  - Integration with SoundManager (singleton) to play alerts in loop until dialog is dismissed; connection to stop sound when QMessageBox closes.
+  - Dynamic theme application to labels and combos (palette sync).
+  - Improvements to start/pause/reset/skip/reset-cycle flows with detailed logging.
+
+- source/modules/tempo/tmp_03_GerenciadorTarefas.py
+  - Implementation of Kanban lists with drag & drop, status synchronization and rowsMoved handling.
+  - Task persistence (tarefas.json) using path from obter_caminho_persistente; robust load/serialize with logging.
+  - Operations: add, move (single & multiple items), remove (single & checked), reset counters (scopes: task, column, global) with confirmation dialogs and informational messages.
+  - Automatic placeholders when lists become empty; items store metadata via Qt.UserRole.
+  - UI adjustments: checkboxes on items, priority emojis, pomodoro visuals, and synchronization with PomodoroTimer (registering completed pomodoros).
+  - Dynamic theme application and palette adjustments for widgets and viewports.
+
+- source/modules/tempo/tmp_04_GerenciadorTempo.py
+  - Composition of the panel integrating PomodoroTimer and GerenciadorTarefas.
+  - Side "In Progress" list updated from GerenciadorTarefas; listens to ciclo_completado to increment pomodoro counters.
+  - Dynamic theme application to the list (QPalette adjustment), installation of eventFilter at runtime and logging.
+
+3) Feynman Module (UI)
+- source/modules/feynman/fey_02_setup_ui.py
+  - Main layout reorganized: left panel (concept list) + right panel (title, explanation, gaps, review).
+  - CRUD buttons with icons via IconUtils; save button integrated with GerenciadorBotoesUI.
+  - Palette/theme synchronization for widgets and viewports; event filter to apply theme when app scheme changes.
+  - Initialization of translations and list updates with exception handling and logging.
+
+4) Accessible Reader (UI)
+- source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py
+  - Control bar (load, play/pause/stop) integrated with audio generation and managed buttons.
+  - Speed and volume sliders with dynamic labels; font selection via FontManager and safe application to QTextEdit.
+  - Text / PDF tab with attempt to use QtPdf (fallback if unavailable) and configurable PDF toolbar.
+  - Focus ruler (toggle) with button and hint; theme/palette applied to QTextEdit via event filter.
+  - Connectivity with GerenciadorBotoesUI and IconUtils.
+
+5) Eisenhower Matrix (UI and Services)
+- source/modules/eisenhower/ui/ui_07_Calendar.py
+  - CalendarDialog / CalendarPanel: dialog and calendar panel with applied locale, date selection, filtering by day/week/month.
+  - Collects tasks from the matrix lists (pending and completed), builds displayable items, sorts and provides placeholders when no tasks exist.
+  - Visual highlighting of dates with tasks (setDateTextFormat) using colors derived from the palette and incremental updates of highlighted dates.
+  - Palette/theme synchronization via eventFilter.
+
+- source/modules/eisenhower/ui/ui_01_add_task.py, ui_02_handle_item_checked.py, ui_03_move_item_between_lists.py, ui_04_remove_task.py
+  - Flows to add tasks with date/time (stored in Qt.UserRole), formatted display and tooltips.
+  - Moving between lists preserves metadata (date/time), creates new QListWidgetItem with appropriate flags and checkState.
+  - Handler for check/uncheck that automatically moves items between pending/completed lists and persists changes.
+  - Routines to remove items with confirmation and ensure placeholders on empty lists.
+  - Robustness in drag & drop, cleanup of time groups and calendar updates.
+
+- source/modules/eisenhower/services/svc_06_show_context_menu.py
+  - Context menu to edit date/time (QDialog with QDateEdit/QTimeEdit and "Attach date/time" checkboxes), move task to another quadrant and remove.
+  - Applies locale to QDateEdit/QCalendarWidget, builds display/tooltip and integrates with save_tasks + calendar pane update.
+  - Helpers to determine destination lists, extract base text from item and build display payload.
+
+- source/modules/eisenhower/services/svc_01_initUI.py
+  - Matrix UI initialization with custom widgets:
+    - CustomTimeEdit: minute stepping with wrap-around 0–1439 (enables continuous rotation).
+    - DragDropTaskList: list with custom drag/drop that accepts items from other lists and updates completed state automatically.
+  - Full configuration of input controls (task_input, date/time, quadrant_selector), buttons (Add/Calendar) with icons via IconUtils and signal connections.
+  - Installation of palette filters to synchronize widget appearance with app theme.
+
+6) Mapping / Mind Map
+- source/modules/mapa/mapamental/mm_21_atualizar_tema.py
+  - Function atualizar_tema: applies the current QPalette to the mind map scene/view (setBackgroundBrush, viewport palette), forces unpolish/polish on widgets and scrollbars for correct repaint, with exception handling.
+  - Improves visual integration of MapaMental with system/app themes.
+
+7) Infra (main GUI)
+- source/gui/gui_01_setup_ui.py
+  - Lazy-loading of tabs: each tab registered with a factory and placeholder; on-demand loading with critical error handling (QMessageBox.critical) and fallback.
+  - Tab titles translated; factories for Reader, Time Manager, Mind Map, Feynman Method and Eisenhower with minimal integration required (e.g., passing translator to Eisenhower).
+  - Synchronization of labels after inserting the real widget.
+
+Main files changed/added in this set
+- source/utils/IconUtils.py
+- source/utils/CaminhoPersistenteUtils.py
+- source/modules/tempo/tmp_02_PomodoroTimer.py
+- source/modules/tempo/tmp_03_GerenciadorTarefas.py
+- source/modules/tempo/tmp_04_GerenciadorTempo.py
+- source/modules/feynman/fey_02_setup_ui.py
+- source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py
+- source/modules/mapa/mapamental/mm_21_atualizar_tema.py
+- source/modules/eisenhower/ui/ui_01_add_task.py
+- source/modules/eisenhower/ui/ui_02_handle_item_checked.py
+- source/modules/eisenhower/ui/ui_03_move_item_between_lists.py
+- source/modules/eisenhower/ui/ui_04_remove_task.py
+- source/modules/eisenhower/ui/ui_07_Calendar.py
+- source/modules/eisenhower/services/svc_01_initUI.py
+- source/modules/eisenhower/services/svc_06_show_context_menu.py
+- source/gui/gui_01_setup_ui.py
+- (various integration points with LogManager, GerenciadorBotoesUI, FontManager and SoundManager)
+
+Impact and expected behavior
+- Appearance and theme: palette/theme changes now propagate correctly to widgets, views and the canvas (map), avoiding visual artifacts.
+- Task flows: drag & drop, moving via menu, date/time editing and calendar synchronization are now more robust and localized.
+- Pomodoro: sound playback loops until user confirmation; pomodoro counters synchronize with tasks in progress.
+- Lazy-loading: reduced startup time and clear error handling when loading heavy modules (PDF, NLP, etc).
+- More informative logs to aid debugging in user environments.
+
+Quick test steps
+1. Open the app and navigate the tabs — confirm lazy-load without errors and translated tab texts.
+2. Test Pomodoro: start/pause/reset, let a cycle complete and confirm alert with sound repeating until dialog is closed.
+3. Create tasks in the Eisenhower Matrix, attach dates/times, move between quadrants via drag & drop and menu; open Calendar and verify highlights and filtered list.
+4. Open Mind Map and switch system theme — confirm background/palette updated.
+5. Open Feynman Method and Accessible Reader — verify palette application and button/edit behaviors.
+
+Technical notes and relevant dependencies
+- Extensive use of PySide6 (Qt Widgets, QtPdf when available).
+- Assumptions: SoundManager implements interface instance().play_looping() / stop(); GerenciadorBotoesUI and LogManager are available globally.
+- Icon and asset files must exist in expected paths (assets/icones, source/assets/icones, _internal/icones); IconUtils logs the exact location found.
+- Locales: QLocale applied to QDateEdit/QCalendarWidget according to the app translation manager.
+
+Suggested fixes and future improvements
+- Complete and test asynchronous I/O flows (reading/writing large files) to avoid UI blocking.
+- Add unit tests for GerenciadorTarefas, PomodoroTimer and calendar services.
+- Additional memoization for get_icon_path in environments with a large number of icons.
+
+_________________________________________________
+
+RELEASE NOTES — Lúmen
 Version: 2025.12.20.0
 Date: December 20, 2025
 Author: Fernando Nillsson Cidade

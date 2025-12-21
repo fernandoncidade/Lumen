@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QTextEdit, QSlider, QLabel, QComboBox, QTabWidget, QWidget, QSpinBox
-from PySide6.QtCore import Qt, QCoreApplication
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, QCoreApplication, QObject, QEvent
+from PySide6.QtGui import QIcon, QPalette
 from source.utils.FontManager import FontManager
 from source.utils.LogManager import LogManager
 from source.utils.IconUtils import get_icon_path
@@ -144,7 +144,45 @@ def setup_ui(self):
 
         self.texto_area = QTextEdit()
         self.texto_area.setReadOnly(False)
-        self.texto_area.setObjectName("leitor_texto_area")
+
+        from PySide6.QtWidgets import QApplication
+
+        def _sync_texto_area_background():
+            try:
+                app = QApplication.instance()
+                if app is None:
+                    return
+
+                window_color = app.palette().color(QPalette.Window)
+
+                pal = self.texto_area.palette()
+                pal.setColor(QPalette.Base, window_color)
+                pal.setColor(QPalette.AlternateBase, window_color)
+
+                self.texto_area.setPalette(pal)
+                self.texto_area.viewport().setAutoFillBackground(True)
+
+            except Exception as e:
+                logger.debug(f"Falha ao sincronizar fundo do QTextEdit via QPalette: {e}", exc_info=True)
+
+        class _PaletteThemeSyncFilter(QObject):
+            def eventFilter(self, obj, event):
+                et = event.type()
+                if et in (
+                    QEvent.ApplicationPaletteChange,
+                    QEvent.PaletteChange,
+                    QEvent.ThemeChange,
+                ):
+                    _sync_texto_area_background()
+                return super().eventFilter(obj, event)
+
+        _sync_texto_area_background()
+
+        self._texto_area_palette_sync_filter = _PaletteThemeSyncFilter(self)
+        app = QApplication.instance()
+        if app is not None:
+            app.installEventFilter(self._texto_area_palette_sync_filter)
+
         text_layout.addWidget(self.texto_area)
         text_tab.setLayout(text_layout)
         self._content_stack.addTab(text_tab, QCoreApplication.translate("App", "Texto"))

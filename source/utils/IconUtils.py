@@ -1,8 +1,11 @@
 import os
 import sys
+from functools import lru_cache
 from source.utils.LogManager import LogManager
+
 logger = LogManager.get_logger()
 
+@lru_cache(maxsize=1)
 def get_app_base_path():
     try:
         if getattr(sys, 'frozen', False):
@@ -25,6 +28,7 @@ def get_app_base_path():
         logger.error(f"Erro ao obter caminho base do app: {e}", exc_info=True)
         return None
 
+@lru_cache(maxsize=512)
 def get_icon_path(icon_name):
     try:
         base_path = get_app_base_path()

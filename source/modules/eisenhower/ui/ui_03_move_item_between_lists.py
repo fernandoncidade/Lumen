@@ -7,6 +7,44 @@ logger = LogManager.get_logger()
 def get_text(text):
     return QCoreApplication.translate("App", text)
 
+def _list_has_selectable_items(lst) -> bool:
+    try:
+        for i in range(lst.count()):
+            it = lst.item(i)
+            if it and (it.flags() & Qt.ItemIsSelectable):
+                return True
+        return False
+    except Exception:
+        return False
+
+def _ensure_placeholder_for_list(app, lst):
+    try:
+        if lst is None:
+            return
+
+        if _list_has_selectable_items(lst):
+            return
+
+        lst.clear()
+
+        if lst in (app.quadrant1_list,):
+            app.add_placeholder(app.quadrant1_list, get_text("1º Quadrante"))
+
+        elif lst in (app.quadrant2_list,):
+            app.add_placeholder(app.quadrant2_list, get_text("2º Quadrante"))
+
+        elif lst in (app.quadrant3_list,):
+            app.add_placeholder(app.quadrant3_list, get_text("3º Quadrante"))
+
+        elif lst in (app.quadrant4_list,):
+            app.add_placeholder(app.quadrant4_list, get_text("4º Quadrante"))
+
+        elif lst in (app.quadrant1_completed_list, app.quadrant2_completed_list, app.quadrant3_completed_list, app.quadrant4_completed_list):
+            app.add_placeholder(lst, get_text("Nenhuma Tarefa Concluída"))
+
+    except Exception as e:
+        logger.debug(f"Falha ao garantir placeholder: {e}", exc_info=True)
+
 def move_item_between_lists(app, item, source, target, new_check_state):
     try:
         data = item.data(Qt.UserRole) or {}
@@ -32,36 +70,14 @@ def move_item_between_lists(app, item, source, target, new_check_state):
         if hasattr(app, "cleanup_time_groups"):
             app.cleanup_time_groups(source)
 
-        if source.count() == 0:
-            if source in (app.quadrant1_list,):
-                app.add_placeholder(app.quadrant1_list, get_text("1º Quadrante"))
-
-            if source in (app.quadrant2_list,):
-                app.add_placeholder(app.quadrant2_list, get_text("2º Quadrante"))
-
-            if source in (app.quadrant3_list,):
-                app.add_placeholder(app.quadrant3_list, get_text("3º Quadrante"))
-
-            if source in (app.quadrant4_list,):
-                app.add_placeholder(app.quadrant4_list, get_text("4º Quadrante"))
-
-            if source in (app.quadrant1_completed_list,):
-                app.add_placeholder(app.quadrant1_completed_list, get_text("Nenhuma Tarefa Concluída"))
-
-            if source in (app.quadrant2_completed_list,):
-                app.add_placeholder(app.quadrant2_completed_list, get_text("Nenhuma Tarefa Concluída"))
-
-            if source in (app.quadrant3_completed_list,):
-                app.add_placeholder(app.quadrant3_completed_list, get_text("Nenhuma Tarefa Concluída"))
-
-            if source in (app.quadrant4_completed_list,):
-                app.add_placeholder(app.quadrant4_completed_list, get_text("Nenhuma Tarefa Concluída"))
+        _ensure_placeholder_for_list(app, source)
 
         if target.count() == 1 and not (target.item(0).flags() & Qt.ItemIsSelectable):
             target.clear()
 
         new_item = QListWidgetItem(display_text)
         new_item.setFlags(new_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+
         if data is not None:
             new_data = dict(data)
             new_data["time"] = time_value
@@ -77,6 +93,9 @@ def move_item_between_lists(app, item, source, target, new_check_state):
 
         else:
             target.addItem(new_item)
+
+        if hasattr(app, "cleanup_time_groups"):
+            app.cleanup_time_groups(target)
 
     except Exception as e:
         logger.error(f"Erro ao mover item entre listas: {e}", exc_info=True)

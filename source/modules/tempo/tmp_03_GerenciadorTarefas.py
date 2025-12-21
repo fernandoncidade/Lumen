@@ -1,12 +1,20 @@
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QListWidget, 
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QListWidget,
                                QListWidgetItem, QComboBox, QGroupBox, QMessageBox, QMenu, QInputDialog)
-from PySide6.QtCore import Qt, Signal, QCoreApplication
-from PySide6.QtGui import QAction
+from PySide6.QtCore import Qt, Signal, QCoreApplication, QEvent
+from PySide6.QtGui import QAction, QPalette
 import json
 import os
 from source.utils.LogManager import LogManager
 from source.utils.CaminhoPersistenteUtils import obter_caminho_persistente
 from source.modules.tempo.tmp_01_Tarefa import Tarefa
+
+
+class _KanbanListWidget(QListWidget):
+    tarefas_soltadas = Signal()
+
+    def dropEvent(self, event):
+        super().dropEvent(event)
+        self.tarefas_soltadas.emit()
 
 
 class GerenciadorTarefas(QWidget):
@@ -20,6 +28,12 @@ class GerenciadorTarefas(QWidget):
             self.arquivo_tarefas = os.path.join(caminho_persistente, "tarefas.json")
             self.tarefas = self.carregar_tarefas()
             self.setup_ui()
+
+            app = QCoreApplication.instance()
+            if app:
+                app.installEventFilter(self)
+
+            self._aplicar_tema_dinamico_inputs()
 
         except Exception as e:
             self.logger.error(f"Erro ao inicializar GerenciadorTarefas: {str(e)}", exc_info=True)
@@ -137,8 +151,14 @@ class GerenciadorTarefas(QWidget):
             grupo = QGroupBox()
             layout = QVBoxLayout()
 
-            lista = QListWidget()
-            lista.setDragDropMode(QListWidget.InternalMove)
+            lista = _KanbanListWidget()
+            lista.setDragEnabled(True)
+            lista.setAcceptDrops(True)
+            lista.setDropIndicatorShown(True)
+            lista.setDefaultDropAction(Qt.MoveAction)
+            lista.setDragDropMode(QListWidget.DragDrop)
+
+            lista.tarefas_soltadas.connect(self._on_drop_sincronizar)
             lista.itemDoubleClicked.connect(lambda item: self.mover_tarefa(item, status))
 
             lista.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -163,14 +183,23 @@ class GerenciadorTarefas(QWidget):
             self.logger.error(f"Erro ao criar coluna '{status}': {str(e)}", exc_info=True)
             return QGroupBox()
 
+    def _on_drop_sincronizar(self):
+        try:
+            sender = self.sender()
+            self._sincronizar_status_pos_movimento(prioridade_lista=sender)
+            self.listas_atualizadas.emit()
+
+        except Exception as e:
+            self.logger.error(f"Erro ao sincronizar após drop: {e}", exc_info=True)
+
     def _on_rows_moved(self, lista):
         try:
-            self._sincronizar_status_pos_movimento()
+            self._sincronizar_status_pos_movimento(prioridade_lista=lista)
 
         except Exception as e:
             self.logger.error(f"Erro ao tratar rowsMoved: {e}", exc_info=True)
 
-    def _sincronizar_status_pos_movimento(self):
+    def _sincronizar_status_pos_movimento(self, prioridade_lista=None):
         try:
             if not hasattr(self, 'tarefas'):
                 return
@@ -187,7 +216,11 @@ class GerenciadorTarefas(QWidget):
 
             alterou = False
 
-            for lst, status in mapping.items():
+            items = list(mapping.items())
+            if prioridade_lista in mapping:
+                items = [it for it in items if it[0] is not prioridade_lista] + [(prioridade_lista, mapping[prioridade_lista])]
+
+            for lst, status in items:
                 for i in range(lst.count()):
                     it = lst.item(i)
                     if not it:
@@ -278,7 +311,12 @@ class GerenciadorTarefas(QWidget):
 
                 item = QListWidgetItem(texto)
 
-                item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+                item.setFlags(
+                    item.flags()
+                    | Qt.ItemIsUserCheckable
+                    | Qt.ItemIsDragEnabled
+                    | Qt.ItemIsDropEnabled
+                )
                 item.setCheckState(Qt.Unchecked)
                 item.setData(Qt.UserRole, getattr(tarefa, 'id', None))
 
@@ -416,6 +454,7 @@ class GerenciadorTarefas(QWidget):
                 QCoreApplication.translate("App", "⚙️ Em Progresso"),
                 QCoreApplication.translate("App", "✅ Concluído")
             ]
+
             mapa_status = {
                 QCoreApplication.translate("App", "📋 A Fazer"): "Todo",
                 QCoreApplication.translate("App", "⚙️ Em Progresso"): "Doing",
@@ -623,3 +662,108 @@ class GerenciadorTarefas(QWidget):
 
         except Exception as e:
             self.logger.error(f"Erro ao ajustar largura do combo: {str(e)}", exc_info=True)
+
+    def _aplicar_tema_dinamico_inputs(self):
+        try:
+            app = QCoreApplication.instance()
+            if not app:
+                return
+
+            app_pal = app.palette()
+            window_color = app_pal.color(QPalette.Window)
+            highlight_color = app_pal.color(QPalette.Highlight)
+            highlight_text = app_pal.color(QPalette.HighlightedText)
+            text_color = app_pal.color(QPalette.Text)
+            button_text = app_pal.color(QPalette.ButtonText)
+            window_text = app_pal.color(QPalette.WindowText)
+
+            def _apply_base_as_window(widget):
+                if widget is None:
+                    return
+
+                pal = widget.palette()
+                pal.setColor(QPalette.Base, window_color)
+                pal.setColor(QPalette.AlternateBase, window_color)
+                try:
+                    from PySide6.QtWidgets import QListWidget
+                    is_list = isinstance(widget, QListWidget)
+
+                except Exception:
+                    is_list = False
+
+                if not is_list:
+                    pal.setColor(QPalette.Button, window_color)
+
+                pal.setColor(QPalette.Highlight, highlight_color)
+                pal.setColor(QPalette.HighlightedText, highlight_text)
+                pal.setColor(QPalette.Text, text_color)
+                pal.setColor(QPalette.ButtonText, button_text)
+                pal.setColor(QPalette.WindowText, window_text)
+
+                widget.setPalette(pal)
+
+                vp = getattr(widget, "viewport", None)
+                if callable(vp):
+                    try:
+                        widget.viewport().setAutoFillBackground(True)
+                        widget.viewport().setPalette(pal)
+
+                    except Exception:
+                        pass
+
+                else:
+                    widget.setAutoFillBackground(True)
+
+                try:
+                    view = getattr(widget, "view", None)
+                    if callable(view):
+                        v = view()
+                        if v is not None:
+                            v.setPalette(pal)
+                            try:
+                                v.viewport().setAutoFillBackground(True)
+
+                            except Exception:
+                                pass
+
+                except Exception:
+                    pass
+
+            _apply_base_as_window(getattr(self, "input_tarefa", None))
+            _apply_base_as_window(getattr(self, "combo_prioridade", None))
+
+            try:
+                _apply_base_as_window(self.col_todo.lista)
+                _apply_base_as_window(self.col_doing.lista)
+                _apply_base_as_window(self.col_done.lista)
+
+            except Exception:
+                pass
+
+            self.update()
+
+        except Exception as e:
+            self.logger.error(f"Erro ao aplicar tema dinâmico (inputs) no GerenciadorTarefas: {str(e)}", exc_info=True)
+
+    def eventFilter(self, obj, event):
+        try:
+            tipos = (
+                QEvent.ApplicationPaletteChange,
+                QEvent.PaletteChange,
+                QEvent.StyleChange,
+                QEvent.ThemeChange,
+            )
+
+            try:
+                tipos = tipos + (QEvent.ColorSchemeChange,)
+
+            except AttributeError:
+                pass
+
+            if event.type() in tipos:
+                self._aplicar_tema_dinamico_inputs()
+
+        except Exception as e:
+            self.logger.error(f"Erro no eventFilter do GerenciadorTarefas: {str(e)}", exc_info=True)
+
+        return super().eventFilter(obj, event)

@@ -1040,6 +1040,26 @@ This may take a few minutes.</translation>
     </message>
 
     <message>
+        <source>Mover para outro quadrante</source>
+        <translation>Move to another quadrant</translation>
+    </message>
+
+    <message>
+        <source>Editar data/horário</source>
+        <translation>Edit date/time</translation>
+    </message>
+
+    <message>
+        <source>Mover tarefa</source>
+        <translation>Move task</translation>
+    </message>
+
+    <message>
+        <source>Selecione o quadrante:</source>
+        <translation>Select the quadrant:</translation>
+    </message>
+
+    <message>
         <source>Erro</source>
         <translation>Error</translation>
     </message>

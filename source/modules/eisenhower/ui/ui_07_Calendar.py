@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import (QDialog, QVBoxLayout, QCalendarWidget, QComboBox, QListWidget, QListWidgetItem, QLabel, QHBoxLayout, QAbstractItemView, QWidget)
-from PySide6.QtCore import Qt, QDate, QCoreApplication, QLocale, QSize
-from PySide6.QtGui import QPainter, QFontMetrics, QTextCharFormat, QBrush, QColor, QFont
+from PySide6.QtWidgets import (QDialog, QHBoxLayout, QVBoxLayout, QCalendarWidget, QComboBox, QListWidget, QListWidgetItem, QLabel, QAbstractItemView, QWidget)
+from PySide6.QtCore import Qt, QDate, QCoreApplication, QLocale, QSize, QObject, QEvent
+from PySide6.QtGui import QPainter, QFontMetrics, QTextCharFormat, QBrush, QColor, QFont, QPalette
 from PySide6.QtWidgets import QSizePolicy
 from source.utils.LogManager import LogManager
 logger = LogManager.get_logger()
@@ -58,6 +58,82 @@ class CalendarDialog(QDialog):
                 self.app.gerenciador_traducao.idioma_alterado.connect(self._on_language_changed)
 
             self.update_task_list()
+
+            try:
+                from PySide6.QtWidgets import QApplication
+
+                def _apply_window_as_base(widget):
+                    if widget is None:
+                        return
+
+                    qt_app = QApplication.instance()
+                    if qt_app is None:
+                        return
+
+                    window_color = qt_app.palette().color(QPalette.Window)
+                    pal = widget.palette()
+                    pal.setColor(QPalette.Base, window_color)
+                    pal.setColor(QPalette.AlternateBase, window_color)
+
+                    try:
+                        if isinstance(widget, QComboBox):
+                            pal.setColor(QPalette.Button, window_color)
+
+                    except Exception:
+                        pass
+
+                    widget.setPalette(pal)
+
+                    vp = getattr(widget, "viewport", None)
+                    if callable(vp):
+                        try:
+                            widget.viewport().setAutoFillBackground(True)
+                            widget.viewport().setPalette(pal)
+
+                        except Exception:
+                            pass
+
+                    view = getattr(widget, "view", None)
+                    if callable(view):
+                        try:
+                            v = view()
+                            if v is not None:
+                                v.setPalette(pal)
+                                try:
+                                    v.viewport().setAutoFillBackground(True)
+                                    v.viewport().setPalette(pal)
+
+                                except Exception:
+                                    pass
+
+                        except Exception:
+                            pass
+
+                def _sync_calendar_backgrounds():
+                    try:
+                        _apply_window_as_base(self.tasks_list)
+                        _apply_window_as_base(self.filter_combo)
+
+                    except Exception as e:
+                        logger.debug(f"Falha ao sincronizar fundos do CalendarDialog via QPalette: {e}", exc_info=True)
+
+
+                class _PaletteThemeSyncFilter(QObject):
+                    def eventFilter(self, obj, event):
+                        et = event.type()
+                        if et in (QEvent.ApplicationPaletteChange, QEvent.PaletteChange, QEvent.ThemeChange):
+                            _sync_calendar_backgrounds()
+                        return super().eventFilter(obj, event)
+
+                _sync_calendar_backgrounds()
+
+                self._calendar_palette_sync_filter = _PaletteThemeSyncFilter(self)
+                qt_app = QApplication.instance()
+                if qt_app is not None:
+                    qt_app.installEventFilter(self._calendar_palette_sync_filter)
+
+            except Exception as e:
+                logger.debug(f"Falha ao instalar sync de paleta (CalendarDialog): {e}", exc_info=True)
 
         except Exception as e:
             logger.error(f"Erro ao inicializar CalendarDialog: {e}", exc_info=True)
@@ -370,6 +446,83 @@ class CalendarPanel(QWidget):
                 self.app.gerenciador_traducao.idioma_alterado.connect(self._on_language_changed)
 
             self.update_task_list()
+
+            try:
+                from PySide6.QtWidgets import QApplication
+
+                def _apply_window_as_base(widget):
+                    if widget is None:
+                        return
+
+                    qt_app = QApplication.instance()
+                    if qt_app is None:
+                        return
+
+                    window_color = qt_app.palette().color(QPalette.Window)
+                    pal = widget.palette()
+                    pal.setColor(QPalette.Base, window_color)
+                    pal.setColor(QPalette.AlternateBase, window_color)
+
+                    try:
+                        if isinstance(widget, QComboBox):
+                            pal.setColor(QPalette.Button, window_color)
+
+                    except Exception:
+                        pass
+
+                    widget.setPalette(pal)
+
+                    vp = getattr(widget, "viewport", None)
+                    if callable(vp):
+                        try:
+                            widget.viewport().setAutoFillBackground(True)
+                            widget.viewport().setPalette(pal)
+
+                        except Exception:
+                            pass
+
+                    view = getattr(widget, "view", None)
+                    if callable(view):
+                        try:
+                            v = view()
+                            if v is not None:
+                                v.setPalette(pal)
+                                try:
+                                    v.viewport().setAutoFillBackground(True)
+                                    v.viewport().setPalette(pal)
+
+                                except Exception:
+                                    pass
+
+                        except Exception:
+                            pass
+
+                def _sync_calendar_panel_backgrounds():
+                    try:
+                        _apply_window_as_base(self.tasks_list)
+                        _apply_window_as_base(self.filter_combo)
+
+                    except Exception as e:
+                        logger.debug(f"Falha ao sincronizar fundos do CalendarPanel via QPalette: {e}", exc_info=True)
+
+
+                class _PaletteThemeSyncFilter(QObject):
+                    def eventFilter(self, obj, event):
+                        et = event.type()
+                        if et in (QEvent.ApplicationPaletteChange, QEvent.PaletteChange, QEvent.ThemeChange):
+                            _sync_calendar_panel_backgrounds()
+
+                        return super().eventFilter(obj, event)
+
+                _sync_calendar_panel_backgrounds()
+
+                self._calendar_panel_palette_sync_filter = _PaletteThemeSyncFilter(self)
+                qt_app = QApplication.instance()
+                if qt_app is not None:
+                    qt_app.installEventFilter(self._calendar_panel_palette_sync_filter)
+
+            except Exception as e:
+                logger.debug(f"Falha ao instalar sync de paleta (CalendarPanel): {e}", exc_info=True)
 
         except Exception as e:
             logger.error(f"Erro ao inicializar CalendarPanel: {e}", exc_info=True)
