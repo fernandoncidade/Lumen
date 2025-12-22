@@ -1,4 +1,115 @@
 NOTAS DE LANÇAMENTO — Lúmen
+Versão: 2025.12.23.0
+Data: 23 de dezembro de 2025
+Autor: Fernando Nillsson Cidade
+
+Resumo rápido
+- Melhorias completas no painel/diálogo de calendário da Matriz de Eisenhower: contadores visuais (badges), destaque de datas com tarefas, filtros por dia/semana/mês e sincronização de locale/paleta.
+- Novo widget de calendário com badges por dia/semana/mês, cálculo robusto de contagens e desenho seguro.
+- Sincronização automática de cores/paleta com a aplicação via eventFilter; tratamento de exceções e logging ampliado.
+- CalendarPanel reutiliza a lógica do CalendarDialog para consistência e reduz duplicação.
+- Botão de aba rotacionado (RotatedTabButton) com pintura e dimensionamento mais estáveis.
+- Pequenas utilidades visuais: LineEditFrame para contorno consistente de widgets.
+
+Detalhamento das mudanças principais
+
+1) BadgeCalendarWidget
+- Implementação de contador de tarefas por data/semana/mês:
+  - Método [`source.modules.eisenhower.ui.ui_07_Calendar.BadgeCalendarWidget.set_task_counts`](source/modules/eisenhower/ui/ui_07_Calendar.py) aceita lista de datas ISO, calcula contadores por dia, semana (ano,semana) e mês (ano,mês) usando Counter.
+  - Atualização de células via self.updateCells() para repintura imediata.
+- Desenho seguro de badge:
+  - Override de [`source.modules.eisenhower.ui.ui_07_Calendar.BadgeCalendarWidget.paintCell`](source/modules/eisenhower/ui/ui_07_Calendar.py) chama super().paintCell e desenha badge quando count > 0.
+  - Método privado [`source.modules.eisenhower.ui.ui_07_Calendar.BadgeCalendarWidget._draw_badge`](source/modules/eisenhower/ui/ui_07_Calendar.py) desenha elipse, texto truncado ("99+") e usa cores derivadas da QPalette para integração com tema.
+- Robustez: blocos try/except com logging via LogManager para diagnosticar falhas de pintura/contagem sem quebrar UI.
+
+2) CalendarDialog
+- Coleta e apresentação de tarefas:
+  - [`source.modules.eisenhower.ui.ui_07_Calendar.CalendarDialog._collect_tasks`](source/modules/eisenhower/ui/ui_07_Calendar.py) percorre as 8 listas (pendentes/concluídas dos 4 quadrantes), filtra headers e monta payload com text/date/time/category/completed preservando metadados (armazenados em Qt.UserRole).
+  - Ordenação e filtragem em [`source.modules.eisenhower.ui.ui_07_Calendar.CalendarDialog.update_task_list`](source/modules/eisenhower/ui/ui_07_Calendar.py) suporta modos "day", "week", "month"; cria placeholder quando não há itens.
+- Destaque de datas:
+  - [`source.modules.eisenhower.ui.ui_07_Calendar.CalendarDialog._get_task_dates`](source/modules/eisenhower/ui/ui_07_Calendar.py) retorna conjunto de datas ISO.
+  - [`source.modules.eisenhower.ui.ui_07_Calendar.CalendarDialog._apply_highlighted_dates`](source/modules/eisenhower/ui/ui_07_Calendar.py) aplica/removem formatos (QTextCharFormat) incrementalmente; usa cor com alpha derivada de paleta highlight.
+- Locale e formato:
+  - [`source.modules.eisenhower.ui.ui_07_Calendar.CalendarDialog._apply_locale_to_calendar`](source/modules/eisenhower/ui/ui_07_Calendar.py) aplica QLocale com fallback (pt-BR, en-US, system) e força primeiro dia da semana (Qt.Sunday). `_date_format` obtido a partir de app.date_input quando disponível.
+  - Reaplica locale ao sinal idioma_alterado (conexão segura com try/except).
+- Paleta / sincronia visual:
+  - Instala eventFilter interno (`_PaletteThemeSyncFilter`) para escutar mudanças de paleta/theme e reaplicar cores de Base/AlternateBase em widgets relacionados (tasks_list, filter_combo), incluindo viewport quando aplicável.
+  - Função utilitária interna `_apply_window_as_base` homogeniza aparência de viewports e combo views para evitar artefatos visuais ao trocar tema.
+- Ciclo de vida:
+  - `closeEvent` desconecta idioma_alterado com tratamento de RuntimeError/TypeError.
+- Logging e segurança:
+  - Todas as rotinas críticas envolvidas em try/except com logger.error(..., exc_info=True) para facilitar diagnóstico sem travar interface.
+
+3) CalendarPanel
+- Implementa wrapper/reuso:
+  - Métodos públicos do painel (`_collect_tasks`, `update_task_list`, `_update_badge_counts`, `_get_task_dates`, `_apply_highlighted_dates`, `_on_language_changed`, `_apply_locale_to_calendar`) delegam para as implementações de [`source.modules.eisenhower.ui.ui_07_Calendar.CalendarDialog`](source/modules/eisenhower/ui/ui_07_Calendar.py) com blocos try/except e logging, evitando duplicação de lógica.
+- Layout embutido:
+  - Painel contém `BadgeCalendarWidget`, filtro, lista de tarefas e instala o mesmo filtro de paleta aplicado no diálogo para consistência.
+
+4) RotatedTabButton
+- Comportamento e pintura:
+  - Classe [`source.modules.eisenhower.ui.ui_07_Calendar.RotatedTabButton`](source/modules/eisenhower/ui/ui_07_Calendar.py) calcula tamanho fixo baseado em QFontMetrics via `_recompute_size` para evitar recortes.
+  - `mousePressEvent` chama `parent().toggle_panel()` e protege com try/except.
+  - `paintEvent` desenha fundo, borda e texto rotacionado (270°) usando cores da palette, com logging de erro.
+
+5) LineEditFrame
+- Frame consistente para embutir calendar (`LineEditFrame`) com:
+  - Margens calculadas dinamicamente via `_frame_width()` (QStyle.PM_DefaultFrameWidth) e desenho do frame em `paintEvent` usando QStyleOptionFrame para aparência nativa.
+  - Evita artefatos visuais ao redor do widget do calendário.
+
+6) Calendar (widget lateral)
+- Toggle com redimensionamento responsivo:
+  - `toggle_panel(open_if_hidden=False)` abre/fecha painel e ajusta largura fixa do container; ao expandir tenta redimensionar a janela principal respeitando largura disponível da tela (com vários fallbacks).
+  - Atualiza texto do botão de acordo com estado (Mostrar/Recolher Calendário) e notifica layout/centralWidget para recalcular geometria quando janela está maximizada.
+- Conexão com tradução:
+  - Conecta sinal idioma_alterado do gerenciador de tradução a `on_language_changed` para atualizar texto do toggle e delegar localmente ao panel.
+
+7) Robustez, logging e compatibilidade
+- Uso consistente de LogManager (via `logger = LogManager.get_logger()`).
+- Tratamento seguro de atributos opcionais (`hasattr`) antes de acessar `app.date_input`, `app.gerenciador_traducao`, `app.quadrant*_list`, `calendar_pane` etc., garantindo compatibilidade com execução embarcada.
+- Blocos try/except em pontos de instalação de event filters e manipulação de palettes para evitar quebra em ambientes com restrições.
+
+Arquivos alterados / símbolos principais
+- [source/modules/eisenhower/ui/ui_07_Calendar.py](source/modules/eisenhower/ui/ui_07_Calendar.py)
+  - Símbolos relevantes:
+    - [`source.modules.eisenhower.ui.ui_07_Calendar.BadgeCalendarWidget`](source/modules/eisenhower/ui/ui_07_Calendar.py)
+    - [`source.modules.eisenhower.ui.ui_07_Calendar.CalendarDialog`](source/modules/eisenhower/ui/ui_07_Calendar.py)
+    - [`source.modules.eisenhower.ui.ui_07_Calendar.CalendarPanel`](source/modules/eisenhower/ui/ui_07_Calendar.py)
+    - [`source.modules.eisenhower.ui.ui_07_Calendar.Calendar`](source/modules/eisenhower/ui/ui_07_Calendar.py)
+    - [`source.modules.eisenhower.ui.ui_07_Calendar.RotatedTabButton`](source/modules/eisenhower/ui/ui_07_Calendar.py)
+    - [`source.modules.eisenhower.ui.ui_07_Calendar.LineEditFrame`](source/modules/eisenhower/ui/ui_07_Calendar.py)
+    - [`source.modules.eisenhower.ui.ui_07_Calendar.get_text`](source/modules/eisenhower/ui/ui_07_Calendar.py)
+
+Impacto e comportamento esperado
+- Calendário passa a exibir badges por dia com contagem de tarefas, além de fornecer filtros por dia/semana/mês com lista filtrada e ordenada.
+- Destaque visual de datas com tarefas respeita paleta do app e atualiza incrementalmente sem repinturas custosas.
+- Mudanças de idioma reaplicam locale e formatos de data/hora quando `gerenciador_traducao` emite idioma_alterado.
+- Sincronização de paleta reduz artefatos visuais em viewports e QComboBox.view(), importante para temas escuros/claro.
+- Operações são resilientes: erros na pintura, locale ou sincronização de paleta são logados e não quebram a janela.
+
+Como testar (passos rápidos)
+1. Abrir Matriz de Eisenhower e garantir que `app.date_input` e listas dos quadrantes existam.
+2. Criar tarefas com datas/horários (em diferentes quadrantes, pendentes e concluídas).
+3. Abrir painel/diálogo de calendário:
+   - Verificar badges nas datas com tarefas.
+   - Alternar filtro (Dia/Semana/Mês) e confirmar lista filtrada/ordenada.
+   - Selecionar data: lista deve mostrar itens do período; placeholder aparece quando vazio.
+4. Mudar idioma via gerenciador de tradução:
+   - Confirmar que textos (Exibir por, Dia, Semana, Mês, títulos) e formato de data se atualizam.
+5. Trocar tema/paleta do sistema (ou do app):
+   - Conferir que cores de fundo da lista e combo se ajustem sem artefatos.
+6. Redimensionar painel (Mostrar/Recolher Calendário):
+   - Verificar comportamento de redimensionamento da janela (não exceder área disponível).
+
+Notas técnicas
+- Dependência principal: PySide6 (QCalendarWidget, QDate, QLocale, QPainter, QPalette).
+- Logging: usa `source.utils.LogManager.LogManager.get_logger()` para gravação de exceções.
+- Preservação de metadados: tarefas devem guardar {"text","date","time"} em Qt.UserRole (integração com outras partes do módulo Eisenhower).
+- Compatibilidade: todo acesso a recursos opcionais (date_input, gerenciador_traducao, calendar_pane) protegido por hasattr/try-except para suportar execução embarcada/integrada.
+
+_________________________________________________
+
+NOTAS DE LANÇAMENTO — Lúmen
 Versão: 2025.12.22.0
 Data: 22 de dezembro de 2025
 Autor: Fernando Nillsson Cidade
