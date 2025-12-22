@@ -4,14 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="02f93f84-518f-4e9e-97ae-36ae501fd277" name="Changes" comment="" />
+    <list default="true" id="02f93f84-518f-4e9e-97ae-36ae501fd277" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/teste1.py" beforeDir="false" afterPath="$PROJECT_DIR$/teste1.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="321" />
+    <option name="cachedIndexableFilesCount" value="323" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -55,10 +57,10 @@
 }</component>
   <component name="RecapSpentCounter">
     <option name="endsOfQuotaMs" value="1766520016699" />
-    <option name="spentUsd" value="0.02312085" />
+    <option name="spentUsd" value="0.03677065" />
   </component>
   <component name="RecapUselessUpdatesCounter">
-    <option name="suspendCountdown" value="4" />
+    <option name="suspendCountdown" value="0" />
   </component>
   <component name="RunManager">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -118,6 +120,7 @@
       <workItem from="1766210010028" duration="893000" />
       <workItem from="1766304996944" duration="2534000" />
       <workItem from="1766329344088" duration="1966000" />
+      <workItem from="1766372100051" duration="3029000" />
     </task>
     <servers />
   </component>
