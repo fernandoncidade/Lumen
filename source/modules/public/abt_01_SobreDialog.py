@@ -21,20 +21,32 @@ class SobreDialog(QDialog):
             self.setModal(False)
 
             layout = QVBoxLayout(self)
+            layout.setContentsMargins(15, 4, 15, 4)
+            layout.setSpacing(20)
 
             header_widget = QWidget()
             header_layout = QVBoxLayout(header_widget)
             header_layout.setContentsMargins(0, 0, 0, 0)
-            header_layout.setSpacing(5)
+            header_layout.setSpacing(0)
 
             self.fixed_label = QLabel(texto_fixo)
             self.fixed_label.setTextFormat(Qt.TextFormat.RichText)
             self.fixed_label.setWordWrap(True)
             self.fixed_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
             self.fixed_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+            try:
+                self.fixed_label.setMargin(0)
+                self.fixed_label.setContentsMargins(0, 0, 0, 0)
+                self.fixed_label.setStyleSheet("padding:0; margin:0;")
+
+            except Exception:
+                pass
+
             header_layout.addWidget(self.fixed_label)
 
             header_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+            header_widget.setContentsMargins(0, 0, 0, 0)
             layout.addWidget(header_widget)
 
             sh_history = show_history_text or "Histórico"
@@ -54,6 +66,13 @@ class SobreDialog(QDialog):
 
             self.tabs = QTabWidget()
             self.tabs.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+            try:
+                self.tabs.setContentsMargins(0, 0, 0, 0)
+                self.tabs.setStyleSheet("QTabWidget::pane { margin-top: 0; padding-top: 0; }")
+
+            except Exception:
+                pass
 
             history_browser = QTextBrowser()
             history_browser.setReadOnly(True)
@@ -83,9 +102,11 @@ class SobreDialog(QDialog):
             if licencas:
                 texto_html = licencas.replace('\n', '<br>')
                 texto_html += f"<br><br><h3>{site_oficial_text}</h3><ul>"
-                for site in sites_licencas.strip().split('\n'):
-                    if site.strip():
-                        texto_html += f'<li><a href="{site.strip()}">{site.strip()}</a></li>'
+                sites_licencas = (sites_licencas or "").strip()
+                for site in sites_licencas.split('\n'):
+                     if site.strip():
+                         texto_html += f'<li><a href="{site.strip()}">{site.strip()}</a></li>'
+
                 texto_html += "</ul>"
                 licencas_browser.setHtml(texto_html)
 

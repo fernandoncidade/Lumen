@@ -58,6 +58,25 @@ class NoConceito(QGraphicsEllipseItem):
                     snapped = scene.snap(self.pos())
                     super().setPos(snapped)
 
+                scene = self.scene()
+                if scene is not None:
+                    try:
+                        item_br_scene = self.mapToScene(self.boundingRect()).boundingRect()
+
+                        padding = 1200
+                        necessario = item_br_scene.adjusted(-padding, -padding, padding, padding)
+
+                        atual = scene.sceneRect()
+                        if atual.isNull() or atual.isEmpty():
+                            scene.setSceneRect(necessario)
+
+                        else:
+                            if not atual.contains(necessario):
+                                scene.setSceneRect(atual.united(necessario))
+
+                    except Exception:
+                        pass
+
             return super().itemChange(change, value)
 
         except Exception as e:

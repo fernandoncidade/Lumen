@@ -714,6 +714,81 @@ This may take a few minutes.</translation>
     </message>
 
     <message>
+      <source>Preparando importação...</source>
+      <translation>Preparing import...</translation>
+    </message>
+
+    <message>
+      <source>Usando modelo já carregado</source>
+      <translation>Using already loaded model</translation>
+    </message>
+
+    <message>
+      <source>Cancelado</source>
+      <translation>Cancelled</translation>
+    </message>
+
+    <message>
+      <source>Documento vazio</source>
+      <translation>Empty document</translation>
+    </message>
+
+    <message>
+      <source>Detectando idioma...</source>
+      <translation>Detecting language...</translation>
+    </message>
+
+    <message>
+      <source>Detectando seções...</source>
+      <translation>Detecting sections...</translation>
+    </message>
+
+    <message>
+      <source>Processando nós (NLP)...</source>
+      <translation>Processing nodes (NLP)...</translation>
+    </message>
+
+    <message>
+      <source>Refinando com TF-IDF...</source>
+      <translation>Refining with TF-IDF...</translation>
+    </message>
+
+    <message>
+      <source>Identificando relações semânticas...</source>
+      <translation>Identifying semantic relationships...</translation>
+    </message>
+
+    <message>
+      <source>Finalizando...</source>
+      <translation>Finalizing...</translation>
+    </message>
+
+    <message>
+      <source>Concluído</source>
+      <translation>Completed</translation>
+    </message>
+
+    <message>
+      <source>Cancelando...</source>
+      <translation>Cancelling...</translation>
+    </message>
+
+    <message>
+      <source>Processamento de nós concluído</source>
+      <translation>Node processing completed</translation>
+    </message>
+
+    <message>
+      <source>Processando nó {atual}/{total}: {titulo}</source>
+      <translation>Processing node {atual}/{total}: {titulo}</translation>
+    </message>
+
+    <message>
+      <source>Construindo árvore hierárquica...</source>
+      <translation>Building hierarchical tree...</translation>
+    </message>
+
+    <message>
       <source>Extraindo texto...</source>
       <translation>Extracting text...</translation>
     </message>

@@ -9,9 +9,27 @@ def reorganizar_com_ia(self):
             logger.warning("Nenhum conceito para reorganizar")
             return
 
+        self._lumen_layout_freeze_on_click = True
+        self._lumen_layout_orientation = "vertical"
+
+        def _pos_processar_layout():
+            try:
+                from source.modules.mapa.mapamental.mm_34_layout_hierarquia_navegacao import _resolver_sobreposicoes_global
+                _resolver_sobreposicoes_global(self, nos=getattr(self, "nos", []) or [], apenas_visiveis=False, push_direcao="down")
+
+            except Exception:
+                pass
+
+            try:
+                self._atualizar_visibilidade_linhas()
+
+            except Exception:
+                pass
+
+        visiveis_idx = {i for i, no in enumerate(self.nos) if getattr(no, "isVisible", lambda: True)()}
+
         if self._hierarquia_root is not None and isinstance(self._hierarquia_children, dict) and self._hierarquia_children:
             idx_por_no = {no: i for i, no in enumerate(self.nos)}
-
             raiz_idx = idx_por_no.get(self._hierarquia_root, 0)
 
             filhos_idx = {i: [] for i in range(len(self.nos))}
@@ -52,8 +70,8 @@ def reorganizar_com_ia(self):
                 "pais": {}
             }
 
-            self._aplicar_layout_arvore(hierarquia_existente)
-            self._atualizar_visibilidade_linhas()
+            self._lumen_last_hierarquia = hierarquia_existente
+            self._aplicar_layout_arvore(hierarquia_existente, orientacao="vertical", espacamento_vertical=120, espacamento_horizontal_base=140, visiveis=visiveis_idx)
 
             if hasattr(self.view, "animate_focus_on") and self._hierarquia_root is not None:
                 self.view.animate_focus_on(self._hierarquia_root)
@@ -73,9 +91,12 @@ def reorganizar_com_ia(self):
         conexoes_existentes = self._obter_conexoes_existentes()
         hierarquia = self._construir_hierarquia(conexoes_existentes)
 
-        self._aplicar_layout_arvore(hierarquia)
+        self._lumen_last_hierarquia = hierarquia
+        self._aplicar_layout_arvore(hierarquia, orientacao="vertical", espacamento_vertical=120, espacamento_horizontal_base=140, visiveis=visiveis_idx)
         self._criar_relacoes_ia(relacoes)
         self._configurar_hierarquia_por_indices(hierarquia)
+
+        _pos_processar_layout()
 
         if self.nos and hasattr(self.view, "animate_focus_on"):
             self.view.animate_focus_on(self.nos[hierarquia.get("raiz", 0)] if hierarquia else self.nos[0])

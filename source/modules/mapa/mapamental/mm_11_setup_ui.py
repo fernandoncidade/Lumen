@@ -1,13 +1,13 @@
 from PySide6.QtWidgets import QVBoxLayout, QPushButton, QLabel, QToolBar, QFrame, QMessageBox
 from PySide6.QtCore import QCoreApplication, QPointF
 from source.utils.LogManager import LogManager
-from source.modules.mapa.mp_03_MapaMental import MapaScene
-from source.modules.mapa.mp_03_MapaMental import SmoothGraphicsView
 
 logger = LogManager.get_logger()
 
 def setup_ui(self):
     try:
+        from source.modules.mapa.mp_03_MapaMental import MapaScene, SmoothGraphicsView
+
         layout = QVBoxLayout()
         self.toolbar = QToolBar()
 
@@ -76,34 +76,94 @@ def setup_ui(self):
 
         def _snapshot_layout_original_se_necessario():
             try:
-                if getattr(self, "_lumen_layout_original_positions", None):
+                if getattr(self, "_lumen_layout_original_snapshot", None):
                     return
 
-                self._lumen_layout_original_positions = {no: no.pos() for no in (getattr(self, "nos", []) or [])}
+                nos = (getattr(self, "nos", []) or [])
+                self._lumen_layout_original_snapshot = {
+                    "positions": {no: no.pos() for no in nos},
+                    "visible": {no: getattr(no, "isVisible", lambda: True)() for no in nos},
+                    "modo_hierarquia": bool(getattr(self, "_modo_navegacao_hierarquia", False)),
+                    "hierarquia_root": getattr(self, "_hierarquia_root", None),
+                    "hierarquia_parent": dict(getattr(self, "_hierarquia_parent", {}) or {}),
+                    "hierarquia_children": dict(getattr(self, "_hierarquia_children", {}) or {}),
+                    "nos_expandidos": set(getattr(self, "_nos_expandidos", set()) or set()),
+                    "freeze_on_click": bool(getattr(self, "_lumen_layout_freeze_on_click", False)),
+                    "orientation": str(getattr(self, "_lumen_layout_orientation", "free") or "free"),
+                }
 
             except Exception as e:
                 logger.error(f"Erro ao salvar snapshot de layout original: {e}", exc_info=True)
 
         def _restaurar_layout_original():
             try:
-                orig = getattr(self, "_lumen_layout_original_positions", None) or {}
-                if not orig:
+                snap = getattr(self, "_lumen_layout_original_snapshot", None) or {}
+                if not snap:
                     return False
 
-                for no in (getattr(self, "nos", []) or []):
-                    if no in orig:
-                        no.setPos(orig[no])
+                nos = (getattr(self, "nos", []) or [])
 
-                if isinstance(getattr(self, "scene", None), MapaScene):
-                    for no in (getattr(self, "nos", []) or []):
+                vis_map = snap.get("visible", {}) or {}
+                for no in nos:
+                    try:
+                        if no in vis_map:
+                            no.setVisible(bool(vis_map[no]))
+
+                        else:
+                            no.setVisible(True)
+
+                    except Exception:
+                        pass
+
+                pos_map = snap.get("positions", {}) or {}
+                for no in nos:
+                    if no in pos_map:
+                        no.setPos(pos_map[no])
+
+                sc = getattr(self, "scene", None)
+                if sc is not None and hasattr(sc, "snap"):
+                    for no in nos:
                         try:
-                            no.setPos(self.scene.snap(no.pos()))
+                            no.setPos(sc.snap(no.pos()))
 
                         except Exception:
                             pass
 
+                try:
+                    self._modo_navegacao_hierarquia = bool(snap.get("modo_hierarquia", False))
+                    self._hierarquia_root = snap.get("hierarquia_root", None)
+                    self._hierarquia_parent = dict(snap.get("hierarquia_parent", {}) or {})
+                    self._hierarquia_children = dict(snap.get("hierarquia_children", {}) or {})
+                    self._nos_expandidos = set(snap.get("nos_expandidos", set()) or set())
+
+                except Exception:
+                    pass
+
+                try:
+                    self._lumen_layout_freeze_on_click = bool(snap.get("freeze_on_click", False))
+                    self._lumen_layout_orientation = str(snap.get("orientation", "free") or "free")
+
+                except Exception:
+                    pass
+
                 if hasattr(self, "_atualizar_visibilidade_linhas"):
                     self._atualizar_visibilidade_linhas()
+
+                try:
+                    if getattr(self, "scene", None) is not None and hasattr(self.scene, "itemsBoundingRect"):
+                        br = self.scene.itemsBoundingRect()
+                        if not br.isNull() and not br.isEmpty():
+                            padding = 1400
+                            alvo = br.adjusted(-padding, -padding, padding, padding)
+                            atual = self.scene.sceneRect()
+                            if atual.isNull() or atual.isEmpty():
+                                self.scene.setSceneRect(alvo)
+
+                            else:
+                                self.scene.setSceneRect(atual.united(alvo))
+
+                except Exception:
+                    pass
 
                 return True
 
@@ -116,6 +176,18 @@ def setup_ui(self):
                 nos = getattr(self, "nos", []) or []
                 if not nos:
                     return False
+
+                hier = getattr(self, "_lumen_last_hierarquia", None)
+                if isinstance(hier, dict) and "raiz" in hier and "filhos" in hier and "niveis" in hier:
+                    self._aplicar_layout_arvore(hier, orientacao="horizontal")
+
+                    if hasattr(self, "_atualizar_visibilidade_linhas"):
+                        self._atualizar_visibilidade_linhas()
+
+                    if hasattr(self.view, "animate_focus_on") and nos:
+                        self.view.animate_focus_on(nos[hier.get("raiz", 0)] if hier else nos[0])
+
+                    return True
 
                 pts_antes = [no.pos() for no in nos]
                 cx_antes = sum(p.x() for p in pts_antes) / len(pts_antes)
@@ -143,6 +215,14 @@ def setup_ui(self):
 
                         except Exception:
                             pass
+
+                try:
+                    from source.modules.mapa.mapamental.mm_34_layout_hierarquia_navegacao import _resolver_sobreposicoes_global
+                    _resolver_sobreposicoes_global(self, nos=nos, apenas_visiveis=False, push_direcao="right")
+                    _resolver_sobreposicoes_global(self, nos=nos, apenas_visiveis=False, push_direcao="down")
+
+                except Exception:
+                    pass
 
                 if hasattr(self, "_atualizar_visibilidade_linhas"):
                     self._atualizar_visibilidade_linhas()
@@ -172,11 +252,14 @@ def setup_ui(self):
                 if estado == 0:
                     _snapshot_layout_original_se_necessario()
                     self.reorganizar_com_ia()
+
+                    self._lumen_layout_orientation = "vertical"
                     self._lumen_reorg_layout_state = 1
                     return
 
                 if estado == 1:
                     if _aplicar_layout_horizontal_por_rotacao():
+                        self._lumen_layout_orientation = "horizontal"
                         self._lumen_reorg_layout_state = 2
 
                     return

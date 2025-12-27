@@ -45,6 +45,9 @@ from .mm_32_expandir_area_se_necessario import _expandir_area_se_necessario
 # Traduções runtime do conteúdo (hierarquia)
 from .mm_33_atualizar_traducoes_hierarquia import _atualizar_traducoes_hierarquia
 
+# Layout incremental da navegação hierárquica
+from .mm_34_layout_hierarquia_navegacao import _layout_hierarquia_navegacao
+
 __all__ = [
     # Scene / View
     "drawBackground",
@@ -86,4 +89,6 @@ __all__ = [
     "_expandir_area_se_necessario",
     # Traduções runtime do conteúdo (hierarquia)
     "_atualizar_traducoes_hierarquia",
+    # Layout incremental
+    "_layout_hierarquia_navegacao",
 ]

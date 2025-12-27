@@ -1,4 +1,144 @@
 RELEASE NOTES — Lúmen
+Version: 2025.12.27.0
+Date: December 27, 2025
+Author: Fernando Nillsson Cidade
+
+Quick summary
+- Substantial improvements to the Mind Map hierarchical layout engine: more robust subtree width calculation, reliable recursive positioning and incremental/global overlap resolution.
+- AI reorganization preserves imported hierarchies and provides a toggle flow (reorganize → rotate horizontal → restore snapshot).
+- Document import via AI refactored with a worker thread: detailed progress, safe cancellation and post-processing (TF‑IDF and semantic relations).
+- Mind Map UI updated: toolbar with AI actions, "AI in alpha" warning shown once per action, snapshot/restore of the original layout and horizontal rotation via 'apply layout'.
+- Concept node (NoConceito) gains direct integration with the Feynman Method (button), visual badge and display of associated information extracted by AI.
+- Several robustness fixes: exception handling, logging via LogManager and safe expansion of sceneRect to avoid clipping.
+
+Detailed changes
+
+1) Hierarchical layout and overlap resolution
+- New/changed: source/modules/mapa/mapamental/mm_34_layout_hierarquia_navegacao.py
+  - Function [_resolver_sobreposicoes_global] now supports direction ("down"/"right"), padding and iteration limit; applies snap when available and expands sceneRect with large padding to avoid clipping.
+  - Implemented incremental algorithm (_layout_incremental_preservando_base) that recalculates only subtrees affected by visibility changes, respecting fixed/obstacle nodes and pushing colliding nodes until resolution or iteration limit.
+  - Stable coordinate-based sorting for deterministic behavior when placing new nodes.
+
+2) Subtree width calculation and recursive positioning
+- New/changed: mm_30_calcular_larguras_subarvore.py, mm_31_posicionar_no_arvore.py
+  - _calcular_larguras_subarvore computes required width per node considering horizontal margin, gap between children and the real boundingRect size (with safe fallback).
+  - _posicionar_no_arvore positions subtrees recursively, centering children relative to the parent, computing vertical spacing based on the tallest child and applying a configurable minimum GAP.
+  - Per-node error handling to avoid global failure during positioning.
+
+3) Applying tree layout (reorganization)
+- Changed: mm_29_aplicar_layout_arvore.py
+  - Layout application pipeline unifies width calculation + positioning and applies rotation for horizontal orientation when requested.
+  - Post-processing: snap via scene.snap() when available and call to global overlap resolver to ensure a clean visual.
+  - Safe expansion of sceneRect with padding after layout.
+
+4) Reorganize with AI — preserve hierarchy and AI fallback
+- Changed: mm_26_reorganizar_com_ia.py
+  - When a previously built hierarchy exists (e.g., map imported from PDF), reorganization preserves that hierarchy and applies the tree layout without reanalyzing the document, avoiding destruction of the imported structure.
+  - Otherwise, integrates ProcessadorIA: concept extraction via TF‑IDF, identification of semantic relations, hierarchy construction and tree layout generation, creation of AI relations and configuration of the hierarchy by indices.
+  - Keeps the last hierarchy snapshot (_lumen_last_hierarquia) and focuses the root item at the end with animate_focus_on.
+
+5) Document Import with AI in worker
+- Changed: mm_23_importar_documento_ia.py
+  - ImportWorker runs extract_text → detect language → detect sections → build tree → process nodes (NLP pipeline) in a separate thread with signals for progress (text, value, busy).
+  - Progress dialog with safe cancellation: requestInterruption, cancel() and flags to abort processing between steps.
+  - Node processing uses nlp.pipe when available, computes concepts, main ideas and contextual summary per node; jobs filter out short nodes to skip heavy NLP.
+  - Post-processing applies global TF‑IDF and attempts to identify semantic relations; worker returns the tree and the ProcessadorIA instance to be used afterwards.
+  - UI Bridge ensures cleanup and integration: clears the map, generates a map from the hierarchy via _gerar_mapa_de_hierarquia and enables hierarchical navigation.
+
+6) Mind Map UI / UX
+- Changed: mm_11_setup_ui.py
+  - Toolbar expanded with buttons for Import Document (AI) and Reorganize (toggle) with a 3-state flow:
+    0) apply AI reorganization (snapshot saved),
+    1) apply horizontal rotation/layout,
+    2) restore original snapshot.
+  - "AI in alpha" warning shown once per action (import/reorganize) with a pt‑BR fallback if the translation key is missing.
+  - Snapshot/restore: captures positions, visibilities, hierarchy and freeze_on_click state; restoration tries to recompute sceneRect and visibilities and reapply snap.
+  - Function to apply horizontal layout via rotation tries to use an already calculated hierarchy; if unavailable, performs rotation by swapping coordinates preserving the center and applies overlap resolver.
+
+7) Concept Node (NoConceito) — editing and integration
+- Changed: mp_01_NoConceito.py
+  - Concept edit dialog now displays "Associated information" (info_associada) extracted by AI, read-only when present.
+  - Button "➕ Integrate with the Feynman Method" sends payload {title, notes} via EventBus.conceito_atualizado (singleton EventBus) with validations (title and notes not empty) and shows confirmation to the user.
+  - Visual badge updated according to presence of notes; local attributes (texto, notas, info_associada) are kept and synchronized visually.
+  - Improved exception handling in the integration flow.
+
+8) Scene / View helpers and MapaMental widget
+- Changed: mp_03_MapaMental.py
+  - Introduces MapaScene with background drawing and configurable snap; SmoothGraphicsView with smooth zoom and delegated animate_focus_on.
+  - MapaMental delegates new modular functions (import document, reorganize with AI, apply layouts, calculate widths, position nodes, etc.) to mm_XX modules.
+  - Initialization installs app eventFilter and applies initial theme; hierarchy attributes and initial flags are preserved.
+
+9) Visibility by focus and incremental layout
+- Changed: mm_07_aplicar_visibilidade_por_foco.py
+  - When applying focus/hierarchy, visibilities are recalculated and, depending on _lumen_layout_freeze_on_click, chooses to recalculate incrementally (_layout_incremental_preservando_base) or run the full layout (_layout_hierarquia_navegacao).
+
+Robustness, logging and compatibility
+- LogManager.get_logger() usage was added/standardized at all critical points for error and debug logs with exc_info=True.
+- try/except blocks in thread setup, calls to ProcessadorIA, sceneRect position setting, snapping and UI calls to avoid application freezes.
+- Use of hasattr/checks before invoking optional methods (snap, animate_focus_on, _atualizar_visibilidade_linhas) ensuring compatibility with alternative scenes/views.
+- Safe fallbacks in geometric calculations (boundingRect, widths/heights) to prevent exceptions for elements not yet rendered.
+
+Changed files / main symbols
+- source/modules/mapa/mapamental/mm_34_layout_hierarquia_navegacao.py
+  - _resolver_sobreposicoes_global, _layout_hierarquia_navegacao, _layout_incremental_preservando_base
+- source/modules/mapa/mapamental/mm_31_posicionar_no_arvore.py
+  - _posicionar_no_arvore
+- source/modules/mapa/mapamental/mm_30_calcular_larguras_subarvore.py
+  - _calcular_larguras_subarvore
+- source/modules/mapa/mapamental/mm_29_aplicar_layout_arvore.py
+  - _aplicar_layout_arvore
+- source/modules/mapa/mapamental/mm_26_reorganizar_com_ia.py
+  - reorganizar_com_ia
+- source/modules/mapa/mapamental/mm_23_importar_documento_ia.py
+  - importar_documento_ia, _ImportWorker, _UiBridge
+- source/modules/mapa/mapamental/mm_11_setup_ui.py
+  - setup_ui (AI toolbar, snapshot/restore, reorg toggle)
+- source/modules/mapa/mp_03_MapaMental.py
+  - MapaScene, SmoothGraphicsView, delegations _aplicar_layout_arvore/_calcular_larguras_subarvore/_posicionar_no_arvore
+- source/modules/mapa/mp_01_NoConceito.py
+  - NoConceito (dialog, badge, EventBus integration)
+- source/modules/mapa/mapamental/mm_07_aplicar_visibilidade_por_foco.py
+  - _aplicar_visibilidade_por_foco
+
+Impact and expected behavior
+- AI reorganization:
+  - Preserves imported hierarchies (e.g., PDF) preventing structure loss; when no prior hierarchy exists, generates a tree via ProcessadorIA and applies layout with configurable spacing.
+  - Reorganization toggle cycles through 3 states (reorganize → rotate horizontal → restore).
+- Document import:
+  - Background processing with progress bar and cancellation; each node receives concepts, ideas and contextual summary; result is produced as a renderable map.
+- Layout and navigation:
+  - Reduced visual overlaps thanks to global/incremental resolver; child positioning centered with vertical spacing based on real heights.
+  - Snap applied when scene supports it; sceneRect automatically expanded to accommodate moved nodes.
+- UI:
+  - "AI in alpha" warning appears once per action to guide the user; snapshot/restore allow reverting the original layout if desired.
+- Feynman integration:
+  - User can integrate a node's notes directly into the Feynman Method via EventBus; flow includes validations and confirmation.
+
+How to test (quick steps)
+1. Open Mind Map and create multiple nodes with varied texts.
+2. Test Import Document (AI):
+   - Import PDF/TXT; follow the progress dialog, cancel at different stages and confirm UI remains stable.
+   - When finished, confirm the map was generated and nodes display info_associada/summary when present.
+3. Test Reorganize with AI:
+   - Click Reorganize (state 0) and verify tree layout applied.
+   - Click again to apply horizontal rotation (state 1) and confirm the visual change.
+   - Click again to restore snapshot (state 2 → 0) and confirm original positions/visibilities.
+4. Test Visibility by Focus:
+   - Enable hierarchical navigation, expand/collapse nodes and observe incremental layout and collision resolution.
+5. Test Feynman Integration:
+   - Double-click a node, write notes, click "➕ Integrar ao Método Feynman" and confirm the concept is emitted via EventBus (see Feynman module for reception).
+6. Test Robustness:
+   - Disconnect or force absence of ProcessadorIA and confirm flows use safe fallbacks without freezing the UI.
+
+Technical notes and dependencies
+- Main components involved: PySide6 (QGraphicsScene/View, QThread, QProgressDialog), ProcessadorIA (spaCy / optional TF‑IDF), LogManager and EventBus.
+- It is recommended to have ProcessadorIA preloaded to speed up large imports; the import worker accepts an existing proc instance.
+- Snap/MapScene: if the Scene implements snap(), layout uses snapping after positioning.
+- Extensive logging via LogManager helps diagnose failures in production.
+
+_________________________________________________
+
+RELEASE NOTES — Lúmen
 Version: 2025.12.23.0
 Date: December 23, 2025
 Author: Fernando Nillsson Cidade

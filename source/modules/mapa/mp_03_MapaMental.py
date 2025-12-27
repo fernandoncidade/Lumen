@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QGraphicsView, QGraphicsScene
 from PySide6.QtCore import QRectF, QCoreApplication, QPointF
 from PySide6.QtGui import QColor, QPainter, QPen
-from typing import Dict
+from typing import Dict, Optional, Set
 from source.utils.LogManager import LogManager
 from source.utils.CaminhoPersistenteUtils import obter_caminho_persistente
 
@@ -136,13 +136,16 @@ class MapaMental(QWidget):
         from source.modules.mapa.mapamental.mm_28_construir_hierarquia import _construir_hierarquia as _impl
         return _impl(self, conexoes)
 
-    def _aplicar_layout_arvore(self, hierarquia: Dict):
-        from source.modules.mapa.mapamental.mm_29_aplicar_layout_arvore import _aplicar_layout_arvore as _impl
-        return _impl(self, hierarquia)
+    def _aplicar_layout_arvore(self, hierarquia, orientacao: str = "vertical", **kwargs):
+        if "orientacao" in kwargs:
+            orientacao = kwargs.get("orientacao") or orientacao
 
-    def _calcular_larguras_subarvore(self, idx: int, filhos, espacamento_base: float):
+        from source.modules.mapa.mapamental.mm_29_aplicar_layout_arvore import (_aplicar_layout_arvore as _aplicar_layout_arvore_impl,)
+        return _aplicar_layout_arvore_impl(self, hierarquia, orientacao=orientacao, **kwargs)
+
+    def _calcular_larguras_subarvore(self, idx: int, filhos, espacamento_base: float, visiveis: Optional[Set[int]] = None):
         from source.modules.mapa.mapamental.mm_30_calcular_larguras_subarvore import _calcular_larguras_subarvore as _impl
-        return _impl(self, idx, filhos, espacamento_base)
+        return _impl(self, idx, filhos, espacamento_base, visiveis=visiveis)
 
     def _posicionar_no_arvore(self, idx: int, filhos, larguras, x: float, y: float, espacamento_v: float):
         from source.modules.mapa.mapamental.mm_31_posicionar_no_arvore import _posicionar_no_arvore as _impl
