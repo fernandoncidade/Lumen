@@ -10,6 +10,16 @@ def atualizar_menu(self):
 
         self.menu_arquivo.setTitle(QCoreApplication.translate("App", "📁 Arquivo"))
 
+        if hasattr(self, 'action_atalhos'):
+            self.action_atalhos.setText(QCoreApplication.translate("App", "📚 Ajuda - Atalhos"))
+            try:
+                from PySide6.QtCore import Qt
+                self.action_atalhos.setShortcut("F1")
+                self.action_atalhos.setShortcutContext(Qt.ApplicationShortcut)
+
+            except Exception:
+                pass
+
         self.submenu_leitor.setTitle(QCoreApplication.translate("App", "📖 Leitor Acessível"))
         self.action_carregar_pdf.setText(QCoreApplication.translate("App", "📁 Carregar PDF"))
         self.action_ler_texto.setText(QCoreApplication.translate("App", "▶️ Ler"))

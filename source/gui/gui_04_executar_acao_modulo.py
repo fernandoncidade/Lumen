@@ -1,4 +1,4 @@
-from PySide6.QtCore import QCoreApplication
+from PySide6.QtCore import QCoreApplication, QTimer
 from source.utils.LogManager import LogManager
 
 logger = LogManager.get_logger()
@@ -62,7 +62,32 @@ def executar_acao_modulo(self, modulo, acao):
         elif modulo == 'gerenciador' and hasattr(self, 'gerenciador'):
             if acao == 'adicionar_tarefa':
                 self.tabs.setCurrentIndex(1)
-                self.gerenciador.tarefas.input_tarefa.setFocus()
+
+                try:
+                    self.gerenciador.tarefas.input_tarefa.setFocus()
+
+                except Exception:
+                    pass
+
+                try:
+                    try:
+                        txt = None
+                        if hasattr(self, 'gerenciador') and getattr(self.gerenciador, 'tarefas', None) is not None:
+                            try:
+                                txt = self.gerenciador.tarefas.input_tarefa.text()
+
+                            except Exception:
+                                txt = None
+
+                        logger.info(f"Atalho 'adicionar_tarefa' acionado; texto_input='{txt}'")
+
+                    except Exception:
+                        pass
+
+                    QTimer.singleShot(0, lambda: getattr(getattr(self.gerenciador, 'tarefas', None), 'adicionar_tarefa', lambda: None)())
+
+                except Exception as e:
+                    logger.error(f"Erro ao agendar adicionar_tarefa: {e}", exc_info=True)
 
             elif acao == 'toggle_timer':
                 self.tabs.setCurrentIndex(1)

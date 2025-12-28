@@ -35,6 +35,11 @@
     </message>
 
     <message>
+      <source>🗂️ Matriz Eisenhower</source>
+      <translation>🗂️ Eisenhower Matrix</translation>
+    </message>
+
+    <message>
       <source>Erro ao Carregar Módulos</source>
       <translation>Error Loading Modules</translation>
     </message>
@@ -159,6 +164,41 @@
 • Click edges/corners to resize
 • Use arrows ↑↓←→ for fine adjustments
 • Press ESC to close</translation>
+    </message>
+
+    <message>
+      <source>📚 Ajuda - Atalhos</source>
+      <translation>📚 Help - Shortcuts</translation>
+    </message>
+
+    <message>
+      <source>Lúmen - Atalhos</source>
+      <translation>Lúmen - Shortcuts</translation>
+    </message>
+
+    <message>
+      <source>Régua de Foco:</source>
+      <translation>Focus Ruler:</translation>
+    </message>
+
+    <message>
+      <source>Arraste no centro para mover</source>
+      <translation>Drag the center to move</translation>
+    </message>
+
+    <message>
+      <source>Arraste nas bordas para redimensionar</source>
+      <translation>Drag the edges to resize</translation>
+    </message>
+
+    <message>
+      <source>Setas ↑↓←→ para ajuste fino</source>
+      <translation>Arrows ↑↓←→ for fine adjustment</translation>
+    </message>
+
+    <message>
+      <source>ESC para fechar</source>
+      <translation>ESC to close</translation>
     </message>
 
     <message>

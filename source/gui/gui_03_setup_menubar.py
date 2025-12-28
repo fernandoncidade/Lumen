@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QDialog
 from PySide6.QtGui import QAction
-from PySide6.QtCore import QCoreApplication
+from PySide6.QtCore import QCoreApplication, Qt
 from source.utils.LogManager import LogManager
 from source.gui.gui_22_font_config_dialog import FontConfigDialog
 from source.gui.gui_23_sound_config_dialog import SoundConfigDialog
@@ -45,7 +45,37 @@ def setup_menubar(self):
 
         self.action_adicionar_tarefa = QAction(QCoreApplication.translate("App", "➕ Adicionar"), self)
         self.action_adicionar_tarefa.setShortcut("Ctrl+T")
-        self.action_adicionar_tarefa.triggered.connect(lambda: self.executar_acao_modulo('gerenciador', 'adicionar_tarefa'))
+
+        try:
+            self.action_adicionar_tarefa.setShortcutContext(Qt.ApplicationShortcut)
+
+        except Exception:
+            pass
+
+        try:
+            if hasattr(self, 'addAction'):
+                self.addAction(self.action_adicionar_tarefa)
+
+        except Exception:
+            pass
+
+        def _on_add_task():
+            try:
+                logger.info("menu: _on_add_task acionado via atalho/menu")
+                try:
+                    if hasattr(self, 'switch_to_tab'):
+                        self.switch_to_tab(1)
+
+                except Exception:
+                    pass
+
+                from PySide6.QtCore import QTimer
+                QTimer.singleShot(0, lambda: self.executar_acao_modulo('gerenciador', 'adicionar_tarefa'))
+
+            except Exception as e:
+                logger.error(f"Erro ao processar adicionar tarefa via atalho: {e}", exc_info=True)
+
+        self.action_adicionar_tarefa.triggered.connect(_on_add_task)
         self.submenu_tempo.addAction(self.action_adicionar_tarefa)
 
         self.submenu_tempo.addSeparator()
@@ -137,10 +167,36 @@ def setup_menubar(self):
         self.action_eis_calendario.triggered.connect(lambda: self.executar_acao_modulo('eisenhower', 'calendar_toggle'))
         self.submenu_eisenhower.addAction(self.action_eis_calendario)
 
+        self.action_atalhos = QAction(QCoreApplication.translate("App", "📚 Ajuda - Atalhos"), self)
+        self.action_atalhos.setShortcut("F1")
+        self.action_atalhos.triggered.connect(self.show_help)
+
+        try:
+            self.action_atalhos.setShortcutContext(Qt.ApplicationShortcut)
+
+        except Exception:
+            pass
+
+        self.menu_arquivo.addAction(self.action_atalhos)
+
         self.menu_arquivo.addSeparator()
 
         self.action_sair = QAction(QCoreApplication.translate("App", "🚪 Sair"), self)
         self.action_sair.setShortcut("Ctrl+Q")
+
+        try:
+            self.action_sair.setShortcutContext(Qt.ApplicationShortcut)
+
+        except Exception:
+            pass
+
+        try:
+            if hasattr(self, 'addAction'):
+                self.addAction(self.action_sair)
+
+        except Exception:
+            pass
+
         self.action_sair.triggered.connect(self.close)
         self.menu_arquivo.addAction(self.action_sair)
 

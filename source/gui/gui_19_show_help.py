@@ -6,26 +6,46 @@ logger = LogManager.get_logger()
 
 def show_help(self):
     try:
-        help_text = QCoreApplication.translate("App", """
-        <h2>Estudo Acessível - Atalhos</h2>
-        <table>
-            <tr><td><b>Ctrl+1</b></td><td>Leitor Acessível</td></tr>
-            <tr><td><b>Ctrl+2</b></td><td>Gestão de Tempo</td></tr>
-            <tr><td><b>Ctrl+3</b></td><td>Mapas Mentais</td></tr>
-            <tr><td><b>Ctrl+4</b></td><td>Método Feynman</td></tr>
-            <tr><td><b>Ctrl+Q</b></td><td>Sair da aplicação</td></tr>
-            <tr><td><b>F1</b></td><td>Ajuda</td></tr>
-        </table>
-        <br>
-        <p><b>Régua de Foco:</b></p>
-        <ul>
-            <li>Arraste no centro para mover</li>
-            <li>Arraste nas bordas para redimensionar</li>
-            <li>Setas ↑↓←→ para ajuste fino</li>
-            <li>ESC para fechar</li>
-        </ul>
-        """)
-        QMessageBox.information(self, QCoreApplication.translate("App", "Ajuda - Atalhos"), help_text)
+        title = QCoreApplication.translate("App", "Lúmen - Atalhos")
+
+        atalhos = [
+            (QCoreApplication.translate("App", "Ctrl+1"), QCoreApplication.translate("App", "📖 Leitor Acessível")),
+            (QCoreApplication.translate("App", "Ctrl+2"), QCoreApplication.translate("App", "⏱️ Gestão de Tempo")),
+            (QCoreApplication.translate("App", "Ctrl+3"), QCoreApplication.translate("App", "🧠 Mapas Mentais")),
+            (QCoreApplication.translate("App", "Ctrl+4"), QCoreApplication.translate("App", "🎓 Método Feynman")),
+            (QCoreApplication.translate("App", "Ctrl+5"), QCoreApplication.translate("App", "🗂️ Matriz Eisenhower")),
+            (QCoreApplication.translate("App", "Ctrl+O"), QCoreApplication.translate("App", "📁 Carregar PDF")),
+            (QCoreApplication.translate("App", "Ctrl+R"), QCoreApplication.translate("App", "▶️ Ler")),
+            (QCoreApplication.translate("App", "Ctrl+P"), QCoreApplication.translate("App", "⏸️ Pausar")),
+            (QCoreApplication.translate("App", "Ctrl+T"), QCoreApplication.translate("App", "➕ Adicionar")),
+            (QCoreApplication.translate("App", "Ctrl+N"), QCoreApplication.translate("App", "➕ Adicionar Conceito")),
+            (QCoreApplication.translate("App", "Ctrl+S"), QCoreApplication.translate("App", "💾 Salvar")),
+            (QCoreApplication.translate("App", "Ctrl+L"), QCoreApplication.translate("App", "📂 Carregar")),
+            (QCoreApplication.translate("App", "Ctrl+Shift+F"), QCoreApplication.translate("App", "🔤 Fonte...")),
+            (QCoreApplication.translate("App", "Ctrl+Shift+S"), QCoreApplication.translate("App", "🔔 Som...")),
+            (QCoreApplication.translate("App", "Ctrl+Q"), QCoreApplication.translate("App", "🚪 Sair")),
+            (QCoreApplication.translate("App", "F1"), QCoreApplication.translate("App", "Ajuda")),
+        ]
+
+        regua_title = QCoreApplication.translate("App", "Régua de Foco:")
+        regua_items = [
+            QCoreApplication.translate("App", "Arraste no centro para mover"),
+            QCoreApplication.translate("App", "Arraste nas bordas para redimensionar"),
+            QCoreApplication.translate("App", "Setas ↑↓←→ para ajuste fino"),
+            QCoreApplication.translate("App", "ESC para fechar"),
+        ]
+
+        rows_html = "".join(f"<tr><td><b>{k}</b></td><td>{v}</td></tr>" for k, v in atalhos)
+        regua_html = "".join(f"<li>{it}</li>" for it in regua_items)
+
+        help_html = (
+            f"<h2>{title}</h2>"
+            f"<table>{rows_html}</table>"
+            f"<br><p><b>{regua_title}</b></p>"
+            f"<ul>{regua_html}</ul>"
+        )
+
+        QMessageBox.information(self, QCoreApplication.translate("App", "Ajuda - Atalhos"), help_html)
 
     except Exception as e:
         logger.critical(f"Erro crítico ao exibir ajuda: {str(e)}", exc_info=True)

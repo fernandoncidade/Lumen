@@ -76,6 +76,32 @@ Detalhamento das mudanças principais
 - Alterado: mm_07_aplicar_visibilidade_por_foco.py
   - Ao aplicar foco/hierarquia, visibilidades são recalculadas e, dependendo de _lumen_layout_freeze_on_click, opta por recalcular incrementalmente (_layout_incremental_preservando_base) ou layout completo (_layout_hierarquia_navegacao).
 
+10) Melhorias no Gerenciador de Tarefas, Menus e Atalhos (anexos mais recentes)
+- Novo/alterado: source/modules/tempo/tmp_03_GerenciadorTarefas.py
+  - Drag & Drop interno: conectado model.rowsMoved para sincronizar status de tarefas após movimentações internas, evitando inconsistências de status quando itens são rearranjados dentro da mesma coluna.
+  - Seleção e arraste mais robustos: listas Kanban configuradas com flags adequadas (drag enabled, accept drops, drop indicator) e tratamento seguro de eventos de drop com sinalização (_on_drop_sincronizar) para persistência imediata.
+  - Sincronização de status pós-movimento: método _sincronizar_status_pos_movimento atualiza status das tarefas com mapeamento estável entre colunas e itens, salvando apenas quando necessário.
+  - Menu de contexto rico: ações para mover/remover item único e em lote, com validações e diálogos de seleção de destino.
+  - Reset de contadores ampliado: opção de reset por tarefa, por coluna ou global, com diálogos informativos quando não há itens.
+  - Ajuste automático de largura do combo de prioridade via _ajustar_largura_combo para evitar cortes de texto e melhorar UX.
+  - Aplicação dinâmica de tema/paleta em inputs e listas (_aplicar_tema_dinamico_inputs) para integração visual com tema do app, incluindo suporte a viewports das listas.
+  - Persistência e logging reforçados: salvar/carregar com tratamento de erros, mensagens de log informativas e blocos try/except para evitar travamentos.
+
+- Novo/alterado: source/gui/gui_03_setup_menubar.py, source/gui/gui_08_atualizar_menu.py
+  - Barra de menu consolidada: ações organizadas em submenus (Leitor, Gestão de Tempo, Mapas Mentais, Método Feynman, Matriz Eisenhower, Configurações, Sobre).
+  - Integração de diálogos de configuração: atalho e ação para configurar Fonte (Ctrl+Shift+F) e Som do Pomodoro (Ctrl+Shift+S) com callbacks que disparam atualização dos módulos quando aplicável.
+  - Ação "Ajuda - Atalhos" (F1) adicionada ao menu; texto e contexto de atalho aplicados dinamicamente em atualizar_menu.
+  - Textos dinâmicos traduzidos e atualizados em tempo de execução para itens de menu (ex.: alternância "📅 Mostrar/Ocultar Calendário", "📚 Ajuda - Atalhos", "🔔 Som...").
+
+- Novo/alterado: source/gui/gui_15_setup_shortcuts.py, source/gui/gui_19_show_help.py
+  - Atalhos globais: registros de Ctrl+1..Ctrl+5 para navegação rápida entre abas e F1 para abrir Ajuda (Atalhos).
+  - Diálogo de Ajuda renovado (show_help): exibe lista de atalhos e instruções de uso da régua de foco em formato HTML simples via QMessageBox.information.
+
+- Novo/alterado: source/gui/gui_04_executar_acao_modulo.py
+  - Roteador de ações por módulo mais resiliente: executar_acao_modulo implementa mapeamentos seguros para leitores, gerenciador de tarefas, mapa mental, feynman e eisenhower.
+  - Melhor tratamento do fluxo "adicionar_tarefa": uso de QTimer.singleShot para agendar a chamada de adicionar_tarefa garantindo foco/captura correta do conteúdo do QLineEdit; logs informativos adicionados para diagnóstico.
+  - Atualizações de estado de UI sincronizadas após ações (ex.: trocar texto do botão de pausa do leitor, atualizar checkbox de calendário da Eisenhower).
+
 Robustez, logging e compatibilidade
 - Em todos os pontos críticos foi adicionado/consistente uso de LogManager.get_logger() para log de erros e debug com exc_info=True.
 - Blocos try/except em pontos de instalação de threads, chamadas a ProcessadorIA, pos-setting de sceneRect, snapping e chamadas a funções de UI para evitar travamentos da aplicação.
@@ -117,6 +143,10 @@ Impacto e comportamento esperado
   - Aviso "IA em alfa" aparece uma vez por ação para orientar usuário; snapshot/restore permitem voltar ao estado original do layout caso usuário queira desfazer reorganizações.
 - Integração Feynman:
   - Usuário pode integrar notas de um nó diretamente ao Método Feynman via EventBus; fluxo com validações e confirmação.
+- Fluxos de tarefas (drag & drop, mover por menu, resetar contadores) tornaram-se mais previsíveis e resilientes a edge-cases do modelo de dados.
+- Atalhos e menu agora fornecem acesso rápido e consistente a ações críticas (leitor, temporizador, adicionar conceito, abrir ajuda).
+- Integração visual com temas do aplicativo melhorou, reduzindo artefatos em viewports e listas.
+- Logs mais informativos facilitam depuração de problemas relacionados a UI e persistência.
 
 Como testar (passos rápidos)
 1. Abrir Mapa Mental e criar múltiplos nós com textos variados.

@@ -4,26 +4,26 @@ Date: December 28, 2025
 Author: Fernando Nillsson Cidade
 
 Quick summary
-- Substantial improvements to the Mind Map hierarchical layout engine: more robust subtree width calculation, reliable recursive positioning and incremental/global overlap resolution.
-- AI reorganization preserves imported hierarchies and provides a toggle flow (reorganize → rotate horizontal → restore snapshot).
-- Document import via AI refactored with a worker thread: detailed progress, safe cancellation and post-processing (TF‑IDF and semantic relations).
-- Mind Map UI updated: toolbar with AI actions, "AI in alpha" warning shown once per action, snapshot/restore of the original layout and horizontal rotation via 'apply layout'.
-- Concept node (NoConceito) gains direct integration with the Feynman Method (button), visual badge and display of associated information extracted by AI.
-- Several robustness fixes: exception handling, logging via LogManager and safe expansion of sceneRect to avoid clipping.
+- Substantial improvements to the Mind Map hierarchical layout engine: more robust subtree width calculation, reliable recursive positioning, and incremental/global overlap resolution.
+- AI-driven reorganization preserves imported hierarchies and offers a toggle flow (reorganize → rotate horizontal → restore snapshot).
+- Document import via AI refactored to use a worker thread: detailed progress, safe cancellation, and post-processing (TF‑IDF and semantic relations).
+- Mind Map UI updated: toolbar with AI actions, one-time "AI in alpha" warning per action, snapshot/restore of the original layout, and horizontal rotation via 'apply layout'.
+- Concept node (NoConceito) gained direct integration with the Feynman Method (button), a visual badge, and display of AI-extracted associated information.
+- Several robustness fixes: exception handling, logging via LogManager, and safe expansion of sceneRect to avoid clipping.
 
-Detailed changes
+Detailed description of main changes
 
 1) Hierarchical layout and overlap resolution
 - New/changed: source/modules/mapa/mapamental/mm_34_layout_hierarquia_navegacao.py
-  - Function [_resolver_sobreposicoes_global] now supports direction ("down"/"right"), padding and iteration limit; applies snap when available and expands sceneRect with large padding to avoid clipping.
-  - Implemented incremental algorithm (_layout_incremental_preservando_base) that recalculates only subtrees affected by visibility changes, respecting fixed/obstacle nodes and pushing colliding nodes until resolution or iteration limit.
-  - Stable coordinate-based sorting for deterministic behavior when placing new nodes.
+  - The [_resolver_sobreposicoes_global] function now supports direction ("down"/"right"), padding, and iteration limits; it applies snap when available and expands the sceneRect with large padding to avoid clipping.
+  - Implemented an incremental algorithm (_layout_incremental_preservando_base) that recalculates only subtrees affected by visibility changes, respects fixed/obstacle nodes, and pushes colliding nodes until resolution or iteration limit.
+  - Stable sorting by coordinates for deterministic behavior when placing new nodes.
 
 2) Subtree width calculation and recursive positioning
 - New/changed: mm_30_calcular_larguras_subarvore.py, mm_31_posicionar_no_arvore.py
-  - _calcular_larguras_subarvore computes required width per node considering horizontal margin, gap between children and the real boundingRect size (with safe fallback).
-  - _posicionar_no_arvore positions subtrees recursively, centering children relative to the parent, computing vertical spacing based on the tallest child and applying a configurable minimum GAP.
-  - Per-node error handling to avoid global failure during positioning.
+  - _calcular_larguras_subarvore computes required width per node considering horizontal margins, gap between children, and the actual boundingRect size (with safe fallbacks).
+  - _posicionar_no_arvore positions subtrees recursively, centering children relative to the parent, computing vertical spacing based on the tallest child, and applying a configurable minimum GAP.
+  - Node-level error handling to avoid global failure during positioning.
 
 3) Applying tree layout (reorganization)
 - Changed: mm_29_aplicar_layout_arvore.py
@@ -31,19 +31,19 @@ Detailed changes
   - Post-processing: snap via scene.snap() when available and call to global overlap resolver to ensure a clean visual.
   - Safe expansion of sceneRect with padding after layout.
 
-4) Reorganize with AI — preserve hierarchy and AI fallback
+4) Reorganize with AI — hierarchy preservation and AI fallback
 - Changed: mm_26_reorganizar_com_ia.py
-  - When a previously built hierarchy exists (e.g., map imported from PDF), reorganization preserves that hierarchy and applies the tree layout without reanalyzing the document, avoiding destruction of the imported structure.
-  - Otherwise, integrates ProcessadorIA: concept extraction via TF‑IDF, identification of semantic relations, hierarchy construction and tree layout generation, creation of AI relations and configuration of the hierarchy by indices.
+  - When a pre-existing hierarchy exists (e.g., map imported from PDF), reorganization preserves that hierarchy and applies the tree layout without reanalyzing the document, avoiding destruction of the imported structure.
+  - Otherwise, integrates ProcessadorIA: concept extraction via TF‑IDF, semantic relation identification, hierarchy construction and tree layout generation, creation of AI relations, and configuration of the hierarchy by indices.
   - Keeps the last hierarchy snapshot (_lumen_last_hierarquia) and focuses the root item at the end with animate_focus_on.
 
-5) Document Import with AI in worker
+5) Document import with AI running in a worker
 - Changed: mm_23_importar_documento_ia.py
-  - ImportWorker runs extract_text → detect language → detect sections → build tree → process nodes (NLP pipeline) in a separate thread with signals for progress (text, value, busy).
-  - Progress dialog with safe cancellation: requestInterruption, cancel() and flags to abort processing between steps.
-  - Node processing uses nlp.pipe when available, computes concepts, main ideas and contextual summary per node; jobs filter out short nodes to skip heavy NLP.
-  - Post-processing applies global TF‑IDF and attempts to identify semantic relations; worker returns the tree and the ProcessadorIA instance to be used afterwards.
-  - UI Bridge ensures cleanup and integration: clears the map, generates a map from the hierarchy via _gerar_mapa_de_hierarquia and enables hierarchical navigation.
+  - ImportWorker runs extract_text → detect_language → detect_sections → build_tree → process_nodes (NLP pipeline) in a separate thread with signals for progress (text, value, busy).
+  - Progress dialog with safe cancellation: requestInterruption, cancel() and flags to interrupt processing between stages.
+  - Node processing uses nlp.pipe when available, computes concepts, key ideas, and contextual summaries per node; jobs skip heavy NLP for short nodes.
+  - Post-processing applies global TF‑IDF and attempts to identify semantic relations; worker returns the tree and a ProcessadorIA instance for later use.
+  - The UI bridge ensures cleanup and integration: clears the map, generates the map from the hierarchy via _gerar_mapa_de_hierarquia, and enables hierarchical navigation.
 
 6) Mind Map UI / UX
 - Changed: mm_11_setup_ui.py
@@ -51,38 +51,64 @@ Detailed changes
     0) apply AI reorganization (snapshot saved),
     1) apply horizontal rotation/layout,
     2) restore original snapshot.
-  - "AI in alpha" warning shown once per action (import/reorganize) with a pt‑BR fallback if the translation key is missing.
-  - Snapshot/restore: captures positions, visibilities, hierarchy and freeze_on_click state; restoration tries to recompute sceneRect and visibilities and reapply snap.
-  - Function to apply horizontal layout via rotation tries to use an already calculated hierarchy; if unavailable, performs rotation by swapping coordinates preserving the center and applies overlap resolver.
+  - One-time "AI in alpha" warning shown per action (import/reorganize) with a pt‑BR fallback if the translation key is missing.
+  - Snapshot/restore: captures positions, visibilities, hierarchy, and freeze_on_click state; restoration attempts to recompute sceneRect and visibilities and reapply snap.
+  - Function to apply horizontal layout by rotation tries to use an already-calculated hierarchy; if unavailable, it rotates by swapping coordinates while preserving center and applies overlap resolution.
 
 7) Concept Node (NoConceito) — editing and integration
 - Changed: mp_01_NoConceito.py
-  - The concept edit dialog now displays "Associated information" (info_associada) extracted by the AI, in read-only mode when present.
-  - The "➕ Integrate with the Feynman Method" button sends a payload {title, notes} via EventBus.conceito_atualizado (singleton EventBus) with validations (title and notes not empty) and user confirmation.
-  - Visual badge updated according to presence of notes; local attributes (text, notes, info_associada) retained and synchronized visually.
+  - The concept edit dialog now displays "Associated information" (info_associada) extracted by AI, in read‑only mode when present.
+  - "➕ Integrate into Feynman Method" button sends payload {title, notes} via EventBus.conceito_atualizado (singleton EventBus) with validations (non-empty title and notes) and user confirmation.
+  - Visual badge updated according to presence of notes; local attributes (text, notes, info_associada) are maintained and synchronized visually.
   - Improved exception handling in the integration flow.
   - Integration fixes:
-    - Forced immediate processing of the event loop right after emitting the integration signal to ensure the QTextEdit content is read and sent even on the first integration.
-    - Applied QTimer.singleShot to ensure the loop processes the signal before showing the confirmation dialog, fixing data loss on the first attempt.
-    - Added an explicit commit of the edited text before reading input_notas (clearFocus + QApplication.processEvents), resolving the first-click issue after loading a document or changing language.
+    - Forced immediate processing of the event loop right after emitting the integration signal to ensure QTextEdit content is read and sent even on the first integration.
+    - Applied QTimer.singleShot to ensure the loop processes the signal before showing the confirmation dialog, fixing first-time data loss.
+    - Explicit commit of edited text before reading input_notas (clearFocus + QApplication.processEvents), solving the first-click issue after loading a document or changing language.
 
-8) Scene / View helpers and MapaMental widget
+8) Scene / View helpers and Mind Map widget
 - Changed: mp_03_MapaMental.py
-  - Introduces MapaScene with background drawing and configurable snap; SmoothGraphicsView with smooth zoom and delegated animate_focus_on.
-  - MapaMental delegates new modular functions (import document, reorganize with AI, apply layouts, calculate widths, position nodes, etc.) to mm_XX modules.
-  - Initialization installs app eventFilter and applies initial theme; hierarchy attributes and initial flags are preserved.
+  - Introduced MapaScene with custom background drawing and configurable snap; SmoothGraphicsView with smooth zoom and delegated animate_focus_on.
+  - MapaMental integrates new modular functions (import document, reorganize with AI, apply layouts, calculate widths, position nodes, etc.) by delegating to mm_XX modules.
+  - Initialization installs the app eventFilter and applies the initial theme; hierarchy attributes and initial flags are preserved.
 
 9) Visibility by focus and incremental layout
 - Changed: mm_07_aplicar_visibilidade_por_foco.py
-  - When applying focus/hierarchy, visibilities are recalculated and, depending on _lumen_layout_freeze_on_click, chooses to recalculate incrementally (_layout_incremental_preservando_base) or run the full layout (_layout_hierarquia_navegacao).
+  - When applying focus/hierarchy, visibilities are recalculated and, depending on _lumen_layout_freeze_on_click, it chooses to recalculate incrementally (_layout_incremental_preservando_base) or perform a full layout (_layout_hierarquia_navegacao).
+
+10) Improvements in Task Manager, Menus and Shortcuts (recent attachments)
+- New/changed: source/modules/tempo/tmp_03_GerenciadorTarefas.py
+  - Internal Drag & Drop: connected model.rowsMoved to synchronize task status after internal rearrangements, avoiding status inconsistencies when items are moved within the same column.
+  - More robust selection and dragging: Kanban lists configured with appropriate flags (drag enabled, accept drops, drop indicator) and safe drop event handling with signaling (_on_drop_sincronizar) for immediate persistence.
+  - Post-move status synchronization: _sincronizar_status_pos_movimento updates task statuses with a stable mapping between columns and items, saving only when necessary.
+  - Rich context menu: actions to move/remove single or multiple items, with validations and destination selection dialogs.
+  - Expanded counter reset: option to reset per task, per column, or globally, with informative dialogs when there are no items.
+  - Automatic width adjustment for the priority combo via _ajustar_largura_combo to avoid text truncation and improve UX.
+  - Dynamic theme/palette application for inputs and lists (_aplicar_tema_dinamico_inputs) to visually integrate with the app theme, including support for list viewports.
+  - Enhanced persistence and logging: save/load with error handling, informative log messages, and try/except blocks to avoid application crashes.
+
+- New/changed: source/gui/gui_03_setup_menubar.py, source/gui/gui_08_atualizar_menu.py
+  - Consolidated menu bar: actions organized into submenus (Reader, Time Management, Mind Maps, Feynman Method, Eisenhower Matrix, Settings, About).
+  - Integration of configuration dialogs: actions/shortcuts to configure Font (Ctrl+Shift+F) and Pomodoro Sound (Ctrl+Shift+S) with callbacks that refresh modules when applicable.
+  - "Help - Shortcuts" action (F1) added to the menu; text and shortcut context applied dynamically in atualizar_menu.
+  - Dynamic texts translated and updated at runtime for menu items (e.g., toggling "📅 Show/Hide Calendar", "📚 Help - Shortcuts", "🔔 Sound...").
+
+- New/changed: source/gui/gui_15_setup_shortcuts.py, source/gui/gui_19_show_help.py
+  - Global shortcuts: register Ctrl+1..Ctrl+5 for quick tab navigation and F1 to open Help (Shortcuts).
+  - Renewed Help dialog (show_help): displays a list of shortcuts and ruler usage instructions in simple HTML via QMessageBox.information.
+
+- New/changed: source/gui/gui_04_executar_acao_modulo.py
+  - More resilient module action router: executar_acao_modulo implements safe mappings for reader, task manager, mind map, feynman and eisenhower modules.
+  - Improved handling of the "add task" flow: use of QTimer.singleShot to schedule the call to adicionar_tarefa ensuring focus/correct capture of the QLineEdit content; informative logs added for diagnostics.
+  - UI state updates synchronized after actions (e.g., swap reader pause button text, update Eisenhower calendar checkbox).
 
 Robustness, logging and compatibility
-- LogManager.get_logger() usage was added/standardized at all critical points for error and debug logs with exc_info=True.
-- try/except blocks in thread setup, calls to ProcessadorIA, sceneRect position setting, snapping and UI calls to avoid application freezes.
-- Use of hasattr/checks before invoking optional methods (snap, animate_focus_on, _atualizar_visibilidade_linhas) ensuring compatibility with alternative scenes/views.
-- Safe fallbacks in geometric calculations (boundingRect, widths/heights) to prevent exceptions for elements not yet rendered.
+- LogManager.get_logger() has been added/used consistently at critical points for error and debug logging with exc_info=True.
+- try/except blocks added in thread installation points, calls to ProcessadorIA, sceneRect pos-setting, snapping and UI calls to avoid app crashes.
+- Use of hasattr/checks before invoking optional methods (snap, animate_focus_on, _atualizar_visibilidade_linhas) to ensure compatibility with alternative scenes/views.
+- Safe fallbacks in geometric calculations (boundingRect, widths/heights) to prevent exceptions from not-yet-rendered elements.
 
-Changed files / main symbols
+Files changed / main symbols
 - source/modules/mapa/mapamental/mm_34_layout_hierarquia_navegacao.py
   - _resolver_sobreposicoes_global, _layout_hierarquia_navegacao, _layout_incremental_preservando_base
 - source/modules/mapa/mapamental/mm_31_posicionar_no_arvore.py
@@ -105,40 +131,44 @@ Changed files / main symbols
   - _aplicar_visibilidade_por_foco
 
 Impact and expected behavior
-- AI reorganization:
+- Reorganize with AI:
   - Preserves imported hierarchies (e.g., PDF) preventing structure loss; when no prior hierarchy exists, generates a tree via ProcessadorIA and applies layout with configurable spacing.
   - Reorganization toggle cycles through 3 states (reorganize → rotate horizontal → restore).
 - Document import:
-  - Background processing with progress bar and cancellation; each node receives concepts, ideas and contextual summary; result is produced as a renderable map.
+  - Background process with progress bar and cancellation; node-by-node receives concepts, ideas and contextual summaries; result is produced as a renderable map.
 - Layout and navigation:
-  - Reduced visual overlaps thanks to global/incremental resolver; child positioning centered with vertical spacing based on real heights.
-  - Snap applied when scene supports it; sceneRect automatically expanded to accommodate moved nodes.
+  - Reduced visual overlaps thanks to global/incremental resolver; children positioned centered with vertical spacing based on real heights.
+  - Snap applied when the scene supports it; sceneRect automatically expanded to accommodate moved nodes.
 - UI:
-  - "AI in alpha" warning appears once per action to guide the user; snapshot/restore allow reverting the original layout if desired.
+  - A one-time "AI in alpha" warning guides the user; snapshot/restore allows reverting to the original layout if desired.
 - Feynman integration:
-  - User can integrate a node's notes directly into the Feynman Method via EventBus; flow includes validations and confirmation.
+  - Users can integrate node notes directly into the Feynman Method via EventBus; the flow includes validations and confirmation.
+- Task flows (drag & drop, move via menu, reset counters) became more predictable and resilient to data-model edge cases.
+- Shortcuts and menu now provide quick and consistent access to critical actions (reader, timer, add concept, open help).
+- Visual integration with app themes improved, reducing artifacts in viewports and lists.
+- More informative logs ease debugging of UI and persistence issues.
 
 How to test (quick steps)
-1. Open Mind Map and create multiple nodes with varied texts.
+1. Open Mind Map and create multiple nodes with varying texts.
 2. Test Import Document (AI):
-   - Import PDF/TXT; follow the progress dialog, cancel at different stages and confirm UI remains stable.
-   - When finished, confirm the map was generated and nodes display info_associada/summary when present.
+   - Import PDF/TXT; follow the progress dialog, cancel at different stages and confirm the UI remains stable.
+   - On completion, confirm the map was generated and nodes display info_associada/summary when present.
 3. Test Reorganize with AI:
-   - Click Reorganize (state 0) and verify tree layout applied.
-   - Click again to apply horizontal rotation (state 1) and confirm the visual change.
+   - Click Reorganize (state 0) and verify tree layout is applied.
+   - Click again to apply horizontal rotation (state 1) and confirm the visual.
    - Click again to restore snapshot (state 2 → 0) and confirm original positions/visibilities.
 4. Test Visibility by Focus:
    - Enable hierarchical navigation, expand/collapse nodes and observe incremental layout and collision resolution.
 5. Test Feynman Integration:
-   - Double-click a node, write notes, click "➕ Integrar ao Método Feynman" and confirm the concept is emitted via EventBus (see Feynman module for reception).
+   - Double-click a node, write notes, click "➕ Integrate into Feynman Method" and confirm emission via EventBus (see Feynman module for reception).
 6. Test Robustness:
-   - Disconnect or force absence of ProcessadorIA and confirm flows use safe fallbacks without freezing the UI.
+   - Disconnect or force absence of ProcessadorIA and confirm flows use fallbacks without freezing the UI.
 
-Technical notes and dependencies
+Technical notes and relevant dependencies
 - Main components involved: PySide6 (QGraphicsScene/View, QThread, QProgressDialog), ProcessadorIA (spaCy / optional TF‑IDF), LogManager and EventBus.
-- It is recommended to have ProcessadorIA preloaded to speed up large imports; the import worker accepts an existing proc instance.
-- Snap/MapScene: if the Scene implements snap(), layout uses snapping after positioning.
-- Extensive logging via LogManager helps diagnose failures in production.
+- It's recommended to pre-load ProcessadorIA to speed up large imports; import worker accepts an existing processor instance.
+- Snap/MapScene: if the Scene implements snap(), the layout uses snapping after positioning.
+- Extensive logging via LogManager facilitates diagnosing production issues.
 
 _________________________________________________
 

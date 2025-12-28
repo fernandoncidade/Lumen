@@ -246,6 +246,13 @@ class GerenciadorTarefas(QWidget):
     def adicionar_tarefa(self):
         try:
             titulo = self.input_tarefa.text().strip()
+
+            try:
+                self.logger.info(f"GerenciadorTarefas.adicionar_tarefa chamado; texto='{titulo}'")
+
+            except Exception:
+                pass
+
             if not titulo:
                 return
 
