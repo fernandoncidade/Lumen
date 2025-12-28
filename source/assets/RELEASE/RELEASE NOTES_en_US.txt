@@ -1,6 +1,6 @@
 RELEASE NOTES — Lúmen
-Version: 2025.12.27.0
-Date: December 27, 2025
+Version: 2025.12.28.0
+Date: December 28, 2025
 Author: Fernando Nillsson Cidade
 
 Quick summary
@@ -57,10 +57,14 @@ Detailed changes
 
 7) Concept Node (NoConceito) — editing and integration
 - Changed: mp_01_NoConceito.py
-  - Concept edit dialog now displays "Associated information" (info_associada) extracted by AI, read-only when present.
-  - Button "➕ Integrate with the Feynman Method" sends payload {title, notes} via EventBus.conceito_atualizado (singleton EventBus) with validations (title and notes not empty) and shows confirmation to the user.
-  - Visual badge updated according to presence of notes; local attributes (texto, notas, info_associada) are kept and synchronized visually.
+  - The concept edit dialog now displays "Associated information" (info_associada) extracted by the AI, in read-only mode when present.
+  - The "➕ Integrate with the Feynman Method" button sends a payload {title, notes} via EventBus.conceito_atualizado (singleton EventBus) with validations (title and notes not empty) and user confirmation.
+  - Visual badge updated according to presence of notes; local attributes (text, notes, info_associada) retained and synchronized visually.
   - Improved exception handling in the integration flow.
+  - Integration fixes:
+    - Forced immediate processing of the event loop right after emitting the integration signal to ensure the QTextEdit content is read and sent even on the first integration.
+    - Applied QTimer.singleShot to ensure the loop processes the signal before showing the confirmation dialog, fixing data loss on the first attempt.
+    - Added an explicit commit of the edited text before reading input_notas (clearFocus + QApplication.processEvents), resolving the first-click issue after loading a document or changing language.
 
 8) Scene / View helpers and MapaMental widget
 - Changed: mp_03_MapaMental.py
