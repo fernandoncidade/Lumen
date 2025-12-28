@@ -1,6 +1,6 @@
 NOTAS DE LANÇAMENTO — Lúmen
-Versão: 2025.12.27.0
-Data: 27 de dezembro de 2025
+Versão: 2025.12.28.0
+Data: 28 de dezembro de 2025
 Autor: Fernando Nillsson Cidade
 
 Resumo rápido
@@ -61,6 +61,10 @@ Detalhamento das mudanças principais
   - Botão "➕ Integrar ao Método Feynman" envia payload {titulo, notas} via EventBus.conceito_atualizado (singleton EventBus) com validações (título e notas não vazios) e confirmação ao usuário.
   - Badge visual atualizado conforme presença de notas; atributos locais (texto, notas, info_associada) mantidos e sincronizados visualmente.
   - Melhor tratamento de exceções no fluxo de integração.
+  - Correções de integração (fixes):
+    - Forçado processamento imediato do loop de eventos logo após emitir o sinal de integração para garantir que o conteúdo do QTextEdit seja lido e enviado mesmo na primeira integração.
+    - Aplicado QTimer.singleShot para garantir que o loop processe o sinal antes de mostrar a caixa de confirmação, corrigindo perda de dados na 1ª vez.
+    - Commit para confirmar explicitamente o texto editado antes de ler input_notas (clearFocus + QApplication.processEvents), solucionando o problema do primeiro clique após carregar documento ou mudar idioma.
 
 8) Scene / View helpers e widget MapaMental
 - Alterado: mp_03_MapaMental.py
