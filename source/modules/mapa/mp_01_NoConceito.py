@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (QVBoxLayout, QHBoxLayout, QLabel, QGraphicsEllipseItem, QGraphicsTextItem, QDialog, 
                                QTextEdit, QDialogButtonBox, QGraphicsDropShadowEffect, QPushButton, QMessageBox)
-from PySide6.QtCore import Qt, QCoreApplication, QTimer
+from PySide6.QtCore import Qt, QCoreApplication
 from PySide6.QtGui import QColor, QPen, QBrush, QFont
 from source.utils.LogManager import LogManager
 from source.utils.EventBus import get_event_bus
@@ -139,18 +139,6 @@ class NoConceito(QGraphicsEllipseItem):
 
             def integrar_ao_feynman():
                 try:
-                    try:
-                        if input_notas.hasFocus():
-                            input_notas.clearFocus()
-
-                        if input_texto.hasFocus():
-                            input_texto.clearFocus()
-
-                        QCoreApplication.processEvents()
-
-                    except Exception:
-                        pass
-
                     titulo = input_texto.toPlainText().strip()
                     notas_texto = input_notas.toPlainText().strip()
 
@@ -174,12 +162,11 @@ class NoConceito(QGraphicsEllipseItem):
                     self.event_bus.conceito_atualizado.emit(dados)
                     self.logger.info(f"Conceito '{titulo}' integrado ao Método Feynman via botão específico")
 
-                    QCoreApplication.processEvents()
-                    QTimer.singleShot(50, lambda: QMessageBox.information(
+                    QMessageBox.information(
                         dialogo,
                         QCoreApplication.translate("App", "✅ Integrado"),
                         QCoreApplication.translate("App", "Conceito '{titulo}' integrado ao Método Feynman com sucesso!").format(titulo=titulo)
-                    ))
+                    )
 
                 except Exception as e:
                     self.logger.error(f"Erro ao integrar conceito ao Método Feynman: {str(e)}", exc_info=True)
