@@ -33,6 +33,13 @@ class MetodoFeynman(QWidget):
 
             self.event_bus = get_event_bus()
             self.event_bus.conceito_atualizado.connect(self.receber_conceito_mapa_mental)
+
+            try:
+                self.event_bus.drain_pending_conceitos()
+
+            except Exception:
+                pass
+
             self.logger.info("MetodoFeynman conectado ao EventBus")
 
         except Exception as e:

@@ -4,20 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="02f93f84-518f-4e9e-97ae-36ae501fd277" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/mapa/mapamental/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/mapa/mapamental/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/mapa/mapamental/mm_07_aplicar_visibilidade_por_foco.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/mapa/mapamental/mm_07_aplicar_visibilidade_por_foco.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/mapa/mapamental/mm_29_aplicar_layout_arvore.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/mapa/mapamental/mm_29_aplicar_layout_arvore.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/mapa/mp_01_NoConceito.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/mapa/mp_01_NoConceito.py" afterDir="false" />
-    </list>
+    <list default="true" id="02f93f84-518f-4e9e-97ae-36ae501fd277" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="323" />
+    <option name="cachedIndexableFilesCount" value="324" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -127,6 +121,7 @@
       <workItem from="1766372100051" duration="4147000" />
       <workItem from="1766525956515" duration="6537000" />
       <workItem from="1766535572895" duration="4000" />
+      <workItem from="1766890318327" duration="6453000" />
     </task>
     <servers />
   </component>

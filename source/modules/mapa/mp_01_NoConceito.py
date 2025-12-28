@@ -171,7 +171,12 @@ class NoConceito(QGraphicsEllipseItem):
                         return
 
                     dados = {'titulo': titulo, 'notas': notas_texto}
-                    self.event_bus.conceito_atualizado.emit(dados)
+                    try:
+                        self.event_bus.send_conceito(dados)
+
+                    except Exception:
+                        self.event_bus.conceito_atualizado.emit(dados)
+
                     self.logger.info(f"Conceito '{titulo}' integrado ao Método Feynman via botão específico")
 
                     QCoreApplication.processEvents()
