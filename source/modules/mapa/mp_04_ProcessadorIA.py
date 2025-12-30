@@ -35,6 +35,10 @@ from source.modules.mapa.iaprocessador import (
     _extrair_ideias_principais as pia__extrair_ideias_principais,
     _extrair_conceitos_tfidf as pia__extrair_conceitos_tfidf,
     _aplicar_tfidf_global as pia__aplicar_tfidf_global,
+    gerar_resumo_avancado as pia__gerar_resumo_avancado,
+    _load_sentence_transformer as pia__load_sentence_transformer,
+    get_sentence_embeddings as pia__get_sentence_embeddings,
+    gerar_resumo_semantico as pia__gerar_resumo_semantico,
     _identificar_relacoes_semanticas as pia__identificar_relacoes_semanticas,
     _identificar_relacoes_avancadas as pia__identificar_relacoes_avancadas,
     _log_estrutura_completa as pia__log_estrutura_completa,
@@ -89,6 +93,11 @@ class ProcessadorIA:
     _extrair_ideias_principais = pia__extrair_ideias_principais
     _extrair_conceitos_tfidf = pia__extrair_conceitos_tfidf
     _aplicar_tfidf_global = pia__aplicar_tfidf_global
+
+    _gerar_resumo_avancado = pia__gerar_resumo_avancado
+    _load_sentence_transformer = pia__load_sentence_transformer
+    _get_sentence_embeddings = pia__get_sentence_embeddings
+    _gerar_resumo_semantico = pia__gerar_resumo_semantico
 
     _identificar_relacoes_semanticas = pia__identificar_relacoes_semanticas
     _identificar_relacoes_avancadas = pia__identificar_relacoes_avancadas

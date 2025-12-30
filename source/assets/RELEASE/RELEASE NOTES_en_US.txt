@@ -1,4 +1,191 @@
 RELEASE NOTES — Lúmen
+Version: 2025.12.30.0
+Date: December 30, 2025
+Author: Fernando Nillsson Cidade
+
+Quick summary
+- Fixes for safe cleanup and shutdown of resources in the main UI (closeEvent) to avoid thread/object leaks.
+- Improved robustness in task removal and placeholder operations in the Eisenhower Matrix.
+- Adjustments to the concept deletion flow in the Feynman Method with secure confirmation and translation support.
+- Strengthened text editing tools in the Accessible Reader: export (TXT/DOCX/PDF), formatting (bullets, line spacing, indent, margins) and fallbacks for missing dependencies.
+- More resilient Edge TTS thread (EdgeTTSThread): safe text splitting, voice id normalization, strict management of async loops/communications, cancellation and cleanup of async resources.
+- IA modules in the iaprocessador package: semantic/advanced summarization and hierarchical tree construction with improved heuristics and robust fallbacks.
+- Map worker (MapasWorker) using a process pool for reorganize with timeout and exception handling.
+- ProcessadorIA integrated with iaprocessador (facade) and safe NLP model initialization; unified API for summarization, embeddings and hierarchical analysis.
+- Mind Map (MapaMental) received Scene/View abstractions, integration with the reorganize worker, an AI layout/reorganization pipeline and translation/theme handlers.
+- Improvements in the "About" dialog: text selection by language, translation fallbacks and dialog sizing.
+- Integration of threads and workers in MetodoFeynman and Eisenhower for safe asynchronous I/O (load/save) with dedicated handlers.
+
+Detailed changes
+
+1) Safe shutdown and cleanup (source/gui/gui_20_closeEvent.py)
+- closeEvent function:
+  - Shuts down/cleans sensitive components before accepting the event: reader (cleanup), reader ruler (close), manager (cleanup) and map (cleanup).
+  - Robust per-block exception handling to avoid crashes on close.
+  - Centralized logging via LogManager to diagnose shutdown failures.
+
+2) Task removal and placeholders (source/modules/eisenhower/ui/ui_04_remove_task.py)
+- remove_task(app, item, list_widget):
+  - Validates selectable items before removal.
+  - Confirmation dialog with translated strings (QCoreApplication.translate).
+  - Centralized placeholder update via _garantir_placeholders_em_todas_as_listas and _ensure_placeholder.
+  - Robust try/except blocks and logging; prevents empty lists without placeholder.
+
+3) Delete concept in the Feynman Method (source/modules/feynman/fey_08_deletar_conceito.py)
+- deletar_conceito(self):
+  - Deletion confirmation with translated dialog and safe title formatting.
+  - Removes the concept from the list and persists (salvar_conceitos) followed by UI update/clear.
+  - Exception handling and logging for audit.
+
+4) Accessible Reader text tools (source/modules/leitor/leitor_acessivel/lta_24_text_tools.py)
+- criar_texto(self, confirmar=True): safe reset of content_stack, discard confirmation and application of default font via FontManager with fallback.
+- salvar_como(self): export support for .txt, .docx and .pdf with:
+  - Direct implementations for TXT and DOCX (python-docx).
+  - PDF generation via reportlab with fallback to docx2pdf when reportlab is unavailable.
+  - Handling of long chunks, width wrapping and protection against dependency failures with user-friendly messages.
+- toggle_bullets, set_line_spacing, set_indent, set_margins:
+  - Utilities to apply lists, spacing, indent and margins to QTextDocument with logging and exception protection.
+  - Incremental per-block application to avoid failures in specific blocks.
+
+5) Edge TTS Thread (source/modules/leitor/lt_02_EdgeTTSThread.py)
+- Robustness and safety:
+  - Splits text into segments (max ~3500 chars) using sentence heuristics (_split_text).
+  - Voice id normalization (_normalize_voice) with several heuristics and fallback.
+  - Uses a dedicated asyncio event loop per thread; careful tracking and closing of Communicate/gen/session.
+  - Cooperative cancellation: _should_stop, task cancellation and closing generators (aclose) and sessions.
+  - Retry strategy across candidate voices (configurable fallbacks).
+  - Emits chunk_ready (file path) and error (message) signals with detailed logging.
+  - Final cleanup of the event loop and tracking of comms to avoid leaks.
+
+6) Embeddings / Semantic summary (source/modules/mapa/iaprocessador/pia_31_embeddings.py)
+- _load_sentence_transformer:
+  - Loads SentenceTransformer with memoization and logs failures.
+- get_sentence_embeddings:
+  - Abstraction to generate embeddings with fallback to a zero array on failure.
+- gerar_resumo_semantico:
+  - Pipeline that extracts sentences (spaCy fallback to split by period), generates embeddings, computes similarity to the document mean embedding and selects top-N relevant sentences.
+  - Error handling and consistent return {'summary', 'sentences'}.
+
+7) Advanced summarizer (source/modules/mapa/iaprocessador/pia_30_summarizador.py)
+- gerar_resumo_avancado:
+  - TF-IDF + PageRank-like pipeline for sentence scoring.
+  - Optional integration of embeddings (when available) to combine TF-IDF + embedding scores (configurable weight).
+  - Detection of syntactic coordination (syndetic/asyndetic) with spaCy heuristics and regex fallback.
+  - Normalization of scores, deduplication and detailed output with metadata (is_sindetic, is_assindetic, clauses).
+  - Robust fallbacks when nlp is not available.
+
+8) Hierarchical tree construction (source/modules/mapa/iaprocessador/pia_20_construir_arvore_hierarquica.py)
+- _construir_arvore_hierarquica:
+  - Heuristic to extract the document's main title from sections or the first lines of text.
+  - Converts the secoes_raw list into nodes with start/end positions, raw text and parent-child structure via a stack (respecting levels).
+  - Fallbacks and logging on error to return a root that preserves content.
+
+9) IA package __init__ initialization (source/modules/mapa/iaprocessador/__init__.py)
+- Re-exports main functions/facades: NLP loader, text extraction, preprocessing, hierarchy construction/processing, summarization, embeddings and relation identification.
+- Organized for easy import by ProcessadorIA and improved testability.
+
+10) Map worker (source/modules/mapa/mp_05_ThreadMapaMental.py)
+- MapasWorker:
+  - Uses ProcessPoolExecutor with worker count based on CPU to process reorganize in a separate process.
+  - _process_reorganize_task: creates a temporary ProcessadorIA instance in the child process, extracts TF-IDF concepts and advanced relations.
+  - Configurable timeout (30s) when waiting for results; cancels the future on timeout.
+  - Emits reorganize_finished signal with payload (relations, existing_connections, visible_idx).
+  - Registers shutdown via atexit to close the pool.
+
+11) ProcessadorIA facade (source/modules/mapa/mp_04_ProcessadorIA.py)
+- ProcessadorIA class:
+  - Safe initialization: detects QCoreApplication for translations, attempts to load NLP with _carregar_modelo_nlp and records idioma_detectado.
+  - Maps/encapsulates all functions from the iaprocessador package as instance attributes (pointers), providing a unified API to the rest of the app.
+  - Error logging on initialization to fallback when models/packages are missing.
+
+12) Mind Map (source/modules/mapa/mp_03_MapaMental.py)
+- New abstractions:
+  - MapaScene: delegated drawBackground, configurable snap-to-grid and grid parameters.
+  - SmoothGraphicsView: smooth zoom/scroll and animate_focus_on method.
+- Worker integration:
+  - Initializes MapasWorker in a QThread with connection _request_reorganize → process_reorganize and callback _on_worker_reorganize_finished.
+  - reorganizar_com_ia triggers the worker when available; applies hierarchy and layout on result.
+- Delegated pipeline and utilities:
+  - _aplicar_layout_arvore, _calcular_larguras_subarvore, _posicionar_no_arvore, _criar_relacoes_ia, _configurar_hierarquia_por_indices, _atualizar_visibilidade_linhas, etc., remain delegated.
+- cleanup:
+  - Safely disconnects worker signals and stops/waits for the thread during cleanup, protecting against leaks.
+
+13) Show About (source/modules/mod_07_exibir_public.py)
+- exibir_sobre(app):
+  - Selection of texts (about, license, notices, privacy, history, release_notes) based on the TranslationManager language with fallbacks.
+  - Translation key fallbacks via _tr_multi and default pt_BR/en_US texts.
+  - Builds the AboutDialog with fixed header, localized texts and sizing (900x600 base adjusted).
+  - Logging and error dialog on failure.
+
+14) Eisenhower — integrating app (source/modules/mod_06_eisenhower.py)
+- EisenhowerMatrixApp class:
+  - Connects to GerenciadorTraducao and applies initial language.
+  - Internal worker for saving tasks (I/O) in a dedicated thread (request_save/save_finished) to avoid blocking the UI.
+  - Calendar pane integrated into the UI when embedded; hides legacy calendar button.
+  - Hour-grouping logic (headers), ordered insertion into time groups and cleanup of orphan headers (cleanup_time_groups).
+  - save_tasks delegates to worker when available; load_tasks and calendar pane updates include exception handling.
+
+15) Metodo Feynman — integration and worker (source/modules/mod_05_metodo_feynman.py)
+- MetodoFeynman:
+  - Integrates with EventBus (get_event_bus()) and connects to conceito_atualizado signal to receive concepts from the Mind Map.
+  - receber_conceito_mapa_mental: intelligent merge/append of notes with logic to update revision/explanation, create a new concept when necessary and persist via worker.
+  - Dedicated worker (FeynmanWorker) to load/save concepts in a separate thread with conceitos_loaded/save_finished signals and error handling.
+  - Exposes load/save methods via wrappers that emit requests to the worker; safe stop/cleanup on aboutToQuit.
+
+Impact and expected behavior
+- Safer application shutdown: reduced risk of dangling threads/resources.
+- Eisenhower operations (remove, placeholders, time grouping) are more predictable and resilient.
+- Accessible Reader export/edit works even when dependencies are missing, with clear messages to the user.
+- Edge TTS synthesis is more reliable across environments; effective stop/cancel and voice fallbacks.
+- Document processing (IA) is robust: TF‑IDF/semantic summarization + embeddings support when available; hierarchy construction with stable heuristics.
+- AI-driven map reorganization is scalable (process pool) and non-blocking — applies layout automatically when finished.
+- MapaMental → MetodoFeynman integration via EventBus is consolidated and thread-safe.
+- About dialog auto-selects texts by language and uses consistent sizing.
+
+How to test (quick steps)
+1. Close the application with several modules open (Mind Map, Reader, Feynman, Eisenhower) and confirm no errors/exceptions in the log.
+2. Eisenhower:
+   - Create tasks with/without time, remove a task and verify placeholder and cleanup_time_groups.
+   - Save and load tasks; ensure the worker saves without blocking the UI.
+3. Accessible Reader:
+   - Create text and use "Save As" for .txt, .docx and .pdf; test behavior when reportlab/docx2pdf are missing.
+   - Apply bullets, adjust line spacing, indent and margins.
+4. Edge TTS:
+   - Generate a long read to force splitting into chunks; pause/stop to confirm the thread ends and temporary files are managed.
+5. Mind Map:
+   - Create multiple nodes and click "🤖 Reorganize with AI": when the worker is active, verify layout application, animated focus and creation of AI relations.
+6. Metodo Feynman:
+   - Double-click a map node → integrate into the Feynman Method → confirm concept creation/update and persistence via worker.
+7. About:
+   - Open About dialog in pt_BR/en_US and confirm contents (Release Notes included), fallback texts and dialog size.
+
+Main changed files (summary)
+- source/gui/gui_20_closeEvent.py
+- source/modules/eisenhower/ui/ui_04_remove_task.py
+- source/modules/feynman/fey_08_deletar_conceito.py
+- source/modules/leitor/leitor_acessivel/lta_24_text_tools.py
+- source/modules/leitor/lt_02_EdgeTTSThread.py
+- source/modules/mapa/iaprocessador/pia_31_embeddings.py
+- source/modules/mapa/iaprocessador/pia_30_summarizador.py
+- source/modules/mapa/iaprocessador/pia_20_construir_arvore_hierarquica.py
+- source/modules/mapa/iaprocessador/__init__.py
+- source/modules/mapa/mp_05_ThreadMapaMental.py
+- source/modules/mapa/mp_04_ProcessadorIA.py
+- source/modules/mapa/mp_03_MapaMental.py
+- source/modules/mod_07_exibir_public.py
+- source/modules/mod_06_eisenhower.py
+- source/modules/mod_05_metodo_feynman.py
+
+Dependencies and technical notes
+- Edge TTS (edge_tts) for remote synthesizer; async session manager.
+- sentence-transformers for embeddings (optional); safe fallback if unavailable.
+- sklearn (TfidfVectorizer) used in the summarizer; fallbacks and protections if absent.
+- reportlab / python-docx / docx2pdf optional for PDF/DOCX export with fallbacks.
+- PySide6 for UI and threading/signals; consistent use of QThread/Workers for I/O.
+
+_________________________________________________
+
+RELEASE NOTES — Lúmen
 Version: 2025.12.28.0
 Date: December 28, 2025
 Author: Fernando Nillsson Cidade

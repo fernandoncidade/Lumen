@@ -915,8 +915,23 @@ Isso pode levar alguns minutos.</translation>
     </message>
 
     <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+
+    <message>
+      <source>Yes</source>
+      <translation>Sim</translation>
+    </message>
+
+    <message>
       <source>Sim</source>
       <translation>Sim</translation>
+    </message>
+
+    <message>
+      <source>No</source>
+      <translation>Não</translation>
     </message>
 
     <message>

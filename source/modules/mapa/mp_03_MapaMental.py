@@ -2,8 +2,10 @@ from PySide6.QtWidgets import QWidget, QGraphicsView, QGraphicsScene
 from PySide6.QtCore import QRectF, QCoreApplication, QPointF
 from PySide6.QtGui import QColor, QPainter, QPen
 from typing import Dict, Optional, Set
+from PySide6.QtCore import QThread, Signal
 from source.utils.LogManager import LogManager
 from source.utils.CaminhoPersistenteUtils import obter_caminho_persistente
+from source.modules.mapa.mp_05_ThreadMapaMental import MapasWorker
 
 
 class MapaScene(QGraphicsScene):
@@ -42,6 +44,8 @@ class SmoothGraphicsView(QGraphicsView):
 
 
 class MapaMental(QWidget):
+    _request_reorganize = Signal(list, object, object)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.logger = LogManager.get_logger()
@@ -57,6 +61,24 @@ class MapaMental(QWidget):
             self._hierarquia_parent = {}
             self._hierarquia_children = {}
             self._nos_expandidos = set()
+
+            try:
+                self._mapas_thread = QThread()
+                self._mapas_worker = MapasWorker()
+                self._mapas_worker.moveToThread(self._mapas_thread)
+                self._mapas_worker.reorganize_finished.connect(self._on_worker_reorganize_finished)
+
+                try:
+                    self._request_reorganize.connect(self._mapas_worker.process_reorganize)
+
+                except Exception:
+                    pass
+
+                self._mapas_thread.start()
+
+            except Exception:
+                self._mapas_thread = None
+                self._mapas_worker = None
 
             self.setup_ui()
             app = QCoreApplication.instance()
@@ -125,8 +147,32 @@ class MapaMental(QWidget):
         return _impl(self, relacoes)
 
     def reorganizar_com_ia(self):
-        from source.modules.mapa.mapamental.mm_26_reorganizar_com_ia import reorganizar_com_ia as _impl
-        return _impl(self)
+        try:
+            if not getattr(self, 'nos', []):
+                self.logger.warning("Nenhum conceito para reorganizar")
+                return
+
+            visiveis_idx = {i for i, no in enumerate(self.nos) if getattr(no, "isVisible", lambda: True)()}
+            if self._hierarquia_root is not None and isinstance(self._hierarquia_children, dict) and self._hierarquia_children:
+                from source.modules.mapa.mapamental.mm_26_reorganizar_com_ia import reorganizar_com_ia as _impl
+                return _impl(self)
+
+            textos = [no.texto for no in self.nos]
+            conexoes_existentes = self._obter_conexoes_existentes()
+
+            if self._mapas_worker is not None and self._mapas_thread is not None:
+                try:
+                    self._request_reorganize.emit(textos, conexoes_existentes, visiveis_idx)
+                    return
+
+                except Exception:
+                    pass
+
+            from source.modules.mapa.mapamental.mm_26_reorganizar_com_ia import reorganizar_com_ia as _impl
+            return _impl(self)
+
+        except Exception as e:
+            self.logger.error(f"Erro ao iniciar reorganização com IA: {e}", exc_info=True)
 
     def _obter_conexoes_existentes(self):
         from source.modules.mapa.mapamental.mm_27_obter_conexoes_existentes import _obter_conexoes_existentes as _impl
@@ -182,6 +228,77 @@ class MapaMental(QWidget):
     def eventFilter(self, obj, event):
         from source.modules.mapa.mapamental.mm_22_eventFilter import eventFilter as _impl
         return _impl(self, obj, event)
+
+    def _on_worker_reorganize_finished(self, relacoes, conexoes_existentes, visiveis_idx):
+        try:
+            hierarquia = self._construir_hierarquia(conexoes_existentes)
+
+            self._lumen_last_hierarquia = hierarquia
+            try:
+                self._aplicar_layout_arvore(hierarquia, orientacao="vertical", espacamento_vertical=120, espacamento_horizontal_base=140, visiveis=visiveis_idx)
+
+            except Exception:
+                pass
+
+            try:
+                self._criar_relacoes_ia(relacoes)
+
+            except Exception:
+                pass
+
+            try:
+                self._configurar_hierarquia_por_indices(hierarquia)
+
+            except Exception:
+                pass
+
+            try:
+                from source.modules.mapa.mapamental.mm_26_reorganizar_com_ia import reorganizar_com_ia as _impl_dummy
+                self._atualizar_visibilidade_linhas()
+
+            except Exception:
+                pass
+
+            try:
+                if self.nos and hasattr(self.view, "animate_focus_on"):
+                    raiz = self.nos[hierarquia.get("raiz", 0)] if hierarquia else self.nos[0]
+                    self.view.animate_focus_on(raiz)
+
+            except Exception:
+                pass
+
+            self.logger.info("Mapa reorganizado em formato de árvore com sucesso (via worker)")
+
+        except Exception as e:
+            self.logger.error(f"Erro ao aplicar resultado da reorganização: {e}", exc_info=True)
+
+    def cleanup(self):
+        try:
+            try:
+                if getattr(self, '_mapas_worker', None) is not None:
+                    try:
+                        self._mapas_worker.reorganize_finished.disconnect(self._on_worker_reorganize_finished)
+
+                    except Exception:
+                        pass
+
+            except Exception:
+                pass
+
+            if getattr(self, '_mapas_thread', None) is not None:
+                try:
+                    self._mapas_thread.quit()
+                    self._mapas_thread.wait(3000)
+
+                except Exception:
+                    try:
+                        self._mapas_thread.terminate()
+
+                    except Exception:
+                        pass
+
+        except Exception:
+            pass
 
     def _atualizar_traducoes_hierarquia(self):
         from source.modules.mapa.mapamental.mm_33_atualizar_traducoes_hierarquia import _atualizar_traducoes_hierarquia as _impl

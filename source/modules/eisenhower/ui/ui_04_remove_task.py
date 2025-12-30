@@ -58,14 +58,14 @@ def remove_task(app, item, list_widget):
         if not item or not (item.flags() & Qt.ItemIsSelectable):
             return
 
-        reply = QMessageBox.question(
-            app,
-            get_text("Remover Tarefa"),
-            get_text("Deseja remover a tarefa '{item}'?").replace("{item}", item.text()),
-            QMessageBox.Yes | QMessageBox.No
-        )
+        msg = QMessageBox(app)
+        msg.setWindowTitle(get_text("Remover Tarefa"))
+        msg.setText(get_text("Deseja remover a tarefa '{item}'?").replace("{item}", item.text()))
+        btn_yes = msg.addButton(get_text("Yes"), QMessageBox.YesRole)
+        btn_no = msg.addButton(get_text("No"), QMessageBox.NoRole)
+        msg.exec()
 
-        if reply != QMessageBox.Yes:
+        if msg.clickedButton() != btn_yes:
             return
 
         list_widget.takeItem(list_widget.row(item))

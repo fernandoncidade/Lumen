@@ -1,4 +1,191 @@
 NOTAS DE LANÇAMENTO — Lúmen
+Versão: 2025.12.30.0
+Data: 30 de dezembro de 2025
+Autor: Fernando Nillsson Cidade
+
+Resumo rápido
+- Correções de limpeza e encerramento de recursos na UI principal (closeEvent) para evitar leaks de threads/objetos.
+- Robustez aprimorada nas operações de remoção de tarefas e placeholders na Matriz de Eisenhower.
+- Ajustes no fluxo de exclusão de conceitos do Método Feynman com confirmação segura e tradução.
+- Ferramentas de edição de texto do Leitor Acessível fortalecidas: exportação (TXT/DOCX/PDF), formatação (bullets, espaçamento, recuo, margens) e fallback para dependências ausentes.
+- Thread de TTS Edge (EdgeTTSThread) mais resiliente: split seguro de texto, normalização de voice id, gerenciamento rigoroso de loops/comm, cancelamento e limpeza de recursos assíncronos.
+- Módulos de IA no package iaprocessador: sumarização semântica/avançada e construção de árvore hierárquica com heurísticas melhoradas e fallbacks robustos.
+- Worker de Mapas (MapasWorker) com pool de processos para reorganização (reorganize) e timeout/handling de exceções.
+- ProcessadorIA integrado com iaprocessador (facade) e inicialização segura do modelo NLP; API unificada para sumarização, embeddings e análise hierárquica.
+- Mapa Mental (MapaMental) recebeu abstrações Scene/View, integração com worker de reorganização, pipeline de layout/reorganização por IA e handlers de tradução/tema.
+- Melhorias na exibição "Sobre": seleção de textos por idioma, fallback de traduções e dimensionamento do diálogo.
+- Integração de threads e workers em MetodoFeynman e Eisenhower para I/O assíncrono seguro (carregar/salvar) com handlers dedicados.
+
+Detalhamento das mudanças principais
+
+1) Encerramento seguro e limpeza (source/gui/gui_20_closeEvent.py)
+- Função closeEvent:
+  - Encerra/limpa componentes sensíveis antes de aceitar o evento: leitor (cleanup), régua do leitor (close), gerenciador (cleanup) e mapa (cleanup).
+  - Tratamento robusto de exceções por bloco para evitar crash no fechamento.
+  - Logging centralizado via LogManager para diagnosticar falhas no shutdown.
+
+2) Remoção de tarefas e placeholders (source/modules/eisenhower/ui/ui_04_remove_task.py)
+- remove_task(app, item, list_widget):
+  - Validação de itens selecionáveis antes de remover.
+  - Diálogo de confirmação com strings traduzidas (QCoreApplication.translate).
+  - Atualização centralizada de placeholders via _garantir_placeholders_em_todas_as_listas e _ensure_placeholder.
+  - Robustez com blocos try/except e logging; evita listas vazias sem placeholder.
+
+3) Deletar conceito no Método Feynman (source/modules/feynman/fey_08_deletar_conceito.py)
+- deletar_conceito(self):
+  - Confirmação de exclusão com diálogo traduzido e formatação segura do título.
+  - Remoção do conceito da lista e persistência (salvar_conceitos) seguida de atualização/limpeza da UI.
+  - Tratamento de exceções e logging para auditoria.
+
+4) Ferramentas de texto do Leitor Acessível (source/modules/leitor/leitor_acessivel/lta_24_text_tools.py)
+- criar_texto(self, confirmar=True): reset seguro do content_stack, confirmação de descarte e aplicação de fonte padrão via FontManager com fallback.
+- salvar_como(self): exportação suportada para .txt, .docx e .pdf com:
+  - Implementação direta para TXT e DOCX (python-docx).
+  - Geração de PDF via reportlab com fallback para docx2pdf quando reportlab não estiver disponível.
+  - Tratamento de chunks longos, wrapping por largura e proteção contra falhas de dependências com mensagens amigáveis.
+- toggle_bullets, set_line_spacing, set_indent, set_margins:
+  - Utilitários para aplicar listas, espaçamento, recuo e margens ao QTextDocument com logging e proteção por exceções.
+  - Aplicação incremental por bloco para evitar falhas em blocos específicos.
+
+5) Edge TTS Thread (source/modules/leitor/lt_02_EdgeTTSThread.py)
+- Robustez e segurança:
+  - Splitting de texto em segmentos (máx ~3500 chars) com heurística por sentenças (_split_text).
+  - Normalização de voice id (_normalize_voice) com várias heurísticas e fallback.
+  - Uso de loop asyncio dedicado por thread; rastreamento e fechamento cuidadoso de Communicate/gen/session.
+  - Cancelamento cooperativo: _should_stop, cancelamento de tasks e fechamento de generators (aclose) e sessões.
+  - Estratégia de retries por candidatos de voz (inclui fallbacks configuráveis).
+  - Emissão de sinais chunk_ready (caminho arquivo) e error (mensagem) com logging detalhado.
+  - Limpeza final do event loop e tracking de comms para evitar leaks.
+
+6) Embeddings / Resumo semântico (source/modules/mapa/iaprocessador/pia_31_embeddings.py)
+- _load_sentence_transformer:
+  - Carregamento com memoization do SentenceTransformer e logging em falha.
+- get_sentence_embeddings:
+  - Abstração para gerar embeddings com fallback para array zeros em caso de falha.
+- gerar_resumo_semantico:
+  - Pipeline que extrai sentenças (spaCy fallback para split por ponto), gera embeddings, calcula similaridade com embedding médio do documento e seleciona top-N sentenças relevantes.
+  - Tratamento de erros e retorno consistente {'summary', 'sentences'}.
+
+7) Summarizador avançado (source/modules/mapa/iaprocessador/pia_30_summarizador.py)
+- gerar_resumo_avancado:
+  - Pipeline TF-IDF + PageRank-like para scoring de sentenças.
+  - Integração opcional de embeddings (quando disponível) para combinar scores TF-IDF + embedding (peso configurável).
+  - Detecção de coordenação sintática (sindética/assindética) com heurísticas spaCy e regex para fallback.
+  - Normalização de scores, deduplicação e saída detalhada com metadados (is_sindetic, is_assindetic, clauses).
+  - Fallbacks robustos quando nlp não está disponível.
+
+8) Construção de árvore hierárquica (source/modules/mapa/iaprocessador/pia_20_construir_arvore_hierarquica.py)
+- _construir_arvore_hierarquica:
+  - Heurística para extrair título principal do documento a partir de seções ou primeiras linhas do texto.
+  - Conversão de lista de secoes_raw em nós com posicoes de início/fim, texto_puro e estrutura pai-filho via stack (respeitando níveis).
+  - Fallbacks e logging em caso de erro para retornar raiz com conteúdo íntegro.
+
+9) Inicialização / __init__ do pacote IA (source/modules/mapa/iaprocessador/__init__.py)
+- Reexport das funções/facades principais: carregamento NLP, extração de texto, pré-processamento, construção/ processamento de hierarquia, sumarização, embeddings e identificação de relações.
+- Organização que facilita import por ProcessadorIA e testabilidade.
+
+10) Worker de Mapas (source/modules/mapa/mp_05_ThreadMapaMental.py)
+- MapasWorker:
+  - Uso de ProcessPoolExecutor com número de workers baseado em CPU para processar reorganize em processo separado.
+  - _process_reorganize_task: cria instancia temporária de ProcessadorIA no processo filho, extrai conceitos TF-IDF e relações avançadas.
+  - Timeout configurável (30s) na espera do resultado; cancela o future em timeout.
+  - Emissão de sinal reorganize_finished com payloads (relacoes, conexoes_existentes, visiveis_idx).
+  - Registro de shutdown via atexit para encerrar pool.
+
+11) Facade ProcessadorIA (source/modules/mapa/mp_04_ProcessadorIA.py)
+- Classe ProcessadorIA:
+  - Inicialização segura: detecta QCoreApplication para tradução, tenta carregar nlp com _carregar_modelo_nlp e registra idioma_detectado.
+  - Mapeamento/encapsulamento de todas as funções do pacote iaprocessador como atributos de instância (pointers), fornecendo API unificada para o restante do app.
+  - Logging de erro na inicialização para fallback quando modelos/pacotes ausentes.
+
+12) Mapa Mental (source/modules/mapa/mp_03_MapaMental.py)
+- Novas abstrações:
+  - MapaScene: drawBackground (delegado), snap-to-grid configurável e parâmetros de grid.
+  - SmoothGraphicsView: zoom/scroll suave e método animate_focus_on.
+- Integração com worker:
+  - Inicialização de MapasWorker em QThread com conexão _request_reorganize → process_reorganize e callback _on_worker_reorganize_finished.
+  - Reorganizar_com_ia dispara worker quando disponível; aplica hierarquia e layout ao receber resultado.
+- Pipeline e utilitários delegados:
+  - _aplicar_layout_arvore, _calcular_larguras_subarvore, _posicionar_no_arvore, _criar_relacoes_ia, _configurar_hierarquia_por_indices, _atualizar_visibilidade_linhas, etc., mantidos como delegados.
+- cleanup:
+  - Desconexão segura dos sinais do worker e parada/espera da thread no cleanup, protegendo contra leaks.
+
+13) Exibir Sobre (source/modules/mod_07_exibir_public.py)
+- exibir_sobre(app):
+  - Seleção de textos (about, license, notices, privacy, history, release_notes) baseada em idioma do GerenciadorTraducao com fallbacks.
+  - Fallbacks para chaves de tradução via _tr_multi e textos padrão pt_BR/en_US.
+  - Construção do diálogo SobreDialog com cabeçalho fixo, textos locais e sizing (900x600 base ajustado).
+  - Logging e diálogo de erro em falha.
+
+14) Eisenhower — app integrador (source/modules/mod_06_eisenhower.py)
+- Classe EisenhowerMatrixApp:
+  - Conexão ao GerenciadorTraducao e aplicação inicial de idioma.
+  - Worker interno para salvar tasks (I/O) em thread dedicada (request_save/save_finished) para evitar bloqueio da UI.
+  - Calendar pane integrado na UI quando em modo embedded; ocultação de botão legado.
+  - Lógicas de agrupamento por hora (headers), inserção ordenada por time groups e limpeza de headers órfãos (cleanup_time_groups).
+  - save_tasks delega a worker quando disponível; load_tasks e atualização de calendar pane com tratamento de exceções.
+
+15) Metodo Feynman — integração e worker (source/modules/mod_05_metodo_feynman.py)
+- MetodoFeynman:
+  - Integração com EventBus (get_event_bus()) e conexão ao sinal conceito_atualizado para receber conceitos do Mapa Mental.
+  - Receber_conceito_mapa_mental: mesclagem inteligente (merge/append) de notas com lógica de atualização de revisão/explicacao, criação de novo conceito quando necessário e persistência via worker.
+  - Worker dedicado (FeynmanWorker) para carregar/salvar conceitos em thread separada com sinais conceitos_loaded/save_finished e tratamento de erros.
+  - Exposição de métodos carregar/salvar via wrappers que emitem requests ao worker; stop/cleanup seguro no aboutToQuit.
+
+Impacto e comportamento esperado
+- Fechamento da aplicação mais seguro: menos risco de threads pendentes/recursos bloqueados.
+- Operações do Eisenhower (remoção, placeholders, agrupamento horário) mais previsíveis e resilientes.
+- Exportação/edição de texto no Leitor Acessível funciona mesmo quando dependências ausentes, com mensagens claras ao usuário.
+- Síntese TTS Edge mais confiável em ambientes heterogêneos; parada/cancelamento efetivos e fallback de vozes.
+- Processamento de documentos (IA) robusto: sumarização TF‑IDF/semântica + suporte a embeddings quando disponível; construção de hierarquia com heurísticas estáveis.
+- Reorganização de mapas por IA escalável (process pool) e não bloqueante — aplica layout automaticamente ao terminar.
+- Integração MapaMental → MetodoFeynman via EventBus consolidada e thread-safe.
+- Diálogo Sobre com selection automática de textos por idioma e dimensionamento coerente.
+
+Como testar (passos rápidos)
+1. Fechar aplicação com vários módulos abertos (Mapa Mental, Leitor, Feynman, Eisenhower) e confirmar ausência de erros/exceções no log.
+2. Eisenhower:
+   - Criar tarefas com/sem horário, remover uma tarefa e verificar placeholder e cleanup_time_groups.
+   - Salvar e carregar tasks; verificar que o worker salva sem bloquear UI.
+3. Leitor Acessível:
+   - Criar texto e usar "Salvar Como" para .txt, .docx e .pdf; testar comportamento quando reportlab/docx2pdf ausentes.
+   - Aplicar bullets, ajustar espaçamento, recuo e margens.
+4. TTS Edge:
+   - Gerar leitura longa para forçar split em chunks; pausar/parar para confirmar que a thread termina e arquivos temporários são gerenciados.
+5. Mapa Mental:
+   - Criar vários nós e clicar em "🤖 Reorganizar com IA": quando worker estiver ativo, verificar aplicação de layout, foco animado e criação de relações IA.
+6. Metodo Feynman:
+   - Duplo-clique em nó do mapa → integrar ao Método Feynman → confirmar criação/atualização do conceito e persistência via worker.
+7. Sobre:
+   - Abrir diálogo Sobre em pt_BR/en_US e confirmar conteúdos (Release Notes incluído), textos de fallback e tamanho do diálogo.
+
+Arquivos principais alterados (resumo)
+- source/gui/gui_20_closeEvent.py
+- source/modules/eisenhower/ui/ui_04_remove_task.py
+- source/modules/feynman/fey_08_deletar_conceito.py
+- source/modules/leitor/leitor_acessivel/lta_24_text_tools.py
+- source/modules/leitor/lt_02_EdgeTTSThread.py
+- source/modules/mapa/iaprocessador/pia_31_embeddings.py
+- source/modules/mapa/iaprocessador/pia_30_summarizador.py
+- source/modules/mapa/iaprocessador/pia_20_construir_arvore_hierarquica.py
+- source/modules/mapa/iaprocessador/__init__.py
+- source/modules/mapa/mp_05_ThreadMapaMental.py
+- source/modules/mapa/mp_04_ProcessadorIA.py
+- source/modules/mapa/mp_03_MapaMental.py
+- source/modules/mod_07_exibir_public.py
+- source/modules/mod_06_eisenhower.py
+- source/modules/mod_05_metodo_feynman.py
+
+Dependências e notas técnicas
+- Edge TTS (edge_tts) para sintetizador remoto; gerenciador de sessões assíncronas.
+- sentence-transformers para embeddings (opcional); retorno seguro caso indisponível.
+- sklearn (TfidfVectorizer) usado no summarizador; fallback e proteções quando não disponível.
+- reportlab / python-docx / docx2pdf opcionais para exportação PDF/DOCX com fallbacks.
+- PySide6 para UI e threading/signals; uso consistente de QThread/Workers para I/O.
+
+_________________________________________________
+
+NOTAS DE LANÇAMENTO — Lúmen
 Versão: 2025.12.28.0
 Data: 28 de dezembro de 2025
 Autor: Fernando Nillsson Cidade

@@ -2,8 +2,9 @@ from PySide6.QtCore import QThread, Signal
 from source.utils.LogManager import LogManager
 import edge_tts
 from edge_tts.exceptions import NoAudioReceived
-import asyncio, tempfile, os, re
+import asyncio, os, re
 import uuid
+from source.utils.CaminhoPersistenteUtils import obter_caminho_persistente
 
 
 class EdgeTTSThread(QThread):
@@ -17,7 +18,14 @@ class EdgeTTSThread(QThread):
         self.voz = voz
         self.rate_pct = rate_pct
         self.volume_pct = volume_pct
-        self.outdir = outdir or tempfile.gettempdir()
+        self.outdir = outdir or obter_caminho_persistente()
+
+        try:
+            os.makedirs(self.outdir, exist_ok=True)
+
+        except Exception:
+            pass
+
         self._should_stop = False
         self._is_running = False
         self._active_loop = None

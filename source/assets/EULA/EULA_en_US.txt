@@ -1,5 +1,5 @@
 END USER LICENSE AGREEMENT - Lúmen
-Version 2025.12.28.0, December 28, 2025
+Version 2025.12.30.0, December 30, 2025
 
 Copyright (c) 2025 Fernando Nillsson Cidade. All rights reserved.
 

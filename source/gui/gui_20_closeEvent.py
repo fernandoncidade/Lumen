@@ -5,10 +5,38 @@ logger = LogManager.get_logger()
 def closeEvent(self, event):
     try:
         if hasattr(self, 'leitor') and self.leitor:
-            self.leitor.cleanup()
+            try:
+                self.leitor.cleanup()
+
+            except Exception:
+                pass
 
         if hasattr(self, 'leitor') and self.leitor and hasattr(self.leitor, 'regua') and self.leitor.regua:
-            self.leitor.regua.close()
+            try:
+                self.leitor.regua.close()
+
+            except Exception:
+                pass
+
+        if hasattr(self, 'gerenciador') and self.gerenciador:
+            try:
+                if hasattr(self.gerenciador, 'cleanup'):
+                    self.gerenciador.cleanup()
+
+            except Exception:
+                pass
+
+        try:
+            if hasattr(self, 'mapa') and getattr(self, 'mapa'):
+                if hasattr(self.mapa, 'cleanup'):
+                    try:
+                        self.mapa.cleanup()
+
+                    except Exception:
+                        pass
+
+        except Exception:
+            pass
 
         event.accept()
 

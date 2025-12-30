@@ -1,5 +1,5 @@
 import os
-from PySide6.QtCore import QCoreApplication, Qt
+from PySide6.QtCore import QCoreApplication, Qt, QThread, QObject, Signal, Slot
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QPushButton
 from source.utils.CaminhoPersistenteUtils import obter_caminho_persistente
 from source.language.tr_01_gerenciadorTraducao import GerenciadorTraducao
@@ -49,6 +49,58 @@ class EisenhowerMatrixApp(QWidget):
 
         self.initUI()
         self.load_tasks()
+
+        try:
+            class _EisenhowerWorker(QObject):
+                request_save = Signal(str, object)
+                save_finished = Signal(bool)
+                error = Signal(str)
+
+                def __init__(self):
+                    super().__init__()
+                    self.request_save.connect(self._save)
+
+                @Slot(str, object)
+                def _save(self, path, tasks):
+                    try:
+                        import json, os
+                        if not path:
+                            self.save_finished.emit(False)
+                            return
+
+                        dirp = os.path.dirname(path)
+                        if dirp and not os.path.exists(dirp):
+                            try:
+                                os.makedirs(dirp, exist_ok=True)
+
+                            except Exception:
+                                pass
+
+                        with open(path, 'w', encoding='utf-8') as f:
+                            json.dump(tasks or {}, f, ensure_ascii=False, indent=2)
+
+                        self.save_finished.emit(True)
+
+                    except Exception as e:
+                        self.error.emit(str(e))
+
+            self._eisenhower_thread = QThread()
+            self._eisenhower_worker = _EisenhowerWorker()
+            self._eisenhower_worker.moveToThread(self._eisenhower_thread)
+            self._eisenhower_worker.error.connect(lambda e: logger.error(f"Worker error (Eisenhower): {e}"))
+            self._eisenhower_thread.start()
+
+            try:
+                app = QCoreApplication.instance()
+                if app is not None:
+                    app.aboutToQuit.connect(self._stop_eisenhower_thread)
+
+            except Exception:
+                pass
+
+        except Exception as e:
+            logger.error(f"Erro ao iniciar thread do Eisenhower: {e}", exc_info=True)
+
         if not self.embedded:
             self.criar_menu_configuracoes()
 
@@ -242,7 +294,46 @@ class EisenhowerMatrixApp(QWidget):
             logger.error(f"Erro ao remover tarefa: {e}", exc_info=True)
 
     def save_tasks(self):
-        save_tasks(self)
+        try:
+            def _list_to_entries(lst):
+                entries = []
+                if lst is None:
+                    return entries
+
+                for i in range(lst.count()):
+                    item = lst.item(i)
+                    if item.flags() & Qt.ItemIsSelectable:
+                        data = item.data(Qt.UserRole) or {}
+                        text = data.get("text", item.text())
+                        date = data.get("date")
+                        time = data.get("time")
+                        entries.append({"text": text, "date": date, "time": time})
+
+                return entries
+
+            tasks = {
+                "quadrant1": _list_to_entries(getattr(self, 'quadrant1_list', None) or []),
+                "quadrant1_completed": _list_to_entries(getattr(self, 'quadrant1_completed_list', None) or []),
+                "quadrant2": _list_to_entries(getattr(self, 'quadrant2_list', None) or []),
+                "quadrant2_completed": _list_to_entries(getattr(self, 'quadrant2_completed_list', None) or []),
+                "quadrant3": _list_to_entries(getattr(self, 'quadrant3_list', None) or []),
+                "quadrant3_completed": _list_to_entries(getattr(self, 'quadrant3_completed_list', None) or []),
+                "quadrant4": _list_to_entries(getattr(self, 'quadrant4_list', None) or []),
+                "quadrant4_completed": _list_to_entries(getattr(self, 'quadrant4_completed_list', None) or []),
+            }
+
+            if hasattr(self, '_eisenhower_worker') and getattr(self, '_eisenhower_worker') is not None:
+                try:
+                    self._eisenhower_worker.request_save.emit(self.tasks_path, tasks)
+
+                except Exception:
+                    globals()['save_tasks'](self)
+
+            else:
+                globals()['save_tasks'](self)
+
+        except Exception as e:
+            logger.error(f"Erro ao salvar tasks via thread: {e}", exc_info=True)
 
     def load_tasks(self):
         load_tasks(self)
@@ -298,3 +389,28 @@ class EisenhowerMatrixApp(QWidget):
 
     def sair_app(self):
         sair(self)
+
+    def _stop_eisenhower_thread(self):
+        try:
+            if hasattr(self, '_eisenhower_thread') and isinstance(self._eisenhower_thread, QThread) and self._eisenhower_thread.isRunning():
+                try:
+                    self._eisenhower_thread.quit()
+
+                except Exception:
+                    pass
+
+                try:
+                    self._eisenhower_thread.wait(3000)
+
+                except Exception:
+                    pass
+
+        except Exception as e:
+            logger.error(f"Erro ao parar thread do Eisenhower: {e}", exc_info=True)
+
+    def cleanup(self):
+        try:
+            self._stop_eisenhower_thread()
+
+        except Exception:
+            pass

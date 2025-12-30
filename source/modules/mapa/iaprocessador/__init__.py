@@ -34,6 +34,10 @@ from .pia_24_extrair_ideias_principais import _extrair_ideias_principais
 from .pia_28_extrair_conceitos_tfidf import _extrair_conceitos_tfidf
 from .pia_25_aplicar_tfidf_global import _aplicar_tfidf_global
 
+# Summarizador avançado (TF-IDF + coordenações)
+from .pia_30_summarizador import gerar_resumo_avancado
+from .pia_31_embeddings import _load_sentence_transformer, get_sentence_embeddings, gerar_resumo_semantico
+
 # Relações / logging
 from .pia_26_identificar_relacoes_semanticas import _identificar_relacoes_semanticas
 from .pia_29_identificar_relacoes_avancadas import _identificar_relacoes_avancadas
@@ -71,6 +75,10 @@ __all__ = [
     "_extrair_ideias_principais",
     "_extrair_conceitos_tfidf",
     "_aplicar_tfidf_global",
+    "gerar_resumo_avancado",
+    "_load_sentence_transformer",
+    "get_sentence_embeddings",
+    "gerar_resumo_semantico",
     # Relações / logging
     "_identificar_relacoes_semanticas",
     "_identificar_relacoes_avancadas",

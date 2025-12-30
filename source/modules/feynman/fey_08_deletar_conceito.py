@@ -12,14 +12,14 @@ def deletar_conceito(self):
 
         titulo = item_atual.text().split(' - ')[0].replace('🔴 ', '').replace('🟡 ', '').replace('🟢 ', '')
 
-        resposta = QMessageBox.question(
-            self, 
-            QCoreApplication.translate("App", "Confirmar Exclusão"), 
-            QCoreApplication.translate("App", "Deseja realmente deletar o conceito '{titulo}'?").format(titulo=titulo),
-            QMessageBox.Yes | QMessageBox.No
-        )
+        msg = QMessageBox(self)
+        msg.setWindowTitle(QCoreApplication.translate("App", "Confirmar Exclusão"))
+        msg.setText(QCoreApplication.translate("App", "Deseja realmente deletar o conceito '{titulo}'?").format(titulo=titulo))
+        btn_yes = msg.addButton(QCoreApplication.translate("App", "Yes"), QMessageBox.YesRole)
+        btn_no = msg.addButton(QCoreApplication.translate("App", "No"), QMessageBox.NoRole)
+        msg.exec()
 
-        if resposta == QMessageBox.Yes:
+        if msg.clickedButton() == btn_yes:
             self.conceitos = [c for c in self.conceitos if c['titulo'] != titulo]
             self.salvar_conceitos()
             self.atualizar_lista()

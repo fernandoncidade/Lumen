@@ -19,13 +19,13 @@ def criar_texto(self, confirmar=True):
             cur_text = self.texto_area.toPlainText()
             if confirmar and cur_text and cur_text.strip():
                 from PySide6.QtWidgets import QMessageBox
-                resp = QMessageBox.question(
-                    self,
-                    QCoreApplication.translate("App", "Criar Texto"),
-                    QCoreApplication.translate("App", "Deseja criar um novo texto? O conteúdo atual será descartado."),
-                    QMessageBox.Yes | QMessageBox.No
-                )
-                if resp != QMessageBox.Yes:
+                msg = QMessageBox(self)
+                msg.setWindowTitle(QCoreApplication.translate("App", "Criar Texto"))
+                msg.setText(QCoreApplication.translate("App", "Deseja criar um novo texto? O conteúdo atual será descartado."))
+                btn_yes = msg.addButton(QCoreApplication.translate("App", "Yes"), QMessageBox.YesRole)
+                btn_no = msg.addButton(QCoreApplication.translate("App", "No"), QMessageBox.NoRole)
+                msg.exec()
+                if msg.clickedButton() != btn_yes:
                     return
 
         except Exception as e:

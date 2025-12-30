@@ -5,7 +5,35 @@ logger = LogManager.get_logger()
 
 def _construir_arvore_hierarquica(self, texto: str, secoes_raw: List[Dict]) -> Dict:
     linhas = (texto or "").split("\n")
-    titulo_raiz_key = "Documento Principal"
+    def _extrair_titulo_documento(texto: str, secoes: List[Dict]) -> str:
+        try:
+            if secoes:
+                for s in secoes:
+                    pos = s.get('posicao', 0)
+                    if int(pos) <= 2:
+                        t = s.get('titulo', '').strip()
+                        if t:
+                            return t
+
+            linhas_topo = [ln.strip() for ln in (texto or "").split('\n')[:12] if ln.strip()]
+            if linhas_topo:
+                for ln in linhas_topo:
+                    if 3 < len(ln) < 200 and not ln.endswith(('.', '?', '!')):
+                        low = ln.lower()
+                        if any(k in low for k in ['sumário', 'sumario', 'índice', 'indice', 'capítulo', 'chapter', 'prefácio', 'prefacio']):
+                            continue
+
+                        return ln
+
+            if linhas_topo:
+                return linhas_topo[0]
+
+        except Exception:
+            pass
+
+        return "Documento Principal"
+
+    titulo_raiz_key = _extrair_titulo_documento(texto, secoes_raw)
 
     raiz = {
         "titulo": titulo_raiz_key,
