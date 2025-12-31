@@ -182,12 +182,19 @@ def exibir_sobre(app):
 
 def exibir_manual(app):
     try:
-        base_dir = Path(__file__).resolve().parents[2]
-        manual_path = base_dir / "MANUAL.md"
-        if not manual_path.exists():
+        from source.utils.ApplicationPathUtils import get_text_file_path, load_text_file
+
+        manual_file_path = get_text_file_path("MANUAL.md")
+        manual_path = Path(manual_file_path)
+
+        text = load_text_file("MANUAL.md", encoding="utf-8")
+        if not text:
+            if manual_path.exists():
+                text = manual_path.read_text(encoding="utf-8")
+
+        if not text:
             raise FileNotFoundError(f"MANUAL.md não encontrado em: {manual_path}")
 
-        text = manual_path.read_text(encoding="utf-8")
         html_body = None
 
         try:
@@ -227,8 +234,9 @@ def exibir_manual(app):
           color: #24292e;
           background: #ffffff;
         }
-        body { background-color: #ffffff !important; }
-        html { background-color: #ffffff !important; }
+        body, html {
+          background-color: #ffffff !important;
+        }
         .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
           border-bottom: 1px solid #eaecef;
           padding-bottom: .3em;
@@ -258,22 +266,7 @@ def exibir_manual(app):
         .center { text-align: center; }
         """
 
-        force_white_bg_js = """
-        function setWhiteBg() {
-            document.body.style.background = '#ffffff';
-            document.documentElement.style.background = '#ffffff';
-        }
-        setWhiteBg();
-        var observer = new MutationObserver(function(mutations) {
-            setWhiteBg();
-        });
-        observer.observe(document.body, { attributes: true, childList: true, subtree: true });
-        document.addEventListener('click', function(e) {
-            if (e.target && e.target.tagName === 'SUMMARY') {
-                setTimeout(setWhiteBg, 10);
-            }
-        });
-        """
+        force_white_bg_js = ""
 
         full_html = f"""<!doctype html>
         <html>
@@ -316,6 +309,7 @@ def exibir_manual(app):
             def on_load_finished(ok):
                 view.page().setBackgroundColor(QColor("#ffffff"))
                 view.repaint()
+                view.update()
 
             view.loadFinished.connect(on_load_finished)
 
