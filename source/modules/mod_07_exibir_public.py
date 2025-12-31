@@ -1,5 +1,5 @@
 from PySide6.QtCore import QCoreApplication
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox, QDialog, QVBoxLayout, QPushButton
 from source.modules.public import (
     SobreDialog,
     SITE_LICENSES,
@@ -17,6 +17,9 @@ from source.modules.public import (
     RELEASE_NOTES_en_US,
 )
 from source.utils.LogManager import LogManager
+from pathlib import Path
+import html
+import os
 
 logger = LogManager.get_logger()
 
@@ -134,7 +137,7 @@ def exibir_sobre(app):
 
         cabecalho_fixo = (
             f"<h3>{app_title}</h3>"
-            f"<p><b>{version_label}</b> 2025.12.30.0</p>"
+            f"<p><b>{version_label}</b> 2025.12.31.0</p>"
             f"<p><b>{authors_label}</b> Fernando Nillsson Cidade</p>"
             f"<p><b>{description_label}</b> {description_text}</p>"
         )
@@ -175,4 +178,200 @@ def exibir_sobre(app):
 
     except Exception as e:
         logger.error(f"Erro ao exibir diálogo Sobre: {e}", exc_info=True)
+        QMessageBox.critical(app, _tr_multi("Erro") if _tr_multi("Erro") != "Erro" else "Erro", f"{_tr_multi('Erro') if _tr_multi('Erro') != 'Erro' else 'Erro'}: {e}")
+
+def exibir_manual(app):
+    try:
+        base_dir = Path(__file__).resolve().parents[2]
+        manual_path = base_dir / "MANUAL.md"
+        if not manual_path.exists():
+            raise FileNotFoundError(f"MANUAL.md não encontrado em: {manual_path}")
+
+        text = manual_path.read_text(encoding="utf-8")
+        html_body = None
+
+        try:
+            from markdown_it import MarkdownIt
+            try:
+                from mdit_py_plugins import plugin_gfm
+                md = MarkdownIt("commonmark").use(plugin_gfm.gfm_plugin)
+
+            except Exception:
+                md = MarkdownIt("commonmark")
+
+            html_body = md.render(text)
+            logger.info("Renderizado MANUAL.md via markdown-it-py")
+
+        except Exception as e:
+            logger.debug(f"markdown-it-py não disponível ou falha: {e}")
+
+        if not html_body:
+            try:
+                import markdown
+                extensions = ["extra", "codehilite", "tables", "toc", "attr_list", "sane_lists"]
+                html_body = markdown.markdown(text, extensions=extensions, output_format="html5")
+                logger.info("Renderizado MANUAL.md via python-markdown com extensões")
+
+            except Exception as e:
+                logger.error(f"Falha ao converter markdown com python-markdown: {e}", exc_info=True)
+                html_body = f"<pre>{html.escape(text)}</pre>"
+
+        github_css = """
+        .markdown-body {
+          box-sizing: border-box;
+          min-width: 200px;
+          max-width: 980px;
+          margin: 0 auto;
+          padding: 30px;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+          color: #24292e;
+          background: #ffffff;
+        }
+        body { background-color: #ffffff !important; }
+        html { background-color: #ffffff !important; }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+          border-bottom: 1px solid #eaecef;
+          padding-bottom: .3em;
+        }
+        .markdown-body pre {
+          background: #0d1117;
+          color: #c9d1d9;
+          padding: 16px;
+          overflow: auto;
+          border-radius: 6px;
+        }
+        .markdown-body code {
+          background-color: rgba(27,31,35,.05);
+          padding: .2em .4em;
+          margin: 0;
+          font-size: 85%;
+          border-radius: 6px;
+        }
+        .markdown-body table {
+          border-collapse: collapse;
+        }
+        .markdown-body table, .markdown-body th, .markdown-body td {
+          border: 1px solid #dfe2e5;
+          padding: 6px 13px;
+        }
+        details summary { cursor: pointer; }
+        .center { text-align: center; }
+        """
+
+        force_white_bg_js = """
+        function setWhiteBg() {
+            document.body.style.background = '#ffffff';
+            document.documentElement.style.background = '#ffffff';
+        }
+        setWhiteBg();
+        var observer = new MutationObserver(function(mutations) {
+            setWhiteBg();
+        });
+        observer.observe(document.body, { attributes: true, childList: true, subtree: true });
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.tagName === 'SUMMARY') {
+                setTimeout(setWhiteBg, 10);
+            }
+        });
+        """
+
+        full_html = f"""<!doctype html>
+        <html>
+        <head>
+          <meta charset="utf-8"/>
+          <meta name="viewport" content="width=device-width, initial-scale=1"/>
+          <style>{github_css}</style>
+        </head>
+        <body class="markdown-body">
+        {html_body}
+        <script>{force_white_bg_js}</script>
+        </body>
+        </html>
+        """
+
+        dlg = QDialog()
+        dlg.setWindowTitle(_tr_multi("Manual") if _tr_multi("Manual") != "Manual" else "Manual")
+        dlg.setMinimumSize(800, 600)
+        from PySide6.QtCore import Qt
+        dlg.setWindowFlags(Qt.Window | Qt.WindowMinimizeButtonHint | Qt.WindowMaximizeButtonHint | Qt.WindowCloseButtonHint)
+        layout = QVBoxLayout(dlg)
+
+        web_view_added = False
+        view = None
+
+        try:
+            from PySide6.QtWebEngineWidgets import QWebEngineView
+            from PySide6.QtCore import QUrl
+            from PySide6.QtGui import QColor
+            view = QWebEngineView()
+
+            try:
+                view.page().setBackgroundColor(QColor("#ffffff"))
+
+            except Exception:
+                pass
+
+            view.setHtml(full_html, QUrl.fromLocalFile(str(manual_path.parent) + os.sep))
+
+            def on_load_finished(ok):
+                view.page().setBackgroundColor(QColor("#ffffff"))
+                view.repaint()
+
+            view.loadFinished.connect(on_load_finished)
+
+            layout.addWidget(view)
+            web_view_added = True
+            logger.info("Exibindo MANUAL.md via QWebEngineView")
+
+        except Exception as e:
+            logger.debug(f"QWebEngineView não disponível ou falha: {e}")
+
+        if not web_view_added:
+            from PySide6.QtWidgets import QTextBrowser
+            from PySide6.QtCore import QUrl
+            browser = QTextBrowser()
+            browser.setStyleSheet("background-color: white;")
+            browser.setOpenExternalLinks(True)
+            browser.setHtml(full_html, QUrl.fromLocalFile(str(manual_path.parent) + os.sep))
+            layout.addWidget(browser)
+            logger.info("Exibindo MANUAL.md via QTextBrowser (fallback)")
+
+        btn_close = QPushButton(_tr_multi("Fechar") if _tr_multi("Fechar") != "Fechar" else "Fechar")
+        from PySide6.QtWidgets import QSizePolicy
+        btn_close.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        btn_close.clicked.connect(dlg.accept)
+        layout.addWidget(btn_close)
+
+        dlg.setLayout(layout)
+
+        if view is not None:
+            class ManualDialog(QDialog):
+                def showEvent(self, event):
+                    super().showEvent(event)
+                    view.setHtml(full_html, QUrl.fromLocalFile(str(manual_path.parent) + os.sep))
+
+                def resizeEvent(self, event):
+                    super().resizeEvent(event)
+                    if self.isMaximized():
+                        view.setHtml(full_html, QUrl.fromLocalFile(str(manual_path.parent) + os.sep))
+
+            manual_dlg = ManualDialog()
+            manual_dlg.setWindowTitle(dlg.windowTitle())
+            manual_dlg.setMinimumSize(800, 600)
+            manual_dlg.setWindowFlags(dlg.windowFlags())
+            manual_dlg.setLayout(layout)
+
+            try:
+                btn_close.clicked.connect(manual_dlg.accept)
+
+            except Exception:
+                pass
+
+            manual_dlg.exec()
+
+        else:
+            dlg.exec()
+
+    except Exception as e:
+        logger.error(f"Erro ao abrir Manual: {e}", exc_info=True)
         QMessageBox.critical(app, _tr_multi("Erro") if _tr_multi("Erro") != "Erro" else "Erro", f"{_tr_multi('Erro') if _tr_multi('Erro') != 'Erro' else 'Erro'}: {e}")

@@ -276,5 +276,19 @@ def setup_menubar(self):
         self.action_sobre_app.triggered.connect(self.exibir_sobre)
         self.menu_sobre.addAction(self.action_sobre_app)
 
+        def _open_manual():
+            try:
+                from source.modules.mod_07_exibir_public import exibir_manual
+                exibir_manual(self)
+
+            except Exception as e:
+                logger.error(f"Erro ao abrir Manual: {e}", exc_info=True)
+
+        self.action_manual = QAction(QCoreApplication.translate("App", "📃 Manual"), self)
+        self.action_manual.triggered.connect(_open_manual)
+        self.menu_sobre.addAction(self.action_manual)
+
+        self.menu_sobre.addSeparator()
+
     except Exception as e:
         logger.error(f"Erro ao configurar barra de menu: {str(e)}", exc_info=True)

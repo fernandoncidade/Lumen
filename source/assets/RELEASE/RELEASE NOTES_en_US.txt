@@ -1,4 +1,102 @@
 RELEASE NOTES — Lúmen
+Version: 2025.12.31.0
+Date: December 31, 2025
+Author: Fernando Nillsson Cidade
+
+Quick summary
+- Consolidation and hardening of the menu bar: shortcut contexts applied safely, handlers protected with try/except, and safe integration of configuration dialogs (Font, Sound).
+- Integration and hardening of public dialogs (About / Manual): automatic language selection, robust translation fallbacks, rendering of MANUAL.md with multiple backends (QWebEngineView → QTextBrowser) and fixes for persistent style/white-bg issues.
+- Improvements in shortcut usability and navigation: use of ApplicationShortcut when possible, safe registration of global actions and opening dialog flows via QTimer.singleShot to ensure correct focus.
+- Robustness and logging: consistent use of LogManager to capture failures in menu construction and dialog display; user-facing error messages when necessary.
+- Minor text/version fixes in the About dialog (version 2025.12.31.0) and dialog sizing with dimensional fallback.
+
+Detailed changes
+
+1) Menu bar (source/gui/gui_03_setup_menubar.py)
+- setup_menubar(self):
+  - Restructured creation of menus and actions with extensive exception handling (try/except) to avoid crashes in resource-constrained environments.
+  - Action shortcuts (e.g., Ctrl+T, F1, Ctrl+Shift+F, Ctrl+Shift+S, Ctrl+Q) defined with attempts to apply Qt.ApplicationShortcut when available; failures are silenced and logged.
+  - Safe registration of global actions via self.addAction when present (protected by try/except) to improve compatibility across platforms/instances of the app.
+  - Implementation of callback _on_add_task that:
+    - Logs the event.
+    - Attempts to switch tabs (switch_to_tab) safely.
+    - Schedules the call to add a task via QTimer.singleShot(0, ...) to ensure correct focus in the input after tab switch.
+    - Wraps flow steps in try/except with logging to diagnose failures in the shortcut flow.
+  - Safe integration of configuration dialogs:
+    - FontConfigDialog and SoundConfigDialog are opened inside wrappers that log exceptions and, on accept, call atualizar_modulos() when available; update failures are logged.
+  - "Voices" menu loaded via self.carregar_vozes() (protected call), allowing fallback when voice listing is not available.
+  - "Help - Shortcuts" action (F1) connected to self.show_help with attempt to apply application shortcut context.
+  - Improvements in translation / language selection logic:
+    - Determination of current language via self.tradutor.obter_idioma_atual() with fallback to pt_BR/en_US and adjustment of corresponding QAction states.
+  - Additional small protections:
+    - Use of menu separators, setCheckable where appropriate and safe handling of connections (triggered.connect) with lambdas calling executar_acao_modulo inside try/except blocks.
+
+2) About dialog and public content display (source/modules/mod_07_exibir_public.py)
+- exibir_sobre(app):
+  - Automatic language selection consulting app.gerenciador_traducao with robust fallback.
+  - Centralized organization of texts (about, license, notices, privacy, history, release_notes) via dictionaries language → text; use of fallback keys (en_US) when applicable.
+  - Normalization of labels via _tr_multi with fallback to local PT/EN strings.
+  - Updated fixed header with the version "2025.12.31.0".
+  - Construction of SobreDialog with translatable parameters and fallback texts for buttons/labels (OK, official site, show/hide sections).
+  - Dialog sizing adjusted with base width/height (900x500) and a 1.2x scale on height; resized before show().
+  - Error handling: capture and log via LogManager and QMessageBox.critical shown to the user on failure.
+
+- exibir_manual(app):
+  - Locates MANUAL.md (base dir computed from the file) and checks existence with clear FileNotFoundError handling.
+  - Markdown rendering pipeline:
+    - First attempts markdown-it-py (+ GFM plugin); on failure tries python-markdown with extensions; if both fail falls back to escaping in <pre> using html.escape.
+    - When available, renders with GitHub-inspired CSS and injects JavaScript to force a persistent white background (setWhiteBg + MutationObserver) to fix dark-theme/dynamic white-bg issues in QWebEngine.
+  - Dynamic display via two paths:
+    - Prefer QWebEngineView (with setBackgroundColor and loadFinished handler) when available.
+    - Fallback to QTextBrowser with white background when QWebEngineView is not available.
+  - Dialog creation with buttons and window flags (min/max/close) and management of content reload in ManualDialog showEvent/resizeEvent to ensure reflow when maximized.
+  - Detailed logging at each step and QMessageBox.critical on severe error.
+
+3) MANUAL.md (c:\Users\ferna\DEV\Python\Lumen\MANUAL.md)
+- Updated and added bilingual manual (pt-BR / en-US) with expandable sections (<details>/<summary>) covering:
+  - Overview, modules (Reader, Time Management, Mind Maps, Feynman Method, Eisenhower Matrix), shortcuts and troubleshooting.
+  - Quick summary and step-by-step instructions for common flows (Reader + Pomodoro, Import PDF, Reorganize with AI).
+  - Listing of shortcuts and usage recommendations.
+- Formatting designed for rendering by markdown-it-py / python-markdown with CSS applied in the Manual dialog.
+
+Impact and expected behavior
+- More resilient menu bar: failures in creating shortcuts, adding global actions and loading voices do not block application startup; all exceptions are logged.
+- Opening of configuration dialogs (Font, Sound) and Help behaves more predictably even when atualizar_modulos is absent — operators receive logs instead of silent failures.
+- Manual and About display better compatibility with environments lacking QWebEngine (fallback to QTextBrowser), with consistent styling and fixes for white background issues across themes.
+- Translations and public texts (About/Manual) are applied robustly with multiple fallbacks; versions and metadata displayed are updated to 2025.12.31.0.
+- Improved shortcut experience thanks to safe use of ApplicationShortcut when possible and use of QTimer.singleShot to ensure correct focus after tab changes.
+
+How to test (quick steps)
+1. Open the application and verify the menu bar without exceptions in the log.
+2. Test shortcuts:
+   - Ctrl+T → should open/trigger add task (check _on_add_task log).
+   - F1 → open Help (show_help).
+   - Ctrl+Shift+F / Ctrl+Shift+S → open Font and Sound dialogs; on accept, if available, call atualizar_modulos().
+3. Open "ℹ️ About the Application" and confirm header with Version 2025.12.31.0 and translated texts according to selected language.
+4. Open Manual via the "📃 Manual" menu:
+   - If QWebEngine is installed: verify rendering via QWebEngineView and forced white background.
+   - If QWebEngine is absent: verify fallback to QTextBrowser with readable layout.
+5. Change language via Settings → Languages and confirm language actions reflect correct QAction.checked state without raising exceptions.
+6. Review logs (LogManager) in %LOCALAPPDATA%/Lumen for error/info messages about voice loading, dialog openings and manual rendering.
+
+Main files changed / introduced
+- source/gui/gui_03_setup_menubar.py
+  - setup_menubar: menu creation and hardening, shortcuts, handlers and integration with Font/Sound dialogs.
+- source/modules/mod_07_exibir_public.py
+  - exibir_sobre, exibir_manual: language-based text selection, MANUAL.md rendering with fallbacks, sizing and failure protection.
+- MANUAL.md (c:\Users\ferna\DEV\Python\Lumen\MANUAL.md)
+  - Updated/added content with PT/EN versions and expandable sections.
+- Observability: LogManager used consistently for diagnostics.
+
+Dependencies and technical notes
+- QWebEngine (PySide6.QtWebEngineWidgets) is preferred to display MANUAL.md; QTextBrowser is a functional fallback.
+- FontConfigDialog and SoundConfigDialog must be present in the imported namespace; menu wrappers tolerate absence or internal failures.
+- It is recommended to review logs after tests to fine-tune messages and capture specific failure scenarios in restricted environments (e.g., no QWebEngine, no audio resources).
+- Runtime translations depend on gerenciador_traducao (self.tradutor) with method obter_idioma_atual(); absence of the translator is handled with pt_BR/en_US fallback.
+
+_________________________________________________
+
+RELEASE NOTES — Lúmen
 Version: 2025.12.30.0
 Date: December 30, 2025
 Author: Fernando Nillsson Cidade

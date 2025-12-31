@@ -6,23 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="02f93f84-518f-4e9e-97ae-36ae501fd277" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_20_closeEvent.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/gui/gui_20_closeEvent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/language/translations/tea_tdah_en_US.qm" beforeDir="false" afterPath="$PROJECT_DIR$/source/language/translations/tea_tdah_en_US.qm" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/language/translations/tea_tdah_en_US.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/language/translations/tea_tdah_en_US.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/language/translations/tea_tdah_pt_BR.qm" beforeDir="false" afterPath="$PROJECT_DIR$/source/language/translations/tea_tdah_pt_BR.qm" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/language/translations/tea_tdah_pt_BR.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/language/translations/tea_tdah_pt_BR.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/eisenhower/ui/ui_04_remove_task.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/eisenhower/ui/ui_04_remove_task.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/feynman/fey_08_deletar_conceito.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/feynman/fey_08_deletar_conceito.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/leitor/leitor_acessivel/lta_24_text_tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/leitor/leitor_acessivel/lta_24_text_tools.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/leitor/lt_02_EdgeTTSThread.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/leitor/lt_02_EdgeTTSThread.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/mapa/iaprocessador/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/mapa/iaprocessador/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/mapa/iaprocessador/pia_20_construir_arvore_hierarquica.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/mapa/iaprocessador/pia_20_construir_arvore_hierarquica.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/mapa/mp_03_MapaMental.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/mapa/mp_03_MapaMental.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/mapa/mp_04_ProcessadorIA.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/mapa/mp_04_ProcessadorIA.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/mod_05_metodo_feynman.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/mod_05_metodo_feynman.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/mod_06_eisenhower.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/mod_06_eisenhower.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/tempo/tmp_04_GerenciadorTempo.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/tempo/tmp_04_GerenciadorTempo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MANUAL.md" beforeDir="false" afterPath="$PROJECT_DIR$/MANUAL.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/gui/gui_03_setup_menubar.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/gui/gui_03_setup_menubar.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/modules/mod_07_exibir_public.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/mod_07_exibir_public.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,7 +16,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="324" />
+    <option name="cachedIndexableFilesCount" value="327" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -142,6 +128,10 @@
       <workItem from="1766535572895" duration="4000" />
       <workItem from="1766890318327" duration="6453000" />
       <workItem from="1767081584745" duration="1640000" />
+      <workItem from="1767092447839" duration="678000" />
+      <workItem from="1767093199129" duration="3000" />
+      <workItem from="1767094663641" duration="2783000" />
+      <workItem from="1767107867232" duration="2000" />
     </task>
     <servers />
   </component>
