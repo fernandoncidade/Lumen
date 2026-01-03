@@ -75,34 +75,3 @@ def iniciar_aplicacao():
     except Exception as e:
         logger.critical(f"Erro fatal ao iniciar aplicação: {e}", exc_info=True)
         return 1
-
-# Para erros do tipo:
-
-# 2025-12-13 04:46:04,216 [ERROR] File_Lumen: Erro ao carregar modelo spaCy: [E050] Can't find model 'pt_core_news_sm'. It doesn't seem to be a Python package or a valid path to a data directory.
-# Traceback (most recent call last):
-# File "c:\Users\ferna\DEV\Python\Lumen\source\modules\mapa\mp_04_ProcessadorIA.py", line 21, in carregar_modelo_nlp
-# self.nlp = spacy.load("pt_core_news_lg")
-# ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
-# File "C:\Users\ferna\DEV\Python\Lumen.venv\Lib\site-packages\spacy_init.py", line 52, in load
-# return util.load_model(
-# ~~~~~~~~~~~~~~~^
-# name,
-# ^^^^^
-# ...<4 lines>...
-# config=config,
-# ^^^^^^^^^^^^^^
-# )
-# ^
-# File "C:\Users\ferna\DEV\Python\Lumen.venv\Lib\site-packages\spacy\util.py", line 531, in load_model
-# raise IOError(Errors.E050.format(name=name))
-# OSError: [E050] Can't find model 'pt_core_news_lg'. It doesn't seem to be a Python package or a valid path to a data directory.
-
-
-# Deve-se instalar os modelos abaixo para corrigir os erros mencionados acima:
-
-# # Instalar modelos (recomendado via spacy download)
-# .venv\Scripts\python.exe -m spacy download pt_core_news_sm
-# .venv\Scripts\python.exe -m spacy download en_core_web_sm   # menor que en_core_web_lg
-# # Se quiser os modelos grandes:
-# .venv\Scripts\python.exe -m spacy download pt_core_news_lg
-# .venv\Scripts\python.exe -m spacy download en_core_web_lg

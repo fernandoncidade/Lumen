@@ -1,6 +1,6 @@
 NOTAS DE LANÇAMENTO — Lúmen
-Versão: 2025.12.31.0
-Data: 31 de dezembro de 2025
+Versão: 2026.01.02.0
+Data: 02 de janeiro de 2026
 Autor: Fernando Nillsson Cidade
 
 Resumo rápido
@@ -36,21 +36,24 @@ Detalhamento das mudanças principais
   - Seleção automática de idioma consultando app.gerenciador_traducao com fallback robusto.
   - Organização centralizada dos textos (about, license, notices, privacy, history, release_notes) via dicionários idioma → texto; uso de chaves de fallback (en_US) quando aplicável.
   - Normalização de labels via função _tr_multi com fallback para strings PT/EN locais.
-  - Atualização do cabeçalho fixo com a versão atualizada "2025.12.31.0".
+  - Atualização do cabeçalho fixo com a versão atualizada "2026.01.02.0".
   - Construção do SobreDialog com parâmetros traduzíveis e textos de fallback para botões/labels (OK, site oficial, mostrar/ocultar seções).
   - Ajuste de dimensão do diálogo com largura/altura base (900x500) e escala de 1.2 na altura; redimensionamento aplicado antes do show().
   - Tratamento de erros: captura e log via LogManager e exibição de QMessageBox.critical ao usuário em caso de falha.
 
 - exibir_manual(app):
-  - Localização do MANUAL.md (base dir calculado a partir do arquivo) e verificação de existência com FileNotFoundError claro.
-  - Pipeline de renderização do Markdown:
-    - Primeiro tenta markdown-it-py (+ plugin GFM); em caso de falha tenta python-markdown com extensões; se ambos falham faz fallback para escape em <pre> usando html.escape.
-    - Quando disponível, renderiza com CSS inspirado no GitHub e injeta JavaScript para forçar background branco persistente (setWhiteBg + MutationObserver) corrigindo problemas de temas escuros/white-bg dinâmico na QWebEngine.
-  - Exibição dinâmica via dois caminhos:
-    - Preferência por QWebEngineView (com setBackgroundColor e loadFinished handler) quando disponível.
-    - Fallback para QTextBrowser com background branco quando QWebEngineView não está disponível.
-  - Criação de diálogo com botões e política de flags (min/max/close) e gestão de reload do conteúdo em showEvent/resizeEvent do ManualDialog para garantir reflow em maximizado.
-  - Logging detalhado em cada passo e QMessageBox.critical em caso de erro grave.
+  - Manual (QTextBrowser) com renderização estruturada por blocos (títulos, índice, parágrafos e bullets) e navegação por seções (ancoras/índice).
+  - Melhorias de hierarquia visual do título principal:
+    - O título principal do documento ("Manual de Utilização — Lúmen" / "User Manual — Lúmen") agora é renderizado com fonte maior e em negrito
+      (fmt_main_title, pointSize base + 8).
+    - Os títulos do corpo do texto (títulos de seção/detalhes) permanecem em tamanho menor (fmt_body_title, pointSize base + 2),
+      garantindo que o título principal seja visualmente superior aos demais.
+  - Tradução dinâmica em tempo de execução:
+    - Ao trocar o idioma do aplicativo, o Manual é re-renderizado automaticamente (QEvent.LanguageChange) e tenta preservar a seção selecionada.
+  - Janela do Manual como janela independente:
+    - O Manual é exibido como janela top-level (sem parent), permitindo ficar por trás da GUI principal ao clicar na janela principal e voltar à frente ao clicar no Manual.
+  - Tratamento de erros e robustez:
+    - Logging detalhado em caso de falhas e QMessageBox.critical em erro grave.
 
 3) MANUAL.md (c:\Users\ferna\DEV\Python\Lumen\MANUAL.md)
 - Atualização e inclusão do manual bilingue (pt-BR / en-US) com seções expansíveis (<details>/<summary>) que cobrem:

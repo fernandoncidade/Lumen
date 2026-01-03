@@ -6,9 +6,24 @@
   <component name="ChangeListManager">
     <list default="true" id="02f93f84-518f-4e9e-97ae-36ae501fd277" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MANUAL.md" beforeDir="false" afterPath="$PROJECT_DIR$/MANUAL.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_03_setup_menubar.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/gui/gui_03_setup_menubar.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/assets/ABOUT/ABOUT_en_US.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/ABOUT/ABOUT_en_US.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/assets/ABOUT/ABOUT_pt_BR.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/ABOUT/ABOUT_pt_BR.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/assets/CLC/CLC_en_US.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/CLC/CLC_en_US.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/assets/CLC/CLC_pt_BR.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/CLC/CLC_pt_BR.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/assets/COPYRIGHT/AVISO DE COPYRIGHT E MARCA REGISTRA_pt_BR.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/COPYRIGHT/AVISO DE COPYRIGHT E MARCA REGISTRA_pt_BR.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/assets/COPYRIGHT/COPYRIGHT AND TRADEMARK NOTICE_en_US.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/COPYRIGHT/COPYRIGHT AND TRADEMARK NOTICE_en_US.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/assets/EULA/EULA_en_US.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/EULA/EULA_en_US.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/assets/EULA/EULA_pt_BR.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/EULA/EULA_pt_BR.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/assets/NOTICES/NOTICE_en_US.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/NOTICES/NOTICE_en_US.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/assets/NOTICES/NOTICE_pt_BR.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/NOTICES/NOTICE_pt_BR.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/assets/PRIVACY_POLICY/Privacy_Policy_en_US.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/PRIVACY_POLICY/Privacy_Policy_en_US.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/assets/RELEASE/RELEASE NOTES_en_US.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/RELEASE/RELEASE NOTES_en_US.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/assets/RELEASE/RELEASE NOTES_pt_BR.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/RELEASE/RELEASE NOTES_pt_BR.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/modules/mod_07_exibir_public.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/mod_07_exibir_public.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/modules/public/abt_01_SobreDialog.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/public/abt_01_SobreDialog.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/src_01_InicializadorMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/src_01_InicializadorMain.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -16,7 +31,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="327" />
+    <option name="cachedIndexableFilesCount" value="328" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -132,6 +147,9 @@
       <workItem from="1767093199129" duration="3000" />
       <workItem from="1767094663641" duration="2783000" />
       <workItem from="1767107867232" duration="2000" />
+      <workItem from="1767340504749" duration="1377000" />
+      <workItem from="1767343818907" duration="5770000" />
+      <workItem from="1767402570443" duration="160000" />
     </task>
     <servers />
   </component>

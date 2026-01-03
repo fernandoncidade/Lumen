@@ -1,6 +1,6 @@
 RELEASE NOTES — Lúmen
-Version: 2025.12.31.0
-Date: December 31, 2025
+Version: 2026.01.02.0
+Date: January 2, 2026
 Author: Fernando Nillsson Cidade
 
 Quick summary
@@ -33,24 +33,27 @@ Detailed changes
 
 2) About dialog and public content display (source/modules/mod_07_exibir_public.py)
 - exibir_sobre(app):
-  - Automatic language selection consulting app.gerenciador_traducao with robust fallback.
-  - Centralized organization of texts (about, license, notices, privacy, history, release_notes) via dictionaries language → text; use of fallback keys (en_US) when applicable.
-  - Normalization of labels via _tr_multi with fallback to local PT/EN strings.
-  - Updated fixed header with the version "2025.12.31.0".
-  - Construction of SobreDialog with translatable parameters and fallback texts for buttons/labels (OK, official site, show/hide sections).
-  - Dialog sizing adjusted with base width/height (900x500) and a 1.2x scale on height; resized before show().
-  - Error handling: capture and log via LogManager and QMessageBox.critical shown to the user on failure.
+  - Automatic language selection by querying app.gerenciador_traducao with robust fallback.
+  - Centralized organization of texts (about, license, notices, privacy, history, release_notes) via language → text dictionaries; use of fallback keys (en_US) when applicable.
+  - Label normalization via the _tr_multi function with fallback to local PT/EN strings.
+  - Updated the fixed header to the current version "2026.01.02.0".
+  - Build of the SobreDialog with translatable parameters and fallback texts for buttons/labels (OK, official website, show/hide sections).
+  - Dialog size adjustment with a base width/height (900x500) and 1.2 scaling on height; resizing applied before show().
+  - Error handling: capture and log via LogManager and display QMessageBox.critical to the user in case of failure.
 
 - exibir_manual(app):
-  - Locates MANUAL.md (base dir computed from the file) and checks existence with clear FileNotFoundError handling.
-  - Markdown rendering pipeline:
-    - First attempts markdown-it-py (+ GFM plugin); on failure tries python-markdown with extensions; if both fail falls back to escaping in <pre> using html.escape.
-    - When available, renders with GitHub-inspired CSS and injects JavaScript to force a persistent white background (setWhiteBg + MutationObserver) to fix dark-theme/dynamic white-bg issues in QWebEngine.
-  - Dynamic display via two paths:
-    - Prefer QWebEngineView (with setBackgroundColor and loadFinished handler) when available.
-    - Fallback to QTextBrowser with white background when QWebEngineView is not available.
-  - Dialog creation with buttons and window flags (min/max/close) and management of content reload in ManualDialog showEvent/resizeEvent to ensure reflow when maximized.
-  - Detailed logging at each step and QMessageBox.critical on severe error.
+  - Manual (QTextBrowser) with structured rendering by blocks (titles, table of contents, paragraphs, and bullets) and section navigation (anchors/table of contents).
+  - Main title visual hierarchy improvements:
+    - The document’s main title ("Manual de Utilização — Lúmen" / "User Manual — Lúmen") is now rendered in a larger, bold font
+      (fmt_main_title, base pointSize + 8).
+    - Body titles (section/detail titles) remain smaller (fmt_body_title, base pointSize + 2),
+      ensuring the main title is visually more prominent than the others.
+  - Dynamic runtime translation:
+    - When switching the application language, the Manual is automatically re-rendered (QEvent.LanguageChange) and attempts to preserve the selected section.
+  - Manual window as an independent window:
+    - The Manual is shown as a top-level window (no parent), allowing it to stay behind the main GUI when clicking the main window and come back to the front when clicking the Manual.
+  - Error handling and robustness:
+    - Detailed logging in case of failures and QMessageBox.critical on severe error.
 
 3) MANUAL.md (c:\Users\ferna\DEV\Python\Lumen\MANUAL.md)
 - Updated and added bilingual manual (pt-BR / en-US) with expandable sections (<details>/<summary>) covering:
