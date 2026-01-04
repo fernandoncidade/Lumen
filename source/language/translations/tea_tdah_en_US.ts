@@ -1521,8 +1521,8 @@ This may take a few minutes.</translation>
     </message>
 
     <message>
-        <source>• Marcadores</source>
-        <translation>• Bullets</translation>
+        <source>☑️/🔹 Marcadores</source>
+        <translation>☑️/🔹 Bullets</translation>
     </message>
 
     <message>
@@ -1906,6 +1906,71 @@ Set 0 to repeat immediately after the audio finishes.</translation>
     <message>
       <source>aviso_ia_alpha</source>
       <translation>When using this feature, please note that it is in an early stage of development (alpha version). Like any system still evolving, it has known limitations and behaviors that may require adjustments. It is therefore recommended to use it with caution, calibrated expectations, and patience while the ongoing process of refinement, bug fixing, and continuous optimization is underway.</translation>
+    </message>
+
+    <message>
+      <source>🔎 Buscar</source>
+      <translation>🔎 Search</translation>
+    </message>
+
+    <message>
+      <source>Buscar no Texto...</source>
+      <translation>Search in Text...</translation>
+    </message>
+
+    <message>
+      <source>Buscar no PDF...</source>
+      <translation>Search in PDF...</translation>
+    </message>
+
+    <message>
+      <source>Anterior (Shift+Enter / Shift+F3)</source>
+      <translation>Previous (Shift+Enter / Shift+F3)</translation>
+    </message>
+
+    <message>
+      <source>Próximo (Enter / F3)</source>
+      <translation>Next (Enter / F3)</translation>
+    </message>
+
+    <message>
+      <source>Diferenciar maiúsculas/minúsculas</source>
+      <translation>Case Sensitive</translation>
+    </message>
+
+    <message>
+      <source>Somente palavra inteira</source>
+      <translation>Whole Word Only</translation>
+    </message>
+
+    <message>
+      <source>Aa</source>
+      <translation>Aa</translation>
+    </message>
+
+    <message>
+      <source>Palavra</source>
+      <translation>Word</translation>
+    </message>
+
+    <message>
+      <source>Destacar tudo</source>
+      <translation>Highlight All</translation>
+    </message>
+
+    <message>
+      <source>Fechar (Esc)</source>
+      <translation>Close (Esc)</translation>
+    </message>
+
+    <message>
+      <source>Marcador:</source>
+      <translation>Marker:</translation>
+    </message>
+
+    <message>
+      <source>Selecione o tipo de marcador a aplicar no texto</source>
+      <translation>Select the type of marker to apply to the text</translation>
     </message>
 
   </context>

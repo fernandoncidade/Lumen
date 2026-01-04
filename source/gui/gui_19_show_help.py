@@ -21,6 +21,7 @@ def show_help(self):
             (QCoreApplication.translate("App", "Ctrl+N"), QCoreApplication.translate("App", "➕ Adicionar Conceito")),
             (QCoreApplication.translate("App", "Ctrl+S"), QCoreApplication.translate("App", "💾 Salvar")),
             (QCoreApplication.translate("App", "Ctrl+L"), QCoreApplication.translate("App", "📂 Carregar")),
+            (QCoreApplication.translate("App", "Ctrl+F"), QCoreApplication.translate("App", "🔎 Buscar")),
             (QCoreApplication.translate("App", "Ctrl+Shift+F"), QCoreApplication.translate("App", "🔤 Fonte...")),
             (QCoreApplication.translate("App", "Ctrl+Shift+S"), QCoreApplication.translate("App", "🔔 Som...")),
             (QCoreApplication.translate("App", "Ctrl+Q"), QCoreApplication.translate("App", "🚪 Sair")),

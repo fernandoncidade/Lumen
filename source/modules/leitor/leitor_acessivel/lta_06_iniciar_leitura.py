@@ -24,6 +24,7 @@ def iniciar_leitura(self):
             if hasattr(self, "_content_stack") and self._content_stack is not None:
                 try:
                     active_idx = self._content_stack.currentIndex()
+
                 except Exception as e:
                     logger.debug(f"Erro ao obter índice da aba ativa: {e}", exc_info=True)
                     active_idx = 0
@@ -33,12 +34,10 @@ def iniciar_leitura(self):
                 texto = cursor.selectedText() if cursor.hasSelection() else self.texto_area.toPlainText()
 
             else:
-                # Aba PDF: decidir entre ler página atual ou todo o documento conforme modo de rolagem
                 texto = ""
                 arquivo = getattr(self, "_last_pdf_path", None)
                 mode = getattr(self, "_pdf_scroll_mode", "continuous")
                 if arquivo:
-                    # Se modo continuous => ler todas as páginas sequencialmente
                     if mode == "continuous":
                         try:
                             import pdfplumber
@@ -47,9 +46,12 @@ def iniciar_leitura(self):
                                 for p in pdf.pages:
                                     try:
                                         parts.append(p.extract_text() or "")
+
                                     except Exception:
                                         parts.append(p.extract_text(x_tolerance=2, y_tolerance=3) or "")
+
                             texto = "\n\n".join(parts).strip()
+
                         except Exception:
                             try:
                                 from PyPDF2 import PdfReader
@@ -58,16 +60,20 @@ def iniciar_leitura(self):
                                 for p in reader.pages:
                                     try:
                                         parts.append(p.extract_text() or "")
+
                                     except Exception:
                                         parts.append("")
+
                                 texto = "\n\n".join(parts).strip()
+
                             except Exception:
                                 texto = ""
+
                     else:
-                        # modo page => comportamento anterior: ler página atual (spin_page) ou todo doc caso inválido
                         page_num = 0
                         try:
                             page_num = int(self.spin_page.value()) - 1 if hasattr(self, "spin_page") else 0
+
                         except Exception:
                             page_num = 0
 
@@ -76,24 +82,31 @@ def iniciar_leitura(self):
                             with pdfplumber.open(arquivo) as pdf:
                                 if 0 <= page_num < len(pdf.pages):
                                     texto = pdf.pages[page_num].extract_text() or ""
+
                                 else:
                                     texto = "\n\n".join((p.extract_text() or "") for p in pdf.pages)
+
                         except Exception:
                             try:
                                 from PyPDF2 import PdfReader
                                 reader = PdfReader(arquivo)
                                 if 0 <= page_num < len(reader.pages):
                                     texto = reader.pages[page_num].extract_text() or ""
+
                                 else:
                                     parts = []
                                     for p in reader.pages:
                                         try:
                                             parts.append(p.extract_text() or "")
+
                                         except Exception:
                                             parts.append("")
+
                                     texto = "\n\n".join(parts)
+
                             except Exception:
                                 texto = ""
+
                 else:
                     texto = ""
 

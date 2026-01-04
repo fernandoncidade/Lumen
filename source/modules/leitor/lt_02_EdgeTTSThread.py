@@ -32,10 +32,23 @@ class EdgeTTSThread(QThread):
         self._current_comm = None
         self._current_gen = None
         self._tracking_comms = set()
+        self._current_outfile_part = None
 
     def stop(self):
         try:
             self._should_stop = True
+
+            try:
+                p = getattr(self, "_current_outfile_part", None)
+                if p and os.path.exists(p):
+                    try:
+                        os.remove(p)
+
+                    except Exception:
+                        pass
+
+            except Exception:
+                pass
 
             try:
                 loop = self._active_loop
@@ -228,6 +241,7 @@ class EdgeTTSThread(QThread):
                         uid = uuid.uuid4().hex
                         outfile = os.path.join(self.outdir, f"tts_edge_part_{os.getpid()}_{uid}_{idx}.mp3")
                         outfile_part = outfile + ".part"
+                        self._current_outfile_part = outfile_part
 
                         tried = []
                         candidates = []

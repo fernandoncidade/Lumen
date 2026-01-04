@@ -1,10 +1,13 @@
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QTextEdit, QSlider, QLabel, QComboBox, QTabWidget, QWidget, QSpinBox
 from PySide6.QtCore import Qt, QCoreApplication, QObject, QEvent
-from PySide6.QtGui import QIcon, QPalette
+from PySide6.QtGui import QIcon, QPalette, QKeySequence, QShortcut
 from source.utils.FontManager import FontManager
 from source.utils.LogManager import LogManager
 from source.utils.IconUtils import get_icon_path
 from .lta_22_pdf_toolbar import setup_pdf_toolbar
+from .lta_26_pymupdf_view import MuPDFView
+from .lta_27_pdf_findbar import PDFFindBar
+from .lta_29_text_findbar import TextFindBar
 logger = LogManager.get_logger()
 
 def setup_ui(self):
@@ -105,9 +108,25 @@ def setup_ui(self):
 
         text_toolbar.addStretch()
 
-        self.btn_bullets = QPushButton(QCoreApplication.translate("App", "• Marcadores"))
+        self.btn_find_text = QPushButton(QCoreApplication.translate("App", "🔎 Buscar"))
+        self.btn_find_text.clicked.connect(self._text_find_show)
+        text_toolbar.addWidget(self.btn_find_text)
+
+        text_toolbar.addStretch()
+
+        self.btn_bullets = QPushButton(QCoreApplication.translate("App", "☑️/🔹 Marcadores"))
         self.btn_bullets.clicked.connect(lambda: getattr(self, "toggle_bullets")())
         text_toolbar.addWidget(self.btn_bullets)
+
+        self.label_bullet_style = QLabel(QCoreApplication.translate("App", "Marcador:"))
+        text_toolbar.addWidget(self.label_bullet_style)
+
+        self.combo_bullet_style = QComboBox()
+        self.combo_bullet_style.setToolTip(QCoreApplication.translate("App", "Selecione o tipo de marcador a aplicar no texto"))
+        self.combo_bullet_style.addItems(["•", "◦", "‣", "∙", "▪", "▫", "✅", "☑️", "🔹", "🔸"])
+        self.combo_bullet_style.setCurrentText("•")
+        self.combo_bullet_style.setMaximumWidth(70)
+        text_toolbar.addWidget(self.combo_bullet_style)
 
         text_toolbar.addStretch()
 
@@ -141,6 +160,9 @@ def setup_ui(self):
         text_toolbar.addWidget(self.spin_margin)
 
         text_layout.addLayout(text_toolbar)
+
+        self._text_find_bar = TextFindBar(self, text_tab)
+        text_layout.addWidget(self._text_find_bar)
 
         self.texto_area = QTextEdit()
         self.texto_area.setReadOnly(False)
@@ -190,28 +212,21 @@ def setup_ui(self):
         pdf_tab = QWidget()
         pdf_layout = QVBoxLayout()
 
+        pdf_toolbar_layout = setup_pdf_toolbar(self)
+        pdf_layout.addLayout(pdf_toolbar_layout)
+
+        self._pdf_find_bar = PDFFindBar(self, pdf_tab)
+        pdf_layout.addWidget(self._pdf_find_bar)
+
+        self.pdf_view = MuPDFView(pdf_tab)
+        self.pdf_doc = None
+        pdf_layout.addWidget(self.pdf_view)
+
         try:
-            from PySide6.QtPdfWidgets import QPdfView
-            from PySide6.QtPdf import QPdfDocument
-
-            self.pdf_doc = QPdfDocument(self)
-            self.pdf_view = QPdfView(self)
-            self.pdf_view.setDocument(self.pdf_doc)
-
-            pdf_toolbar_layout = setup_pdf_toolbar(self)
-            pdf_layout.addLayout(pdf_toolbar_layout)
-            pdf_layout.addWidget(self.pdf_view)
+            self.pdf_view.current_page_changed.connect(lambda idx, total: self._pdf_update_page_ui(idx, total))
 
         except Exception as e:
-            logger.debug(f"QtPdf indisponível: {e}", exc_info=True)
-            self.pdf_view = None
-            self.pdf_doc = None
-            try:
-                pdf_toolbar_layout = setup_pdf_toolbar(self)
-                pdf_layout.addLayout(pdf_toolbar_layout)
-
-            except Exception as e:
-                logger.debug(f"Erro ao configurar toolbar PDF: {e}", exc_info=True)
+            logger.debug(f"Falha ao conectar current_page_changed: {e}", exc_info=True)
 
         pdf_tab.setLayout(pdf_layout)
         self._content_stack.addTab(pdf_tab, QCoreApplication.translate("App", "PDF"))
@@ -243,6 +258,32 @@ def setup_ui(self):
         layout.addLayout(regua_layout)
         self.setLayout(layout)
         self.atualizar_traducoes()
+
+        self._sc_find_toggle = QShortcut(QKeySequence.Find, self)
+        self._sc_find_toggle.setContext(Qt.ShortcutContext.ApplicationShortcut)
+
+        def _toggle_find_active_tab():
+            try:
+                idx = 0
+                if getattr(self, "_content_stack", None) is not None:
+                    idx = int(self._content_stack.currentIndex())
+
+                if idx == 0:
+                    if getattr(self, "_pdf_find_bar", None) is not None and self._pdf_find_bar.isVisible():
+                        self._pdf_find_bar.hide_bar()
+
+                    self._text_find_toggle()
+
+                else:
+                    if getattr(self, "_text_find_bar", None) is not None and self._text_find_bar.isVisible():
+                        self._text_find_bar.hide_bar()
+
+                    self._pdf_find_toggle()
+
+            except Exception as e:
+                logger.debug(f"Falha no Ctrl+F toggle: {e}", exc_info=True)
+
+        self._sc_find_toggle.activated.connect(_toggle_find_active_tab)
 
     except Exception as e:
         logger.error(f"Erro ao configurar interface do Leitor Acessível: {str(e)}", exc_info=True)

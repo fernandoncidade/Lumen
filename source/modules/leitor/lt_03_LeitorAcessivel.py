@@ -79,6 +79,22 @@ from source.modules.leitor.leitor_acessivel import (
     set_line_spacing,
     set_indent,
     set_margins,
+    _pdf_find_show,
+    _pdf_find_clear,
+    _pdf_find_apply,
+    _pdf_find_next,
+    _pdf_find_prev,
+    _pdf_find_set_highlight_all,
+    _pdf_update_page_ui,
+    TextFindBar,
+    _text_find_show,
+    _text_find_clear,
+    _text_find_apply,
+    _text_find_next,
+    _text_find_prev,
+    _text_find_set_highlight_all,
+    _pdf_find_toggle,
+    _text_find_toggle,
 )
 
 LeitorAcessivel.setup_ui = setup_ui
@@ -120,3 +136,19 @@ LeitorAcessivel.toggle_bullets = toggle_bullets
 LeitorAcessivel.set_line_spacing = set_line_spacing
 LeitorAcessivel.set_indent = set_indent
 LeitorAcessivel.set_margins = set_margins
+LeitorAcessivel._pdf_find_show = _pdf_find_show
+LeitorAcessivel._pdf_find_clear = _pdf_find_clear
+LeitorAcessivel._pdf_find_apply = _pdf_find_apply
+LeitorAcessivel._pdf_find_next = _pdf_find_next
+LeitorAcessivel._pdf_find_prev = _pdf_find_prev
+LeitorAcessivel._pdf_find_set_highlight_all = _pdf_find_set_highlight_all
+LeitorAcessivel._pdf_update_page_ui = _pdf_update_page_ui
+LeitorAcessivel.TextFindBar = TextFindBar
+LeitorAcessivel._text_find_show = _text_find_show
+LeitorAcessivel._text_find_clear = _text_find_clear
+LeitorAcessivel._text_find_apply = _text_find_apply
+LeitorAcessivel._text_find_next = _text_find_next
+LeitorAcessivel._text_find_prev = _text_find_prev
+LeitorAcessivel._text_find_set_highlight_all = _text_find_set_highlight_all
+LeitorAcessivel._pdf_find_toggle = _pdf_find_toggle
+LeitorAcessivel._text_find_toggle = _text_find_toggle

@@ -1,11 +1,16 @@
 from PySide6.QtCore import QThread, QUrl
 from source.utils.LogManager import LogManager
-import os
 
 logger = LogManager.get_logger()
 
 def parar_leitura(self):
     try:
+        try:
+            self._stopping_tts = True
+
+        except Exception:
+            pass
+
         if self.usar_edge_tts:
             try:
                 if hasattr(self, "player") and self.player is not None:
@@ -22,6 +27,24 @@ def parar_leitura(self):
 
             except Exception as e:
                 logger.error(f"Erro ao parar player Edge TTS: {str(e)}", exc_info=True)
+
+            try:
+                t = getattr(self, "tts_thread", None)
+                if t is not None:
+                    try:
+                        t.chunk_ready.disconnect(self._play_generated_audio)
+
+                    except Exception:
+                        pass
+
+                    try:
+                        t.error.disconnect()
+
+                    except Exception:
+                        pass
+
+            except Exception:
+                pass
 
             if self.tts_thread and isinstance(self.tts_thread, QThread) and self.tts_thread.isRunning():
                 try:
@@ -48,21 +71,27 @@ def parar_leitura(self):
                     logger.error(f"Erro ao finalizar EdgeTTSThread: {e}", exc_info=True)
 
             try:
-                files = getattr(self, "_generated_files", []) or []
-                for f in list(files):
-                    try:
-                        if f and os.path.exists(f):
-                            os.remove(f)
+                from .lta_25_audio_temp_cleanup import cleanup_paths_with_retry, cleanup_edge_tts_parts_in_outdir
 
-                    except Exception:
-                        logger.debug(f"Falha ao remover arquivo temporário TTS: {f}", exc_info=True)
+                files = list(getattr(self, "_generated_files", []) or [])
+                queue = list(getattr(self, "_generated_queue", []) or [])
+                current = getattr(self, "_current_generated", None)
+
+                targets = []
+                targets.extend(files)
+                targets.extend(queue)
+                if current:
+                    targets.append(current)
+
+                cleanup_paths_with_retry(self, targets)
+                cleanup_edge_tts_parts_in_outdir(self)
 
                 self._generated_files = []
                 self._generated_queue = []
                 self._current_generated = None
 
             except Exception as e:
-                logger.error(f"Erro ao limpar arquivos gerados: {e}", exc_info=True)
+                logger.error(f"Erro ao limpar arquivos gerados (retry): {e}", exc_info=True)
 
         else:
             try:
@@ -112,3 +141,10 @@ def parar_leitura(self):
 
     except Exception as e:
         logger.error(f"Erro ao executar parar_leitura: {str(e)}", exc_info=True)
+
+    finally:
+        try:
+            self._stopping_tts = False
+
+        except Exception:
+            pass

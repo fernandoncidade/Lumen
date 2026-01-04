@@ -1,5 +1,4 @@
 from PySide6.QtCore import QUrl
-from PySide6.QtMultimedia import QMediaPlayer
 from source.utils.LogManager import LogManager
 import os
 
@@ -7,6 +6,20 @@ logger = LogManager.get_logger()
 
 def _play_generated_audio(self, path):
     try:
+        try:
+            if getattr(self, "_stopping_tts", False):
+                try:
+                    if path and os.path.exists(path):
+                        os.remove(path)
+
+                except Exception:
+                    logger.debug(f"Chunk gerado após STOP não pôde ser removido: {path}", exc_info=True)
+
+                return
+
+        except Exception:
+            pass
+
         try:
             if getattr(self, "_changing_voice", False):
                 try:

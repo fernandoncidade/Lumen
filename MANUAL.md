@@ -298,6 +298,7 @@ Dicas práticas
 - Ctrl+N — ➕ Adicionar Conceito  
 - Ctrl+S — 💾 Salvar  
 - Ctrl+L — 📂 Carregar  
+- Ctrl+F — 🔎 Buscar  
 - Ctrl+Shift+F — 🔤 Fonte...  
 - Ctrl+Shift+S — 🔔 Som...  
 - Ctrl+Q — 🚪 Sair  
@@ -605,6 +606,7 @@ Practical tips
 - Ctrl+N — ➕ Add Concept  
 - Ctrl+S — 💾 Save  
 - Ctrl+L — 📂 Load  
+- Ctrl+F — 🔎 Search  
 - Ctrl+Shift+F — 🔤 Font...  
 - Ctrl+Shift+S — 🔔 Sound...  
 - Ctrl+Q — 🚪 Exit  

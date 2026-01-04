@@ -34,22 +34,45 @@ def _on_media_status(self, status):
             except Exception as e:
                 logger.error(f"Erro ao tocar próximo chunk: {e}", exc_info=True)
 
-            prev = getattr(self, "_current_generated", None)
-            if prev and os.path.exists(prev):
-                try:
-                    os.remove(prev)
-                    if getattr(self, "_generated_files", None) and prev in self._generated_files:
-                        try:
-                            self._generated_files.remove(prev)
+            try:
+                if hasattr(self, "player") and self.player is not None:
+                    try:
+                        self.player.stop()
 
-                        except Exception as e:
-                            logger.debug(f"Falha ao remover último chunk da lista: {prev}", exc_info=True)
+                    except Exception:
+                        pass
 
-                except Exception as e:
-                    logger.debug(f"Não foi possível remover último chunk: {prev}", exc_info=True)
+                    try:
+                        self.player.setSource(QUrl())
+
+                    except Exception:
+                        pass
+
+            except Exception:
+                pass
+
+            try:
+                from .lta_25_audio_temp_cleanup import cleanup_paths_with_retry, cleanup_edge_tts_temp_in_outdir
+
+                files = list(getattr(self, "_generated_files", []) or [])
+                queue = list(getattr(self, "_generated_queue", []) or [])
+                current = getattr(self, "_current_generated", None)
+
+                targets = []
+                targets.extend(files)
+                targets.extend(queue)
+                if current:
+                    targets.append(current)
+
+                cleanup_paths_with_retry(self, targets)
+                cleanup_edge_tts_temp_in_outdir(self, remove_mp3=True, remove_part=True)
+
+            except Exception as e:
+                logger.debug(f"Falha ao executar limpeza final com retry: {e}", exc_info=True)
 
             try:
                 self._generated_queue = []
+                self._generated_files = []
                 self._current_generated = None
 
             except Exception as e:

@@ -1,6 +1,5 @@
 from PySide6.QtCore import QCoreApplication
 from source.utils.LogManager import LogManager
-
 logger = LogManager.get_logger()
 
 def atualizar_traducoes(self):
@@ -24,7 +23,16 @@ def atualizar_traducoes(self):
                 self.btn_save.setText(QCoreApplication.translate("App", "💾 Salvar Como"))
 
             if hasattr(self, "btn_bullets"):
-                self.btn_bullets.setText(QCoreApplication.translate("App", "• Marcadores"))
+                self.btn_bullets.setText(QCoreApplication.translate("App", "☑️/🔹 Marcadores"))
+
+            if hasattr(self, "label_bullet_style"):
+                self.label_bullet_style.setText(QCoreApplication.translate("App", "Marcador:"))
+
+            if hasattr(self, "combo_bullet_style"):
+                self.combo_bullet_style.setToolTip(QCoreApplication.translate("App", "Selecione o tipo de marcador a aplicar no texto"))
+
+            if hasattr(self, "btn_find_text"):
+                self.btn_find_text.setText(QCoreApplication.translate("App", "🔎 Buscar"))
 
             if hasattr(self, "label_spacing"):
                 self.label_spacing.setText(QCoreApplication.translate("App", "Espaçamento:"))
@@ -35,18 +43,22 @@ def atualizar_traducoes(self):
             if hasattr(self, "label_margin"):
                 self.label_margin.setText(QCoreApplication.translate("App", "Margem:"))
 
-            # atualizar itens do combo de espaçamento (opcional, números não traduzem)
-            if hasattr(self, "combo_spacing"):
-                # manter valores numéricos; caso queira palavras, descomente/exemplo abaixo:
-                # self.combo_spacing.clear()
-                # self.combo_spacing.addItems([QCoreApplication.translate("App","1.0"),
-                #                              QCoreApplication.translate("App","1.15"),
-                #                              QCoreApplication.translate("App","1.5"),
-                #                              QCoreApplication.translate("App","2.0")])
-                pass
-
         except Exception as e:
             logger.debug(f"Erro ao atualizar traduções da toolbar de Texto: {e}", exc_info=True)
+
+        try:
+            if hasattr(self, "_text_find_bar") and self._text_find_bar is not None:
+                rt = getattr(self._text_find_bar, "retranslate", None)
+                if callable(rt):
+                    rt()
+
+            if hasattr(self, "_pdf_find_bar") and self._pdf_find_bar is not None:
+                rt = getattr(self._pdf_find_bar, "retranslate", None)
+                if callable(rt):
+                    rt()
+
+        except Exception as e:
+            logger.debug(f"Erro ao retranslate das FindBars: {e}", exc_info=True)
 
         if self.btn_regua.isChecked():
             texto_regua = QCoreApplication.translate("App", "📏 Desativar Régua de Foco")
@@ -93,16 +105,32 @@ def atualizar_traducoes(self):
                     tr_pagina = QCoreApplication.translate("App", "Página")
                     special = getattr(self, "_pdf_zoom_special", None)
 
-                    if special == "largura":
+                    cur = (self.combo_zoom.currentText() or "").strip()
+                    cur_low = cur.lower()
+
+                    def _is_percent_text(s: str) -> bool:
+                        s = (s or "").strip()
+                        if not s.endswith("%"):
+                            return False
+
+                        n = s[:-1].strip().replace(",", ".")
+                        try:
+                            float(n)
+                            return True
+
+                        except Exception:
+                            return False
+
+                    if _is_percent_text(cur):
+                        pass
+
+                    elif special == "largura":
                         self.combo_zoom.setCurrentText(tr_largura)
 
                     elif special == "pagina":
                         self.combo_zoom.setCurrentText(tr_pagina)
 
                     else:
-                        cur = (self.combo_zoom.currentText() or "").strip()
-                        cur_low = cur.lower()
-
                         if cur_low in ("largura", tr_largura.lower()):
                             self.combo_zoom.setCurrentText(tr_largura)
 

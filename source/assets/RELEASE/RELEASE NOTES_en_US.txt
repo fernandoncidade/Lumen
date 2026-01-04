@@ -1,6 +1,127 @@
 RELEASE NOTES — Lúmen
-Version: 2026.01.02.0
-Date: January 2, 2026
+Version: 2026.1.4.0
+Date: January 4, 2026
+Author: Fernando Nillsson Cidade
+
+Quick summary
+- Accessible Reader: added integrated search (Text and PDF) with a search bar, hit navigation, and visual highlighting (current match + highlight all).
+- PDF (PyMuPDF): custom viewer with incremental rendering (lazy render), pixmap cache per zoom/page, current-page calculation by scrolling, and highlight of search results using rectangles.
+- Expanded PDF toolbar: page navigation, zoom (±, %), “Fit to width / page”, “Hand” tool (pan), and direct integration with search.
+- Translations/UX: FindBars and toolbars with retranslate() for dynamic updates when switching language; unified search shortcuts (Ctrl+F) automatically switching based on the active tab (Text/PDF).
+- Robustness and diagnostics: exception handling and logging (LogManager) across search/rendering flows, preventing crashes in constrained environments.
+
+Detailed overview of the main changes
+
+1) Text Search (Accessible Reader)
+- Implemented a complete search workflow in QTextEdit with:
+  - Search bar (TextFindBar) with a text field, previous/next buttons, a counter (current/total), and options:
+    - Match case (Aa).
+    - Whole word only.
+    - “Highlight all” (highlights all occurrences and keeps the current occurrence in a distinct color).
+  - Shortcuts:
+    - Enter → next result.
+    - Shift+Enter → previous result.
+    - F3 → next, Shift+F3 → previous.
+    - Esc → close the bar (and clear highlights).
+- Search algorithm:
+  - Scans the QTextDocument with QTextDocument.find(...) using FindFlags (case sensitive / whole words).
+  - Stores occurrences as pairs (selectionStart, selectionEnd) and navigates by index.
+  - Applies highlights via QTextEdit.ExtraSelection:
+    - General occurrences in yellow.
+    - Current occurrence in orange, keeping focus and ensureCursorVisible().
+
+Related files:
+- source/modules/leitor/leitor_acessivel/lta_29_text_findbar.py
+- source/modules/leitor/leitor_acessivel/lta_30_text_find_actions.py
+
+2) PDF Search (PyMuPDF)
+- Implemented a search bar (PDFFindBar) integrated with the MuPDFView viewer, featuring:
+  - The same controls/shortcuts as Text mode (Enter/Shift+Enter, F3/Shift+F3, Esc).
+  - Options: Aa, Whole word, Highlight all.
+  - Counter (current/total) updated on each search/navigation action.
+- Search strategy:
+  - Uses page.search_for(...) with PyMuPDF flags when available (ignorecase/matchcase).
+  - “Whole word” mode optimized for simple queries (no spaces/line breaks) using page.get_text("words") and direct token comparison.
+  - Extra match_case filter: validation via clipped text (clip) to reduce false positives depending on the backend/extraction.
+- Visual highlighting:
+  - Rectangles (rects) per page are stored and drawn over the rendered pixmap.
+  - General hits use a yellow overlay without border; the current hit uses an orange overlay with a border (pen) to emphasize focus.
+  - The “Highlight all” option can be disabled to highlight only the current page/hit.
+
+Related files:
+- source/modules/leitor/leitor_acessivel/lta_27_pdf_findbar.py
+- source/modules/leitor/leitor_acessivel/lta_28_pdf_find_actions.py
+- source/modules/leitor/leitor_acessivel/lta_26_pymupdf_view.py
+
+3) Custom PDF viewer (MuPDFView)
+- New viewer based on QScrollArea + per-page widgets (MuPDFPageWidget), focused on performance and compatibility:
+  - Incremental rendering (lazy render): pages are rendered on demand when they enter the visible area (with extra margin), reducing initial cost.
+  - Pixmap cache per (page, zoom) with a limit (simple LRU by insertion order) to avoid excessive re-rendering.
+  - Current-page calculation by scrolling: detects the page whose “middle” is visible and emits current_page_changed(page, total).
+  - Zoom:
+    - setZoomFactor with clamp (0.25–5.0) and cache invalidation/cleanup.
+    - fit_width and fit_page based on page 0 rect.
+  - Search and navigation:
+    - goto_next_hit / goto_prev_hit with automatic scroll to the hit (vertical positioning with ~25% viewport offset).
+    - configurable highlight_all.
+- Safety and logs:
+  - All critical flows (render/search/scroll) protected with try/except and recorded via LogManager.
+
+Related file:
+- source/modules/leitor/leitor_acessivel/lta_26_pymupdf_view.py
+
+4) PDF toolbar (navigation/zoom/tools)
+- Expanded and consolidated toolbar featuring:
+  - Navigation: first, previous, next, last, page spin box + total.
+  - Zoom: +/- buttons and an editable combo (percentages); support for special modes “Width” and “Page”.
+  - “Hand” tool (pan/drag): toggles mode in PDFMouseHandler and applies a visual style when active.
+  - “🔎 Search” button to open the PDF search bar.
+  - Safe enable/disable of widgets depending on whether a PDF is loaded.
+- Translation integration:
+  - atualizar_traducoes keeps labels and special texts (“Width/Page”) consistent when switching language.
+
+Related files:
+- source/modules/leitor/leitor_acessivel/lta_22_pdf_toolbar.py
+- source/modules/leitor/leitor_acessivel/lta_02_atualizar_traducoes.py
+
+5) Unified Ctrl+F shortcut (Text/PDF)
+- Ctrl+F toggles search according to the active tab:
+  - In the Text tab: opens/closes TextFindBar and ensures PDFFindBar is closed.
+  - In the PDF tab: opens/closes PDFFindBar and ensures TextFindBar is closed.
+- The shortcut context is configured as ApplicationShortcut to work consistently in the Accessible Reader window.
+
+Related file:
+- source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py
+
+How to test (quick steps)
+1. Accessible Reader → “Text” tab:
+   - Type a text with repetitions; use Ctrl+F and search for a term.
+   - Test Enter / Shift+Enter and F3 / Shift+F3; verify the counter and highlighting (current vs others).
+   - Disable “Highlight all” and confirm only the current occurrence is highlighted.
+2. Accessible Reader → load a PDF and go to the “PDF” tab:
+   - Verify the toolbar is enabled and total pages is correct.
+   - Test zoom (± and percentages), “📄 Width” and “📃 Page”.
+   - Ctrl+F or “🔎 Search”: search for a common term, navigate hits, and confirm highlighting in the document.
+3. Switch the app language:
+   - Confirm toolbars and FindBars update placeholder/tooltips/labels and that the zoom combo respects “Width/Page” when applicable.
+4. Check logs:
+   - In case of rendering/search failures, confirm errors are recorded via LogManager without crashing the UI.
+
+Main files changed / introduced (Accessible Reader)
+- source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py
+- source/modules/leitor/leitor_acessivel/lta_02_atualizar_traducoes.py
+- source/modules/leitor/leitor_acessivel/lta_22_pdf_toolbar.py
+- source/modules/leitor/leitor_acessivel/lta_26_pymupdf_view.py
+- source/modules/leitor/leitor_acessivel/lta_27_pdf_findbar.py
+- source/modules/leitor/leitor_acessivel/lta_28_pdf_find_actions.py
+- source/modules/leitor/leitor_acessivel/lta_29_text_findbar.py
+- source/modules/leitor/leitor_acessivel/lta_30_text_find_actions.py
+
+_________________________________________________
+
+RELEASE NOTES — Lúmen
+Version: 2026.1.3.0
+Date: January 3, 2026
 Author: Fernando Nillsson Cidade
 
 Quick summary

@@ -1,10 +1,41 @@
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 from PySide6.QtCore import QCoreApplication
-from PySide6.QtGui import QTextCursor, QTextBlockFormat, QTextListFormat
+from PySide6.QtGui import QTextCursor, QTextBlockFormat
 from source.utils.LogManager import LogManager
 import os
-
 logger = LogManager.get_logger()
+
+_BULLET_SYMBOLS = ["•", "◦", "‣", "∙", "▪", "▫", "✅", "☑️", "🔹", "🔸"]
+
+def _get_selected_bullet_symbol(self) -> str:
+    try:
+        cb = getattr(self, "combo_bullet_style", None)
+        if cb is not None:
+            s = (cb.currentText() or "").strip()
+            if s in _BULLET_SYMBOLS:
+                return s
+
+    except Exception:
+        pass
+
+    return "•"
+
+def _strip_bullet_prefix(line: str) -> str:
+    s = line or ""
+    for sym in _BULLET_SYMBOLS:
+        pref = sym + " "
+        if s.startswith(pref):
+            return s[len(pref):]
+
+    return s
+
+def _has_any_bullet_prefix(line: str) -> bool:
+    s = line or ""
+    for sym in _BULLET_SYMBOLS:
+        if s.startswith(sym + " "):
+            return True
+
+    return False
 
 def criar_texto(self, confirmar=True):
     try:
@@ -176,12 +207,68 @@ def salvar_como(self):
 def toggle_bullets(self):
     try:
         cursor = self.texto_area.textCursor()
-        if not cursor:
+        if cursor is None:
             return
 
-        fmt = QTextListFormat()
-        fmt.setStyle(QTextListFormat.ListDisc)
-        cursor.createList(fmt)
+        doc = self.texto_area.document()
+        sym = _get_selected_bullet_symbol(self)
+        prefix = sym + " "
+
+        sel_start = cursor.selectionStart()
+        sel_end = cursor.selectionEnd()
+
+        if sel_end > sel_start:
+            end_for_block = sel_end - 1
+
+        else:
+            end_for_block = sel_end
+
+        c1 = QTextCursor(doc)
+        c1.setPosition(sel_start)
+        start_block = c1.blockNumber()
+
+        c2 = QTextCursor(doc)
+        c2.setPosition(end_for_block)
+        end_block = c2.blockNumber()
+
+        if sel_end == sel_start:
+            start_block = cursor.blockNumber()
+            end_block = cursor.blockNumber()
+
+        all_have_bullets = True
+        for bn in range(start_block, end_block + 1):
+            block = doc.findBlockByNumber(bn)
+            if not block.isValid():
+                continue
+
+            if not _has_any_bullet_prefix(block.text()):
+                all_have_bullets = False
+                break
+
+        cursor.beginEditBlock()
+        try:
+            for bn in range(start_block, end_block + 1):
+                block = doc.findBlockByNumber(bn)
+                if not block.isValid():
+                    continue
+
+                bc = QTextCursor(block)
+                bc.movePosition(QTextCursor.MoveOperation.StartOfBlock)
+
+                text = block.text() or ""
+
+                if all_have_bullets:
+                    new_text = _strip_bullet_prefix(text)
+                    if new_text != text:
+                        bc.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+                        bc.insertText(new_text)
+
+                else:
+                    if not _has_any_bullet_prefix(text):
+                        bc.insertText(prefix)
+
+        finally:
+            cursor.endEditBlock()
 
     except Exception as e:
         logger.error(f"Erro ao alternar marcadores: {e}", exc_info=True)

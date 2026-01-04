@@ -31,6 +31,7 @@ from .lta_22_pdf_toolbar import (
     _pdf_set_hand_mode,
     _pdf_set_selection_mode,
     _pdf_enable_toolbar,
+    _pdf_update_page_ui,
 )
 from .lta_23_pdf_mouse_handler import PDFMouseHandler
 from .lta_24_text_tools import (
@@ -40,6 +41,27 @@ from .lta_24_text_tools import (
     set_line_spacing,
     set_indent,
     set_margins,
+)
+from .lta_26_pymupdf_view import MuPDFView
+from .lta_27_pdf_findbar import PDFFindBar
+from .lta_28_pdf_find_actions import (
+    _pdf_find_show,
+    _pdf_find_toggle,
+    _pdf_find_clear,
+    _pdf_find_apply,
+    _pdf_find_next,
+    _pdf_find_prev,
+    _pdf_find_set_highlight_all,
+)
+from .lta_29_text_findbar import TextFindBar
+from .lta_30_text_find_actions import (
+    _text_find_show,
+    _text_find_toggle,
+    _text_find_clear,
+    _text_find_apply,
+    _text_find_next,
+    _text_find_prev,
+    _text_find_set_highlight_all,
 )
 
 __all__ = [
@@ -75,6 +97,7 @@ __all__ = [
     "_pdf_set_hand_mode",
     "_pdf_set_selection_mode",
     "_pdf_enable_toolbar",
+    "_pdf_update_page_ui",
     "PDFMouseHandler",
     "criar_texto",
     "salvar_como",
@@ -82,4 +105,21 @@ __all__ = [
     "set_line_spacing",
     "set_indent",
     "set_margins",
+    "MuPDFView",
+    "PDFFindBar",
+    "_pdf_find_show",
+    "_pdf_find_clear",
+    "_pdf_find_apply",
+    "_pdf_find_next",
+    "_pdf_find_prev",
+    "_pdf_find_set_highlight_all",
+    "TextFindBar",
+    "_text_find_show",
+    "_text_find_clear",
+    "_text_find_apply",
+    "_text_find_next",
+    "_text_find_prev",
+    "_text_find_set_highlight_all",
+    "_pdf_find_toggle",
+    "_text_find_toggle",
 ]

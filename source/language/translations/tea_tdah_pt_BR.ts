@@ -1521,8 +1521,8 @@ Isso pode levar alguns minutos.</translation>
     </message>
 
     <message>
-        <source>• Marcadores</source>
-        <translation>• Marcadores</translation>
+        <source>☑️/🔹 Marcadores</source>
+        <translation>☑️/🔹 Marcadores</translation>
     </message>
 
     <message>
@@ -1906,6 +1906,71 @@ Defina 0 para repetir imediatamente após o áudio terminar.</translation>
     <message>
       <source>aviso_ia_alpha</source>
       <translation>Ao utilizar este recurso, considere que ele se encontra em fase inicial de desenvolvimento (versão alfa). Como todo sistema ainda em evolução, apresenta limitações conhecidas e comportamentos passíveis de ajustes. Recomenda-se, portanto, seu uso com cautela, expectativa calibrada e a devida paciência, enquanto o processo de refinamento, correção de falhas e otimização contínua está em andamento.</translation>
+    </message>
+
+    <message>
+      <source>🔎 Buscar</source>
+      <translation>🔎 Buscar</translation>
+    </message>
+
+    <message>
+      <source>Buscar no Texto...</source>
+      <translation>Buscar no Texto...</translation>
+    </message>
+
+    <message>
+      <source>Buscar no PDF...</source>
+      <translation>Buscar no PDF...</translation>
+    </message>
+
+    <message>
+      <source>Anterior (Shift+Enter / Shift+F3)</source>
+      <translation>Anterior (Shift+Enter / Shift+F3)</translation>
+    </message>
+
+    <message>
+      <source>Próximo (Enter / F3)</source>
+      <translation>Próximo (Enter / F3)</translation>
+    </message>
+
+    <message>
+      <source>Diferenciar maiúsculas/minúsculas</source>
+      <translation>Diferenciar maiúsculas/minúsculas</translation>
+    </message>
+
+    <message>
+      <source>Somente palavra inteira</source>
+      <translation>Somente palavra inteira</translation>
+    </message>
+
+    <message>
+      <source>Aa</source>
+      <translation>Aa</translation>
+    </message>
+
+    <message>
+      <source>Palavra</source>
+      <translation>Palavra</translation>
+    </message>
+
+    <message>
+      <source>Destacar tudo</source>
+      <translation>Destacar tudo</translation>
+    </message>
+
+    <message>
+      <source>Fechar (Esc)</source>
+      <translation>Fechar (Esc)</translation>
+    </message>
+
+    <message>
+      <source>Marcador:</source>
+      <translation>Marcador:</translation>
+    </message>
+
+    <message>
+      <source>Selecione o tipo de marcador a aplicar no texto</source>
+      <translation>Selecione o tipo de marcador a aplicar no texto</translation>
     </message>
 
   </context>
