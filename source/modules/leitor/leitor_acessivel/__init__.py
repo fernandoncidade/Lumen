@@ -42,7 +42,7 @@ from .lta_24_text_tools import (
     set_indent,
     set_margins,
 )
-from .lta_26_pymupdf_view import MuPDFView
+from .lta_26_pdf_view import PDFView
 from .lta_27_pdf_findbar import PDFFindBar
 from .lta_28_pdf_find_actions import (
     _pdf_find_show,
@@ -105,7 +105,7 @@ __all__ = [
     "set_line_spacing",
     "set_indent",
     "set_margins",
-    "MuPDFView",
+    "PDFView",
     "PDFFindBar",
     "_pdf_find_show",
     "_pdf_find_clear",

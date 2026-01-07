@@ -1,9 +1,11 @@
 from source.utils.LogManager import LogManager
-
 logger = LogManager.get_logger()
 
 def carregar_vozes(self):
     try:
+        leitor = getattr(self, 'leitor', None)
+        leitor_ok = bool(leitor) and hasattr(leitor, 'definir_voz')
+
         try:
             for ac in list(self.menu_vozes.actions()):
                 try:
@@ -79,10 +81,10 @@ def carregar_vozes(self):
 
                     if idx_found >= 0:
                         combo.setCurrentIndex(idx_found)
-                        if hasattr(self, 'leitor') and self.leitor:
+                        if leitor_ok:
                             self.leitor.definir_voz(combo.itemData(idx_found))
 
-                elif hasattr(self, 'leitor') and self.leitor and self.leitor.voz_id_atual is None and combo.count() > 0:
+                elif leitor_ok and getattr(self.leitor, 'voz_id_atual', None) is None and combo.count() > 0:
                     first_id = combo.itemData(0)
                     if first_id:
                         self.leitor.definir_voz(first_id)
@@ -141,10 +143,10 @@ def carregar_vozes(self):
 
                 if idx_found >= 0:
                     combo.setCurrentIndex(idx_found)
-                    if hasattr(self, 'leitor') and self.leitor:
+                    if leitor_ok:
                         self.leitor.definir_voz(combo.itemData(idx_found))
 
-            elif hasattr(self, 'leitor') and self.leitor and self.leitor.voz_id_atual is None and combo.count() > 0:
+            elif leitor_ok and getattr(self.leitor, 'voz_id_atual', None) is None and combo.count() > 0:
                 try:
                     first_id = combo.itemData(0)
                     self.leitor.definir_voz(first_id)

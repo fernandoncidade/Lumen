@@ -1,10 +1,12 @@
 from source.utils.LogManager import LogManager
-
 logger = LogManager.get_logger()
 
 def definir_voz(self, voz_id):
     try:
         if not (hasattr(self, 'leitor') and self.leitor):
+            return
+
+        if not hasattr(self.leitor, 'definir_voz'):
             return
 
         self.leitor.definir_voz(voz_id)

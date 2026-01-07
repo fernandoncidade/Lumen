@@ -1,6 +1,5 @@
 from PySide6.QtCore import QCoreApplication
 from source.utils.LogManager import LogManager
-
 logger = LogManager.get_logger()
 
 def atualizar_interface(self, codigo_idioma):
@@ -9,11 +8,20 @@ def atualizar_interface(self, codigo_idioma):
         if not hasattr(self, 'tabs'):
             return
 
-        self.tabs.setTabText(0, QCoreApplication.translate("App", "📖 Leitor Acessível"))
-        self.tabs.setTabText(1, QCoreApplication.translate("App", "⏱️ Gestão de Tempo"))
-        self.tabs.setTabText(2, QCoreApplication.translate("App", "🧠 Mapas Mentais"))
-        self.tabs.setTabText(3, QCoreApplication.translate("App", "🎓 Método Feynman"))
-        self.tabs.setTabText(4, QCoreApplication.translate("App", "🗂️ Matriz Eisenhower"))
+        titles = {
+            "leitor_acessivel": QCoreApplication.translate("App", "📖 Leitor Acessível"),
+            "gestao_tempo": QCoreApplication.translate("App", "⏱️ Gestão de Tempo"),
+            "mapas_mentais": QCoreApplication.translate("App", "🧠 Mapas Mentais"),
+            "metodo_feynman": QCoreApplication.translate("App", "🎓 Método Feynman"),
+            "matriz_eisenhower": QCoreApplication.translate("App", "🗂️ Matriz Eisenhower"),
+        }
+        
+        tab_module_ids = getattr(self, "_tab_module_ids", None) or []
+        for i in range(self.tabs.count()):
+            if i < len(tab_module_ids):
+                mid = tab_module_ids[i]
+                if mid in titles:
+                    self.tabs.setTabText(i, titles[mid])
 
         self.atualizar_menu()
 

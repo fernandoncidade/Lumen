@@ -1,4 +1,138 @@
 RELEASE NOTES — Lúmen
+Version: 2026.1.7.0
+Date: January 7, 2026
+Author: Fernando Nillsson Cidade
+
+Quick summary
+- Hardened and more robust module infrastructure (discovery, instantiation and lifecycle).
+- Standardized EventBus for decoupled communication between UI and modules.
+- Significant improvements in the PDF viewer: backend detection, incremental render, LRU cache, highlights and more resilient search.
+- Consolidation of application startup and integration of translation/icon/module contexts.
+- Refinements in the Accessible Reader UI: controls, palette synchronization, FindBars and unified Ctrl+F shortcut.
+- Multiple hardenings (try/except + logging) and small fixes in critical cleanup and module stop points.
+
+Detailed changes
+
+1) Modules infra / plugin loader
+- New / updated: source/gui/gui_04_module_loader.py
+  - discover_plugin_imports: recursive discovery of modules matching *_module.py based on the repository root.
+  - _instantiate_plugin: supports two entrypoints (create_plugin() or PLUGIN_CLASS) and validates the instance implements ModuleInterface.
+  - discover_plugins: dynamically imports paths, collects errors (import/instantiation) and sorts plugins by meta.order and meta.name.
+  - Better error handling when importing/instantiating plugins; prevents global crash if a plugin fails.
+
+2) EventBus and events
+- New / updated: source/gui/gui_03_events.py
+  - Event dataclass with type/payload/source and EventBus (QObject) with Signal(object).
+  - publish / publish_type methods and subscribe with filters by event_type and source.
+  - subscribe returns a safe unsubscribe function (disconnect attempt guarded against TypeError/RuntimeError).
+
+3) Module contracts / context
+- source/gui/gui_02_interfaces.py
+  - ModuleMeta dataclass with metadata (id, name, order, host_attr).
+  - ModuleContext includes event_bus, app and host; ModuleInterface defines the minimal interface (meta, get_widget, start, stop).
+  - Enforces a single integration standard between host (EstudoAcessivel) and plugins.
+
+4) Application initialization / host
+- source/gui/gui_01_estudo_acessivel.py
+  - Protected initialization: OrganizationName/ApplicationName configuration wrapped in try/except with logging.
+  - Creation of EventBus and ModuleContext attempted safely; falls back without breaking initialization if creation fails.
+  - Integration with GerenciadorTraducao: connects to idioma_alterado signal, applies initial translation and attaches atualizar_interface handler.
+  - Window icon loading via IconUtils with logging and fallback when asset is missing.
+  - Dynamic association of UI functions (setup_ui, menus, shortcuts, etc.) via import of source.gui.ui, keeping separation of responsibilities.
+  - Setups wrapped in try/except to avoid failures during main window assembly.
+
+5) Module plugins (example plugins)
+- Module files: eis_01_module.py, fey_12_module.py, mp_06_module.py, tmp_05_module.py, lta_31_module.py
+  - Each plugin implements ModuleInterface, exposes consistent meta (id/name/order/host_attr) and implements lifecycle:
+    - start(context): safely stores context.
+    - get_widget(parent): lazy-loads the real widget (local import), applies parent if provided.
+    - stop(): safe cleanup; attempts to call cleanup/_stop... methods guarded by try/except; deleteLater protected.
+  - LeitorAcessivelPlugin publishes "module.started" event via event_bus on start.
+  - Overall strategy: isolate module failures to avoid impacting the main application.
+
+6) PDF viewer (robustness and features)
+- source/modules/leitor/leitor_acessivel/lta_26_pdf_view.py
+  - Robust detection of backends (pypdfium2, pdf2image, pdfplumber) and PIL; clear logging on availability.
+  - PDFView:
+    - Incremental rendering (per-page widgets: PDFPageWidget) and on-demand render (ensure_rendered) to reduce initial cost.
+    - Image (PIL) cache by (page, zoom) with a simple LRU and configurable limit (_pix_cache_max).
+    - Zoom clamped (0.25–5.0), fit_width and fit_page implemented with safe calculations.
+    - Current page calculation by scroll (current_page_changed) with debounce (QTimer).
+    - Search using pdfplumber (when available) with strategies by chars/words/lines/cross-lines and construction of highlight rectangles (SimpleRect).
+    - Highlights: per-page rectangles, configurable "highlight all" mode, current-match emphasis; navigation between matches with goto_next_hit/goto_prev_hit.
+    - Programmatic scroll to current match with an approximate offset (viewport * 0.25).
+  - PDFPageWidget:
+    - Robust PIL→QImage conversion, centered pixmap painting, semi-transparent overlays for matches and a visual separator.
+  - Hardening: try/except and logging in all critical flows (render, load, search, conversion) to avoid crashes in environments missing dependencies.
+  - Notes: improvements prepared for bundled environments (get_poppler_path for poppler when using pyinstaller).
+
+7) Accessible Reader — UI and integration
+- source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py + package __init__.py
+  - Full control panel (load, play, pause checkable, stop) connected to module functions.
+  - Speed controls (wpm slider), volume, font selection (combo with values and persistence via FontManager), bullets, spacing, indent and margins.
+  - Text / PDF tabs integrated with FindBars (TextFindBar and PDFFindBar) and Ctrl+F which toggles automatically according to the active tab.
+  - PDF toolbar integrated via setup_pdf_toolbar; PDFView shown in the PDF tab.
+  - QTextEdit background synchronized with application QPalette; an event filter installed to react to palette/theme changes.
+  - Use of FontManager to apply default font and doc.setDefaultFont guarded by try/except.
+  - Exports and text actions exposed via the reader package __init__.
+
+8) Extra: PDF text extraction
+- source/modules/leitor/leitor_acessivel/lta_05_carregar_pdf.py
+  - Uses pdfplumber and pypdf (PyPDF2 fallback) to extract text and populate the Text tab when possible.
+  - When loading a PDF for viewing, also attempts text extraction; if successful, applies font and switches to the Text tab automatically.
+  - Robust logging and fallbacks when extraction fails.
+
+9) Package adjustments and import helpers
+- source/__init__.py: __getattr__ for lazy import of EstudoAcessivel, reducing initial import time and providing a single access point.
+- source/gui/__init__.py: re-exports EstudoAcessivel and interfaces/events/loader to simplify imports.
+
+General fixes / hardenings
+- Expanded try/except blocks with LogManager.get_logger() in critical points (initialization, render, load, search, stop).
+- Attribute checks with hasattr / None-guards before accessing optional contexts (e.g. gerenciador_traducao, app.date_input).
+- Protections during cleanup/stop to avoid leaks and crashes when closing modules.
+- Improved dynamic import flows and fallbacks when modules/dependencies are missing.
+
+How to test (quick steps)
+1. Start the application (main.py) → verify main window opens, icon loads (if available) and translations are applied.
+2. Open Accessible Reader:
+   - Test loading a PDF: viewer should render pages on demand; zoom controls, fit width / fit page work.
+   - Test text extraction (PDF → Text): when possible, text appears in the Text tab.
+   - Test PDF search (if pdfplumber is available): use the FindBar, navigate matches, check highlights and navigation.
+   - Test Ctrl+F toggling between FindBars in the tabs.
+3. Open other tabs (Time Management, Mind Maps, Feynman Method, Eisenhower Matrix) via registered plugins:
+   - Confirm widgets load via lazy import and stop/cleanup does not raise exceptions when closing tabs.
+4. Check logs (folder %LOCALAPPDATA%/... per LogManager) for debug/error messages in flows where dependencies are absent.
+
+Main files changed / introduced in this release
+- source/gui/gui_04_module_loader.py
+- source/gui/gui_03_events.py
+- source/gui/gui_02_interfaces.py
+- source/gui/gui_01_estudo_acessivel.py
+- source/gui/__init__.py
+- source/__init__.py
+- source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py
+- source/modules/leitor/leitor_acessivel/lta_05_carregar_pdf.py
+- source/modules/leitor/leitor_acessivel/lta_26_pdf_view.py
+- source/modules/leitor/leitor_acessivel/__init__.py
+- source/modules/eisenhower/eis_01_module.py
+- source/modules/feynman/fey_12_module.py
+- source/modules/mapa/mp_06_module.py
+- source/modules/tempo/tmp_05_module.py
+- main.py
+
+Expected impact
+- More resilient module initialization and loading: a failing plugin no longer compromises the entire application.
+- PDF viewer with improved UX (lazy render, cache, search highlighting) and lower memory/CPU cost when navigating large documents.
+- Better integration between Host/Plugins via ModuleContext + EventBus for communication and coordination.
+- Fewer crashes in constrained environments (missing native libraries or resources) thanks to fallbacks and detailed logging.
+
+Final notes
+- The application still depends on optional libraries (pdfplumber, pypdf / PyPDF2, pypdfium2, PIL) for advanced features; without them, the app keeps fallback behavior but with reduced functionality.
+- Review logs after testing to tune messages and identify areas to harden further in upcoming releases.
+
+_________________________________________________
+
+RELEASE NOTES — Lúmen
 Version: 2026.1.4.0
 Date: January 4, 2026
 Author: Fernando Nillsson Cidade

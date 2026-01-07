@@ -5,7 +5,7 @@ from source.utils.FontManager import FontManager
 from source.utils.LogManager import LogManager
 from source.utils.IconUtils import get_icon_path
 from .lta_22_pdf_toolbar import setup_pdf_toolbar
-from .lta_26_pymupdf_view import MuPDFView
+from .lta_26_pdf_view import PDFView
 from .lta_27_pdf_findbar import PDFFindBar
 from .lta_29_text_findbar import TextFindBar
 logger = LogManager.get_logger()
@@ -218,7 +218,7 @@ def setup_ui(self):
         self._pdf_find_bar = PDFFindBar(self, pdf_tab)
         pdf_layout.addWidget(self._pdf_find_bar)
 
-        self.pdf_view = MuPDFView(pdf_tab)
+        self.pdf_view = PDFView(pdf_tab)
         self.pdf_doc = None
         pdf_layout.addWidget(self.pdf_view)
 
