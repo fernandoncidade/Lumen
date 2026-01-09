@@ -1,250 +1,147 @@
 NOTAS DE LANÇAMENTO — Lúmen
-Versão: 2026.1.7.0
-Data: 7 de janeiro de 2026
+Versão: 2026.1.8.0
+Data: 8 de janeiro de 2026
 Autor: Fernando Nillsson Cidade
 
 Resumo rápido
-- Robusteza e endurecimento da infraestrutura de módulos (descoberta, instanciação e lifecycle).
-- EventBus padronizado para comunicação desacoplada entre UI e módulos.
-- Melhorias significativas no visualizador PDF: deteção de backends, render incremental, cache LRU, highlights e busca mais resiliente.
-- Consolidação da inicialização da aplicação e integração de tradução/ícone/contexts de módulo.
-- Refinamentos na UI do Leitor Acessível: controles, sincronização de paleta, FindBars e atalho unificado Ctrl+F.
-- Vários hardenings (try/except + logging) e pequenos fixes em pontos críticos de cleanup e stop de módulos.
-
-Detalhamento das mudanças principais
-
-1) Infra de módulos / plugin loader
-- Novo / atualizado: source/gui/gui_04_module_loader.py
-  - discover_plugin_imports: descoberta recursiva de módulos com padrão *_module.py baseada no root do repositório.
-  - _instantiate_plugin: suporta dois entrypoints (create_plugin() ou PLUGIN_CLASS) e valida que a instância implemente ModuleInterface.
-  - discover_plugins: carrega import paths dinamicamente, acumula erros (import/instanciação) e ordena plugins pelo meta.order e meta.name.
-  - Melhor tratamento de erros ao importar/instanciar plugins; evita crash global se um plugin falhar.
-
-2) EventBus e eventos
-- Novo / atualizado: source/gui/gui_03_events.py
-  - Event dataclass com type/payload/source e EventBus (QObject) com Signal(object).
-  - Métodos publish / publish_type e subscribe com filtro por event_type e source.
-  - subscribe retorna função de unsubscribe segura (tenta desconectar protegendo TypeError/RuntimeError).
-
-3) Contratos de módulo / contexto
-- source/gui/gui_02_interfaces.py
-  - ModuleMeta dataclass com metadados (id, name, order, host_attr).
-  - ModuleContext inclui event_bus, app e host; ModuleInterface define a interface mínima (meta, get_widget, start, stop).
-  - Força padrão único de integração entre host (EstudoAcessivel) e plugins.
-
-4) Inicialização da aplicação / host
-- source/gui/gui_01_estudo_acessivel.py
-  - Inicialização protegida: configuração de OrganizationName/ApplicationName envolta em try/except com logging.
-  - Criação de EventBus e ModuleContext tentada de forma segura; quando falha, existem fallbacks sem quebrar inicialização.
-  - Integração com GerenciadorTraducao: conexão ao sinal idioma_alterado, aplicação inicial de tradução e handler atualizar_interface.
-  - Carregamento do ícone da janela via IconUtils com logging e fallback quando arquivo ausente.
-  - Associação dinâmica de funções de UI (setup_ui, menus, atalhos, etc.) via import de source.gui.ui, mantendo separação de responsabilidades.
-  - Setups protegidos por try/except para evitar falhas durante montagem da janela principal.
-
-5) Plugins de módulos (plugins de exemplo)
-- Arquivos de módulos: eis_01_module.py, fey_12_module.py, mp_06_module.py, tmp_05_module.py, lta_31_module.py
-  - Cada plugin implementa ModuleInterface, expõe meta consistente (id/name/order/host_attr) e implementa lifecycle:
-    - start(context): armazena context de maneira segura.
-    - get_widget(parent): lazy-load do widget real (import local), aplica parent quando fornecido.
-    - stop(): cleanup seguro; tenta chamar métodos cleanup/_stop... protegidos por try/except; deleteLater com proteção.
-  - LeitorAcessivelPlugin publica evento "module.started" via event_bus ao iniciar.
-  - Estratégia geral: isolamento de falhas do módulo, evitando impactos na aplicação principal.
-
-6) Visualizador PDF (robustez e funcionalidades)
-- source/modules/leitor/leitor_acessivel/lta_26_pdf_view.py
-  - Deteção robusta de backends (pypdfium2, pdf2image, pdfplumber) e PIL; logging claro sobre disponibilidade.
-  - PDFView:
-    - Render incremental (widgets por página: PDFPageWidget) e render sob demanda (ensure_rendered) para reduzir custo inicial.
-    - Cache de imagens (pil) por (página, zoom) com LRU simples e limite configurável (_pix_cache_max).
-    - Zoom clamp (0.25–5.0), fit_width e fit_page implementados com cálculos seguros.
-    - Cálculo de página atual por rolagem (current_page_changed) com debounce (QTimer).
-    - Busca usando pdfplumber (quando disponível) com estratégias por chars/words/lines/cross-lines e construção de retângulos de destaque (SimpleRect).
-    - Destaques: retângulos por página, modo "destacar tudo" configurável, destaque da ocorrência atual; navegação entre ocorrências com goto_next_hit/goto_prev_hit.
-    - Scroll programático para ocorrência corrente com offset aproximado (viewport * 0.25).
-  - PDFPageWidget:
-    - Conversão PIL→QImage robusta, desenho centralizado do pixmap, desenho de overlays semi-translúcidos para ocorrências e desenho de separador visual.
-  - Hardening: try/except e logging em todos os fluxos críticos (render, load, search, conversion) para evitar crashes em ambientes sem dependências.
-  - Observações: melhorias preparadas para ambientes empacotados (get_poppler_path para poppler quando pyinstaller).
-
-7) Leitor Acessível — UI e integração
-- source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py + __init__.py do pacote leitor
-  - Painel de controles completo (carregar, play, pause checkable, stop) com conexões a funções do módulo.
-  - Controles de velocidade (slider wpm), volume, seleção de fonte (combo com valores e persistência via FontManager), bullets, espaçamento, recuo e margem.
-  - Abas Texto / PDF com integração dos FindBars (TextFindBar e PDFFindBar) e atalho Ctrl+F que alterna automaticamente conforme aba ativa.
-  - PDF toolbar integrado via setup_pdf_toolbar; PDFView exibido em aba PDF.
-  - Sincronização de fundo do QTextEdit com a QPalette da aplicação; filtro de eventos instalado para reagir a mudanças de paleta/theme.
-  - Uso de FontManager para aplicar fonte padrão e doc.setDefaultFont protegido por try/except.
-  - Exportações e ações de texto expostas via __init__ do pacote leitor.
-
-8) Extra: extração de texto de PDF
-- source/modules/leitor/leitor_acessivel/lta_05_carregar_pdf.py
-  - Uso de pdfplumber e pypdf (PyPDF2 fallback) para extrair texto e popular a aba Texto quando possível.
-  - Ao carregar PDF para visualizar, tenta também extrair texto; quando bem-sucedido, aplica fonte e muda para aba Texto automaticamente.
-  - Logging e fallback robustos quando extração falha.
-
-9) Ajustes de pacote e import helpers
-- source/__init__.py: __getattr__ para lazy import de EstudoAcessivel, reduz tempo de import inicial e cria ponto único de acesso.
-- source/gui/__init__.py: reexporta EstudoAcessivel e interfaces/eventos/loader para facilitar imports.
-
-Correções / hardenings gerais
-- Ampliação de blocos try/except com LogManager.get_logger() em pontos críticos (inicialização, render, load, search, stop).
-- Check de atributos com hasattr/None-guards antes de acessar contextos opcionais (ex.: gerenciador_traducao, app.date_input).
-- Proteções durante cleanup/stop para evitar leaks e crashes ao fechar módulos.
-- Melhoria nos fluxos de import dinâmico e fallback quando módulos/depêndencias ausentes.
-
-Como testar (passos rápidos)
-1. Iniciar aplicação (main.py) → verificar janela principal abre, ícone carregado (se disponível) e traduções aplicadas.
-2. Abrir Leitor Acessível:
-   - Testar carregar PDF: visualizador deve renderizar páginas sob demanda; controles de zoom, fit width / fit page funcionam.
-   - Testar extração de texto (PDF → Texto): quando possível, texto aparece na aba Texto.
-   - Testar busca no PDF (se pdfplumber disponível): usar FindBar, navegar por ocorrências, verificar highlights e navegação.
-   - Testar Ctrl+F alternando entre FindBars nas abas.
-3. Abrir outras abas (Gestão de Tempo, Mapas Mentais, Método Feynman, Matriz Eisenhower) via plugins registrados:
-   - Conferir que widgets carregam via lazy import e que stop/cleanup não gera exceções ao fechar abas.
-4. Verificar logs (pasta %LOCALAPPDATA%/... conforme LogManager) para mensagens de debug/erro em fluxos onde dependências estão ausentes.
-
-Arquivos principais alterados / introduzidos nesta versão
-- source/gui/gui_04_module_loader.py
-- source/gui/gui_03_events.py
-- source/gui/gui_02_interfaces.py
-- source/gui/gui_01_estudo_acessivel.py
-- source/gui/__init__.py
-- source/__init__.py
-- source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py
-- source/modules/leitor/leitor_acessivel/lta_05_carregar_pdf.py
-- source/modules/leitor/leitor_acessivel/lta_26_pdf_view.py
-- source/modules/leitor/leitor_acessivel/__init__.py
-- source/modules/eisenhower/eis_01_module.py
-- source/modules/feynman/fey_12_module.py
-- source/modules/mapa/mp_06_module.py
-- source/modules/tempo/tmp_05_module.py
-- main.py
-
-Impacto esperado
-- Inicialização e carregamento de módulos mais resilientes: falhas em um plugin não comprometem a aplicação inteira.
-- Visualizador de PDF com UX melhorada (lazy render, cache, destaque de busca) e menor custo de memória/CPU ao navegar documentos grandes.
-- Host/Plugins melhor integrados via ModuleContext + EventBus para comunicação e coordenação.
-- Menos crashes em ambientes limitados (falta de bibliotecas nativas ou recursos) graças a fallbacks e logging detalhado.
-
-Notas finais
-- Ainda dependemos de bibliotecas opcionais (pdfplumber, pypdf / PyPDF2, pypdfium2, PIL) para recursos avançados; sem elas, a aplicação mantém comportamentos de fallback, mas com funcionalidades reduzidas.
-- Revisar logs após testes para ajustar mensagens e detectar pontos a endurecer nas próximas versões.
-
-_________________________________________________
-
-NOTAS DE LANÇAMENTO — Lúmen
-Versão: 2026.1.4.0
-Data: 4 de janeiro de 2026
-Autor: Fernando Nillsson Cidade
-
-Resumo rápido
-- Leitor Acessível: adicionada busca integrada (Texto e PDF) com barra de pesquisa, navegação por ocorrências e destaque visual (match atual + destacar tudo).
-- PDF (PyMuPDF): visualizador customizado com renderização incremental (lazy render), cache de pixmaps por zoom/página, cálculo de página atual por rolagem e destaque de resultados de busca por retângulos.
-- Toolbar de PDF ampliada: navegação de páginas, zoom (±, %), “Ajustar à largura / página”, ferramenta “Mão” (pan) e integração direta com a busca.
-- Traduções/UX: FindBars e toolbars com retranslate() para atualização dinâmica ao trocar idioma; atalhos de busca unificados (Ctrl+F) alternando automaticamente conforme a aba ativa (Texto/PDF).
-- Robustez e diagnóstico: tratamento de exceções e logging (LogManager) nos fluxos de busca/renderização, evitando travamentos em ambientes com restrições.
+- Leitor Acessível: busca integrada (Texto e PDF) com barra de pesquisa, navegação por ocorrências e destaque visual (ocorrência atual + destacar tudo).
+- Visualizador PDF redesenhado para novos backends: substituímos PyMuPDF por uma pilha baseada em `pypdfium2`, `pdf2image` e `pdfplumber` para renderização, rasterização e extração de texto/posições.
+- PDF: renderização incremental (lazy render), cache de imagens por (página, zoom), cálculo da página atual por rolagem e destaque de resultados de busca com retângulos desenhados sobre o raster.
+- Toolbar de PDF ampliada: navegação, zoom (±, %), modos “Ajustar à largura / página”, ferramenta “Mão” (pan) e integração direta com a busca.
+- Traduções/UX: FindBars e toolbars com `retranslate()` para atualização dinâmica ao trocar idioma; atalho unificado de busca (`Ctrl+F`) que alterna entre Texto e PDF conforme a aba ativa.
+- Robustez e diagnóstico: tratamento de exceções e logging (LogManager) em fluxos de render, busca e I/O, evitando travamentos em ambientes com limitações ou bibliotecas ausentes.
 
 Detalhamento das mudanças principais
 
 1) Busca no Texto (Leitor Acessível)
-- Implementado um fluxo completo de busca no QTextEdit com:
-  - Barra de busca (TextFindBar) com campo de texto, botões anterior/próximo, contador (atual/total) e opções:
-    - Diferenciar maiúsculas/minúsculas (Aa).
-    - Somente palavra inteira.
-    - “Destacar tudo” (realça todas as ocorrências e mantém a ocorrência atual com cor distinta).
-  - Atalhos:
-    - Enter → próximo resultado.
-    - Shift+Enter → resultado anterior.
-    - F3 → próximo, Shift+F3 → anterior.
-    - Esc → fechar a barra (e limpar destaques).
-- Algoritmo de busca:
-  - Varredura do QTextDocument com QTextDocument.find(...) usando FindFlags (case sensitive / whole words).
-  - Armazenamento das ocorrências como pares (selectionStart, selectionEnd) e navegação por índice.
-  - Aplicação de destaques via QTextEdit.ExtraSelection:
-    - Ocorrências gerais em amarelo.
-    - Ocorrência atual em laranja, mantendo foco e ensureCursorVisible().
+- Fluxo completo de busca no `QTextEdit` com `TextFindBar` (campo, anterior/próximo, contador atual/total) e opções:
+  - Diferenciar maiúsculas/minúsculas (Aa).
+  - Somente palavra inteira.
+  - “Destacar tudo” (realça todas as ocorrências; ocorrência atual com cor distinta).
+- Atalhos: `Enter` → próximo, `Shift+Enter` → anterior, `F3` / `Shift+F3`, `Esc` → fechar e limpar destaques.
+- Algoritmo: varredura do `QTextDocument` usando `QTextDocument.find(...)` com flags apropriadas; ocorrências armazenadas como pares `(start,end)`; destaques aplicados via `QTextEdit.ExtraSelection` (amarelo para todas, laranja para atual).
 
-Arquivos relacionados:
+Arquivos relacionados (Texto):
 - source/modules/leitor/leitor_acessivel/lta_29_text_findbar.py
 - source/modules/leitor/leitor_acessivel/lta_30_text_find_actions.py
 
-2) Busca no PDF (PyMuPDF)
-- Implementada barra de busca (PDFFindBar) integrada ao visualizador MuPDFView com:
-  - Mesmos controles/atalhos do modo Texto (Enter/Shift+Enter, F3/Shift+F3, Esc).
-  - Opções: Aa, Palavra inteira, Destacar tudo.
-  - Contador (atual/total) atualizado a cada busca/navegação.
+2) Busca no PDF (nova pilha: pypdfium2 / pdf2image / pdfplumber)
+- Migração do backend de PDF: removida dependência direta de PyMuPDF. Agora o Leitor usa:
+  - `pypdfium2` para renderização eficiente de páginas em pixmaps quando disponível;
+  - `pdf2image` como fallback/conversor para rasterização em ambientes sem `pypdfium2`;
+  - `pdfplumber` para extração de texto/posições e refinamento de buscas (tokens e bounding boxes).
+- Barra de busca (PDFFindBar) com os mesmos controles/atalhos do modo Texto e opções: Aa, Palavra inteira, Destacar tudo.
 - Estratégia de busca:
-  - Uso de page.search_for(...) com flags do PyMuPDF quando disponíveis (ignorecase/matchcase).
-  - Modo “palavra inteira” otimizado para consultas simples (sem espaços/quebras) usando page.get_text("words") e comparação direta por token.
-  - Filtro extra em match_case: validação por texto recortado (clip) para reduzir falsos positivos dependendo do backend/extração.
+  - Busca por página utilizando `pdfplumber` (quando disponível) para obter palavras e caixas (word tokens) e comparar tokens para “palavra inteira” com melhor precisão;
+  - Em modos de busca por substring, também suportamos buscas case-insensitive/regex-simples sobre o texto extraído;
+  - Quando necessário, há validação adicional por recorte (clip) do raster para reduzir falsos positivos dependendo do backend.
 - Destaque visual:
-  - Retângulos (rects) por página armazenados e desenhados sobre o pixmap renderizado.
-  - Ocorrências gerais com overlay amarelo sem borda; ocorrência atual com overlay laranja e borda (pen) para evidenciar o foco.
-  - Opção “Destacar tudo” pode ser desativada para destacar apenas a página/ocorrência corrente.
+  - Retângulos por página armazenados e desenhados sobre as imagens rasterizadas;
+  - Ocorrências gerais com overlay amarelo; ocorrência atual com overlay laranja e borda para evidenciar o foco;
+  - Opção “Destacar tudo” pode ser desativada para destacar apenas a ocorrência corrente.
 
-Arquivos relacionados:
+Arquivos relacionados (PDF):
 - source/modules/leitor/leitor_acessivel/lta_27_pdf_findbar.py
 - source/modules/leitor/leitor_acessivel/lta_28_pdf_find_actions.py
-- source/modules/leitor/leitor_acessivel/lta_26_pymupdf_view.py
+- source/modules/leitor/leitor_acessivel/lta_26_pdf_view.py
 
-3) Visualizador PDF customizado (MuPDFView)
-- Novo visualizador baseado em QScrollArea + widgets por página (MuPDFPageWidget), com foco em performance e compatibilidade:
-  - Renderização incremental (lazy render): páginas são renderizadas sob demanda quando entram na janela visível (com margem extra), reduzindo custo inicial.
-  - Cache de pixmaps por (página, zoom) com limite (LRU simples por ordem) para evitar re-render excessivo.
-  - Cálculo de página atual por rolagem: detecta a página cujo “meio” está visível e emite current_page_changed(page, total).
-  - Zoom:
-    - setZoomFactor com clamp (0.25–5.0) e invalidação/limpeza do cache.
-    - fit_width e fit_page baseados no rect da página 0.
-  - Busca e navegação:
-    - goto_next_hit / goto_prev_hit com scroll automático para a ocorrência (posicionamento vertical com offset ~25% da viewport).
-    - highlight_all controlável.
-- Segurança e logs:
-  - Todos os fluxos críticos (render/search/scroll) protegidos por try/except e com registro via LogManager.
+3) Visualizador PDF customizado (multibackend)
+- Implementado visualizador baseado em `QScrollArea` com widgets por página (page widgets) e renderização incremental:
+  - Lazy render: páginas são rasterizadas sob demanda (com margem extra) para reduzir custo inicial;
+  - Cache de imagens (pixmaps) por (página, zoom) com política simples de limite/LRU para evitar re-render excessivo;
+  - Cálculo de página atual por rolagem: identifica a página cujo centro está visível e emite `current_page_changed(page, total)`;
+  - Zoom com `setZoomFactor` (clamped entre 0.25–5.0) e invalidação adequada do cache;
+  - `fit_width` e `fit_page` calculados a partir do retângulo da primeira página;
+  - Navegação por hits (`goto_next_hit` / `goto_prev_hit`) com scroll automático posicionando a ocorrência com offset visual confortável (~25% da viewport);
+  - `highlight_all` controlável para reduzir custo quando muitas ocorrências existirem.
+- Robustez: fluxos de render, extração e busca protegidos por `try/except` com logs via `LogManager`.
 
 Arquivo relacionado:
-- source/modules/leitor/leitor_acessivel/lta_26_pymupdf_view.py
+- source/modules/leitor/leitor_acessivel/lta_26_pdf_view.py
 
 4) Toolbar de PDF (navegação/zoom/ferramentas)
-- Toolbar expandida e consolidada com:
-  - Navegação: primeira, anterior, próxima, última, spin de página + total.
-  - Zoom: botões +/- e combo editável (percentuais); suporte a modos especiais “Largura” e “Página”.
-  - Ferramenta “Mão” (pan/arrasto): alterna modo no PDFMouseHandler e aplica estilo visual quando ativo.
-  - Botão “🔎 Buscar” para abrir a barra de busca do PDF.
-  - Habilitação/desabilitação segura dos widgets conforme PDF carregado.
-- Integração com tradução:
-  - atualizar_traducoes mantém labels e textos especiais (“Largura/Página”) coerentes ao trocar idioma.
+- Toolbar consolidada com:
+  - Navegação: primeira, anterior, próxima, última, spin de página + total;
+  - Zoom: botões ±, combo editável com percentuais; modos especiais “📄 Largura” e “📃 Página”;
+  - Ferramenta “Mão” (pan/arrasto) integrada ao `PDFMouseHandler` (modo mão altera comportamento do mouse e estilo do cursor);
+  - Botão “🔎 Buscar” para abrir a barra de busca do PDF;
+  - Widgets habilitados/desabilitados com segurança conforme estado do documento;
+  - Tradução: `retranslate()` para labels e entradas que mudam com o idioma.
 
-Arquivo relacionado:
+Arquivos relacionados:
 - source/modules/leitor/leitor_acessivel/lta_22_pdf_toolbar.py
 - source/modules/leitor/leitor_acessivel/lta_02_atualizar_traducoes.py
 
-5) Atalho unificado Ctrl+F (Texto/PDF)
-- Ctrl+F alterna a busca conforme a aba ativa:
-  - Na aba Texto: abre/fecha TextFindBar e garante que PDFFindBar seja fechado.
-  - Na aba PDF: abre/fecha PDFFindBar e garante que TextFindBar seja fechado.
-- Contexto do atalho configurado como ApplicationShortcut para funcionar de forma consistente na janela do Leitor Acessível.
-
-Arquivo relacionado:
-- source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py
-
-Como testar (passos rápidos)
-1. Leitor Acessível → aba “Texto”:
-   - Digitar um texto com repetições; usar Ctrl+F e buscar um termo.
-   - Testar Enter / Shift+Enter e F3 / Shift+F3; verificar contador e destaque (atual vs demais).
-   - Desativar “Destacar tudo” e confirmar que apenas a ocorrência atual fica realçada.
-2. Leitor Acessível → carregar PDF e ir para a aba “PDF”:
-   - Verificar toolbar habilitada e total de páginas.
-   - Testar zoom (± e percentuais), “📄 Largura” e “📃 Página”.
-   - Ctrl+F ou “🔎 Buscar”: buscar termo comum, navegar por ocorrências e confirmar highlight no documento.
-3. Trocar idioma do app:
-   - Confirmar que toolbars e FindBars atualizam placeholder/tooltips/labels e que o combo de zoom respeita “Largura/Página” quando aplicável.
-4. Verificar logs:
-   - Em caso de falhas de renderização/busca, confirmar que erros são registrados via LogManager sem travar a UI.
+5) Atalho unificado `Ctrl+F` (Texto/PDF)
+- `Ctrl+F` alterna a busca conforme a aba ativa:
+  - Aba Texto: abre/fecha `TextFindBar` e garante que `PDFFindBar` seja fechado;
+  - Aba PDF: abre/fecha `PDFFindBar` e garante que `TextFindBar` seja fechado;
+  - O atalho tem contexto `ApplicationShortcut` para funcionar consistentemente na janela principal.
 
 Arquivos principais alterados / introduzidos (Leitor Acessível)
 - source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py
 - source/modules/leitor/leitor_acessivel/lta_02_atualizar_traducoes.py
 - source/modules/leitor/leitor_acessivel/lta_22_pdf_toolbar.py
+- source/modules/leitor/leitor_acessivel/lta_26_pdf_view.py
+- source/modules/leitor/leitor_acessivel/lta_27_pdf_findbar.py
+- source/modules/leitor/leitor_acessivel/lta_28_pdf_find_actions.py
+- source/modules/leitor/leitor_acessivel/lta_29_text_findbar.py
+- source/modules/leitor/leitor_acessivel/lta_30_text_find_actions.py
+
+Alterações de caminhos e organização de arquivos
+- Arquivos de UI foram movidos de `source/gui` para `source/gui/ui`. Nas notas abaixo listamos os novos caminhos:
+  - source/gui/ui/__init__.py
+  - source/gui/ui/ui_01_setup_ui.py
+  - source/gui/ui/ui_02_sincronizar_regua_menu.py
+  - source/gui/ui/ui_03_setup_menubar.py
+  - source/gui/ui/ui_04_executar_acao_modulo.py
+  - source/gui/ui/ui_05_mudar_idioma.py
+  - source/gui/ui/ui_06_exibir_sobre.py
+  - source/gui/ui/ui_07_atualizar_interface.py
+  - source/gui/ui/ui_08_atualizar_menu.py
+  - source/gui/ui/ui_09_get_persist_file.py
+  - source/gui/ui/ui_10_salvar_voz_persistente.py
+  - source/gui/ui/ui_11_carregar_voz_persistente.py
+  - source/gui/ui/ui_12_carregar_vozes.py
+  - source/gui/ui/ui_13_definir_voz.py
+  - source/gui/ui/ui_14_atualizar_modulos.py
+  - source/gui/ui/ui_15_setup_shortcuts.py
+  - source/gui/ui/ui_16_setup_statusbar.py
+  - source/gui/ui/ui_17_switch_to_tab.py
+  - source/gui/ui/ui_18_on_tab_changed.py
+  - source/gui/ui/ui_19_show_help.py
+  - source/gui/ui/ui_20_closeEvent.py
+  - source/gui/ui/ui_21_changeEvent.py
+  - source/gui/ui/ui_22_font_config_dialog.py
+  - source/gui/ui/ui_23_sound_config_dialog.py
+
+ - Também foi reorganizado o módulo principal de GUI de `source` para `source/gui`:
+  - source/gui/__init__.py
+  - source/gui/gui_01_estudo_acessivel.py
+
+Como testar (passos rápidos)
+1. Leitor Acessível → aba “Texto”:
+   - Digite um texto com repetições; pressione `Ctrl+F` e busque um termo.
+   - Teste Enter / Shift+Enter e F3 / Shift+F3; verifique contador e destaque (atual vs demais).
+   - Desative “Destacar tudo” e confirme que apenas a ocorrência atual fica realçada.
+2. Leitor Acessível → carregar PDF e ir para a aba “PDF”:
+   - Verifique toolbar habilitada e total de páginas.
+   - Teste zoom (± e percentuais), “📄 Largura” e “📃 Página”.
+   - `Ctrl+F` ou botão “🔎 Buscar”: busque um termo comum, navegue por ocorrências e confirme highlight no documento.
+3. Trocar idioma do app:
+   - Confirme que toolbars e FindBars atualizam `placeholder`/tooltips/labels e que o combo de zoom respeita “Largura/Página”.
+4. Verificar logs:
+   - Em caso de falhas de renderização/busca, confirme que erros são registrados via `LogManager` sem travar a UI.
+
+Notas de compatibilidade e dependências
+- A nova pilha de PDF adiciona dependências opcionais: `pypdfium2`, `pdf2image`, `pdfplumber`, e `Pillow`/`PIL` conforme o ambiente. O visualizador tenta usar `pypdfium2` quando disponível e recorre a `pdf2image` como fallback; `pdfplumber` é usado para extração de texto/caixas quando presente.
+- O código foi escrito para degradar graciosamente quando alguma dessas bibliotecas não estiver instalada, registrando avisos no `LogManager` e mantendo funcionalidade básica (ex.: leitura de texto quando possível).
+
+Arquivos principais alterados/novos (resumo)
+- GUI reorganizada: `source/gui/__init__.py`, `source/gui/gui_01_estudo_acessivel.py` e os arquivos em `source/gui/ui/` listados acima.
+- Leitor Acessível (PDF/Texto): arquivos em `source/modules/leitor/leitor_acessivel/` destacados na seção "Arquivos principais alterados / introduzidos".
+
+Fim das notas.
 - source/modules/leitor/leitor_acessivel/lta_26_pymupdf_view.py
 - source/modules/leitor/leitor_acessivel/lta_27_pdf_findbar.py
 - source/modules/leitor/leitor_acessivel/lta_28_pdf_find_actions.py

@@ -6,9 +6,6 @@ def definir_voz(self, voz_id):
         if not (hasattr(self, 'leitor') and self.leitor):
             return
 
-        if not hasattr(self.leitor, 'definir_voz'):
-            return
-
         self.leitor.definir_voz(voz_id)
 
         try:

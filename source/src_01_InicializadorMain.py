@@ -4,7 +4,6 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon
 from source.utils.LogManager import LogManager
 from source.utils.IconUtils import get_icon_path
-
 logger = LogManager.get_logger()
 
 def configurar_windows_app_id():

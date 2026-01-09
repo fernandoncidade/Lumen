@@ -1,7 +1,7 @@
 from __future__ import annotations
 from PySide6.QtCore import Qt, QCoreApplication
 from PySide6.QtGui import QKeySequence, QShortcut
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QLabel, QCheckBox
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QLabel, QCheckBox, QApplication
 from source.utils.LogManager import LogManager
 logger = LogManager.get_logger()
 
@@ -104,7 +104,18 @@ class TextFindBar(QWidget):
         self.lbl_count.setText(f"{cur}/{total}")
 
     def _on_enter_next(self):
-        mods = self.edt.keyboardModifiers()
+        mods = Qt.KeyboardModifier.NoModifier
+        try:
+            mods = QApplication.keyboardModifiers()
+
+        except Exception:
+            try:
+                from PySide6.QtGui import QGuiApplication
+                mods = QGuiApplication.queryKeyboardModifiers()
+
+            except Exception:
+                pass
+
         if mods & Qt.KeyboardModifier.ShiftModifier:
             self._call_owner_prev()
 

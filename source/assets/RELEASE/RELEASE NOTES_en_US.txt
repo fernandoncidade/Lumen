@@ -1,250 +1,147 @@
 RELEASE NOTES — Lúmen
-Version: 2026.1.7.0
-Date: January 7, 2026
+Version: 2026.1.8.0
+Date: January 8, 2026
 Author: Fernando Nillsson Cidade
 
 Quick summary
-- Hardened and more robust module infrastructure (discovery, instantiation and lifecycle).
-- Standardized EventBus for decoupled communication between UI and modules.
-- Significant improvements in the PDF viewer: backend detection, incremental render, LRU cache, highlights and more resilient search.
-- Consolidation of application startup and integration of translation/icon/module contexts.
-- Refinements in the Accessible Reader UI: controls, palette synchronization, FindBars and unified Ctrl+F shortcut.
-- Multiple hardenings (try/except + logging) and small fixes in critical cleanup and module stop points.
+- Accessible Reader: integrated search (Text and PDF) with a search bar, occurrence navigation and visual highlighting (current occurrence + highlight all).
+- PDF viewer redesigned for new backends: replaced PyMuPDF with a stack based on `pypdfium2`, `pdf2image` and `pdfplumber` for rendering, rasterization and text/position extraction.
+- PDF: incremental rendering (lazy render), image cache by (page, zoom), calculation of current page by scrolling and highlighting of search results with rectangles drawn over the raster.
+- Expanded PDF toolbar: navigation, zoom (±, %), “Fit width / Fit page” modes, “Hand” tool (pan) and direct integration with search.
+- Translations/UX: FindBars and toolbars implemented with `retranslate()` for dynamic updates when switching language; unified search shortcut (`Ctrl+F`) toggles between Text and PDF according to the active tab.
+- Robustness and diagnostics: exception handling and logging (LogManager) in rendering, search and I/O flows, avoiding crashes in environments with limitations or missing libraries.
 
-Detailed changes
-
-1) Modules infra / plugin loader
-- New / updated: source/gui/gui_04_module_loader.py
-  - discover_plugin_imports: recursive discovery of modules matching *_module.py based on the repository root.
-  - _instantiate_plugin: supports two entrypoints (create_plugin() or PLUGIN_CLASS) and validates the instance implements ModuleInterface.
-  - discover_plugins: dynamically imports paths, collects errors (import/instantiation) and sorts plugins by meta.order and meta.name.
-  - Better error handling when importing/instantiating plugins; prevents global crash if a plugin fails.
-
-2) EventBus and events
-- New / updated: source/gui/gui_03_events.py
-  - Event dataclass with type/payload/source and EventBus (QObject) with Signal(object).
-  - publish / publish_type methods and subscribe with filters by event_type and source.
-  - subscribe returns a safe unsubscribe function (disconnect attempt guarded against TypeError/RuntimeError).
-
-3) Module contracts / context
-- source/gui/gui_02_interfaces.py
-  - ModuleMeta dataclass with metadata (id, name, order, host_attr).
-  - ModuleContext includes event_bus, app and host; ModuleInterface defines the minimal interface (meta, get_widget, start, stop).
-  - Enforces a single integration standard between host (EstudoAcessivel) and plugins.
-
-4) Application initialization / host
-- source/gui/gui_01_estudo_acessivel.py
-  - Protected initialization: OrganizationName/ApplicationName configuration wrapped in try/except with logging.
-  - Creation of EventBus and ModuleContext attempted safely; falls back without breaking initialization if creation fails.
-  - Integration with GerenciadorTraducao: connects to idioma_alterado signal, applies initial translation and attaches atualizar_interface handler.
-  - Window icon loading via IconUtils with logging and fallback when asset is missing.
-  - Dynamic association of UI functions (setup_ui, menus, shortcuts, etc.) via import of source.gui.ui, keeping separation of responsibilities.
-  - Setups wrapped in try/except to avoid failures during main window assembly.
-
-5) Module plugins (example plugins)
-- Module files: eis_01_module.py, fey_12_module.py, mp_06_module.py, tmp_05_module.py, lta_31_module.py
-  - Each plugin implements ModuleInterface, exposes consistent meta (id/name/order/host_attr) and implements lifecycle:
-    - start(context): safely stores context.
-    - get_widget(parent): lazy-loads the real widget (local import), applies parent if provided.
-    - stop(): safe cleanup; attempts to call cleanup/_stop... methods guarded by try/except; deleteLater protected.
-  - LeitorAcessivelPlugin publishes "module.started" event via event_bus on start.
-  - Overall strategy: isolate module failures to avoid impacting the main application.
-
-6) PDF viewer (robustness and features)
-- source/modules/leitor/leitor_acessivel/lta_26_pdf_view.py
-  - Robust detection of backends (pypdfium2, pdf2image, pdfplumber) and PIL; clear logging on availability.
-  - PDFView:
-    - Incremental rendering (per-page widgets: PDFPageWidget) and on-demand render (ensure_rendered) to reduce initial cost.
-    - Image (PIL) cache by (page, zoom) with a simple LRU and configurable limit (_pix_cache_max).
-    - Zoom clamped (0.25–5.0), fit_width and fit_page implemented with safe calculations.
-    - Current page calculation by scroll (current_page_changed) with debounce (QTimer).
-    - Search using pdfplumber (when available) with strategies by chars/words/lines/cross-lines and construction of highlight rectangles (SimpleRect).
-    - Highlights: per-page rectangles, configurable "highlight all" mode, current-match emphasis; navigation between matches with goto_next_hit/goto_prev_hit.
-    - Programmatic scroll to current match with an approximate offset (viewport * 0.25).
-  - PDFPageWidget:
-    - Robust PIL→QImage conversion, centered pixmap painting, semi-transparent overlays for matches and a visual separator.
-  - Hardening: try/except and logging in all critical flows (render, load, search, conversion) to avoid crashes in environments missing dependencies.
-  - Notes: improvements prepared for bundled environments (get_poppler_path for poppler when using pyinstaller).
-
-7) Accessible Reader — UI and integration
-- source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py + package __init__.py
-  - Full control panel (load, play, pause checkable, stop) connected to module functions.
-  - Speed controls (wpm slider), volume, font selection (combo with values and persistence via FontManager), bullets, spacing, indent and margins.
-  - Text / PDF tabs integrated with FindBars (TextFindBar and PDFFindBar) and Ctrl+F which toggles automatically according to the active tab.
-  - PDF toolbar integrated via setup_pdf_toolbar; PDFView shown in the PDF tab.
-  - QTextEdit background synchronized with application QPalette; an event filter installed to react to palette/theme changes.
-  - Use of FontManager to apply default font and doc.setDefaultFont guarded by try/except.
-  - Exports and text actions exposed via the reader package __init__.
-
-8) Extra: PDF text extraction
-- source/modules/leitor/leitor_acessivel/lta_05_carregar_pdf.py
-  - Uses pdfplumber and pypdf (PyPDF2 fallback) to extract text and populate the Text tab when possible.
-  - When loading a PDF for viewing, also attempts text extraction; if successful, applies font and switches to the Text tab automatically.
-  - Robust logging and fallbacks when extraction fails.
-
-9) Package adjustments and import helpers
-- source/__init__.py: __getattr__ for lazy import of EstudoAcessivel, reducing initial import time and providing a single access point.
-- source/gui/__init__.py: re-exports EstudoAcessivel and interfaces/events/loader to simplify imports.
-
-General fixes / hardenings
-- Expanded try/except blocks with LogManager.get_logger() in critical points (initialization, render, load, search, stop).
-- Attribute checks with hasattr / None-guards before accessing optional contexts (e.g. gerenciador_traducao, app.date_input).
-- Protections during cleanup/stop to avoid leaks and crashes when closing modules.
-- Improved dynamic import flows and fallbacks when modules/dependencies are missing.
-
-How to test (quick steps)
-1. Start the application (main.py) → verify main window opens, icon loads (if available) and translations are applied.
-2. Open Accessible Reader:
-   - Test loading a PDF: viewer should render pages on demand; zoom controls, fit width / fit page work.
-   - Test text extraction (PDF → Text): when possible, text appears in the Text tab.
-   - Test PDF search (if pdfplumber is available): use the FindBar, navigate matches, check highlights and navigation.
-   - Test Ctrl+F toggling between FindBars in the tabs.
-3. Open other tabs (Time Management, Mind Maps, Feynman Method, Eisenhower Matrix) via registered plugins:
-   - Confirm widgets load via lazy import and stop/cleanup does not raise exceptions when closing tabs.
-4. Check logs (folder %LOCALAPPDATA%/... per LogManager) for debug/error messages in flows where dependencies are absent.
-
-Main files changed / introduced in this release
-- source/gui/gui_04_module_loader.py
-- source/gui/gui_03_events.py
-- source/gui/gui_02_interfaces.py
-- source/gui/gui_01_estudo_acessivel.py
-- source/gui/__init__.py
-- source/__init__.py
-- source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py
-- source/modules/leitor/leitor_acessivel/lta_05_carregar_pdf.py
-- source/modules/leitor/leitor_acessivel/lta_26_pdf_view.py
-- source/modules/leitor/leitor_acessivel/__init__.py
-- source/modules/eisenhower/eis_01_module.py
-- source/modules/feynman/fey_12_module.py
-- source/modules/mapa/mp_06_module.py
-- source/modules/tempo/tmp_05_module.py
-- main.py
-
-Expected impact
-- More resilient module initialization and loading: a failing plugin no longer compromises the entire application.
-- PDF viewer with improved UX (lazy render, cache, search highlighting) and lower memory/CPU cost when navigating large documents.
-- Better integration between Host/Plugins via ModuleContext + EventBus for communication and coordination.
-- Fewer crashes in constrained environments (missing native libraries or resources) thanks to fallbacks and detailed logging.
-
-Final notes
-- The application still depends on optional libraries (pdfplumber, pypdf / PyPDF2, pypdfium2, PIL) for advanced features; without them, the app keeps fallback behavior but with reduced functionality.
-- Review logs after testing to tune messages and identify areas to harden further in upcoming releases.
-
-_________________________________________________
-
-RELEASE NOTES — Lúmen
-Version: 2026.1.4.0
-Date: January 4, 2026
-Author: Fernando Nillsson Cidade
-
-Quick summary
-- Accessible Reader: added integrated search (Text and PDF) with a search bar, hit navigation, and visual highlighting (current match + highlight all).
-- PDF (PyMuPDF): custom viewer with incremental rendering (lazy render), pixmap cache per zoom/page, current-page calculation by scrolling, and highlight of search results using rectangles.
-- Expanded PDF toolbar: page navigation, zoom (±, %), “Fit to width / page”, “Hand” tool (pan), and direct integration with search.
-- Translations/UX: FindBars and toolbars with retranslate() for dynamic updates when switching language; unified search shortcuts (Ctrl+F) automatically switching based on the active tab (Text/PDF).
-- Robustness and diagnostics: exception handling and logging (LogManager) across search/rendering flows, preventing crashes in constrained environments.
-
-Detailed overview of the main changes
+Detailed description of main changes
 
 1) Text Search (Accessible Reader)
-- Implemented a complete search workflow in QTextEdit with:
-  - Search bar (TextFindBar) with a text field, previous/next buttons, a counter (current/total), and options:
-    - Match case (Aa).
-    - Whole word only.
-    - “Highlight all” (highlights all occurrences and keeps the current occurrence in a distinct color).
-  - Shortcuts:
-    - Enter → next result.
-    - Shift+Enter → previous result.
-    - F3 → next, Shift+F3 → previous.
-    - Esc → close the bar (and clear highlights).
-- Search algorithm:
-  - Scans the QTextDocument with QTextDocument.find(...) using FindFlags (case sensitive / whole words).
-  - Stores occurrences as pairs (selectionStart, selectionEnd) and navigates by index.
-  - Applies highlights via QTextEdit.ExtraSelection:
-    - General occurrences in yellow.
-    - Current occurrence in orange, keeping focus and ensureCursorVisible().
+- Full search flow in `QTextEdit` with `TextFindBar` (field, previous/next, current/total counter) and options:
+  - Match case (Aa).
+  - Whole word only.
+  - “Highlight all” (highlights all occurrences; current occurrence with a distinct color).
+- Shortcuts: `Enter` → next, `Shift+Enter` → previous, `F3` / `Shift+F3`, `Esc` → close and clear highlights.
+- Algorithm: scan of the `QTextDocument` using `QTextDocument.find(...)` with appropriate flags; occurrences stored as `(start,end)` pairs; highlights applied via `QTextEdit.ExtraSelection` (yellow for all, orange for current).
 
-Related files:
+Related files (Text):
 - source/modules/leitor/leitor_acessivel/lta_29_text_findbar.py
 - source/modules/leitor/leitor_acessivel/lta_30_text_find_actions.py
 
-2) PDF Search (PyMuPDF)
-- Implemented a search bar (PDFFindBar) integrated with the MuPDFView viewer, featuring:
-  - The same controls/shortcuts as Text mode (Enter/Shift+Enter, F3/Shift+F3, Esc).
-  - Options: Aa, Whole word, Highlight all.
-  - Counter (current/total) updated on each search/navigation action.
+2) PDF Search (new stack: pypdfium2 / pdf2image / pdfplumber)
+- Migration of the PDF backend: removed direct dependency on PyMuPDF. The Reader now uses:
+  - `pypdfium2` for efficient page rendering into pixmaps when available;
+  - `pdf2image` as a fallback/converter for rasterization in environments without `pypdfium2`;
+  - `pdfplumber` for text/position extraction and search refinement (tokens and bounding boxes).
+- Search bar (PDFFindBar) with the same controls/shortcuts as Text mode and options: Aa, Whole word, Highlight all.
 - Search strategy:
-  - Uses page.search_for(...) with PyMuPDF flags when available (ignorecase/matchcase).
-  - “Whole word” mode optimized for simple queries (no spaces/line breaks) using page.get_text("words") and direct token comparison.
-  - Extra match_case filter: validation via clipped text (clip) to reduce false positives depending on the backend/extraction.
+  - Page-by-page search using `pdfplumber` (when available) to obtain words and boxes (word tokens) and compare tokens for more accurate “whole word” matches;
+  - In substring search modes, also support case-insensitive/simple-regex searches over the extracted text;
+  - When needed, additional validation via raster clipping reduces false positives depending on the backend.
 - Visual highlighting:
-  - Rectangles (rects) per page are stored and drawn over the rendered pixmap.
-  - General hits use a yellow overlay without border; the current hit uses an orange overlay with a border (pen) to emphasize focus.
-  - The “Highlight all” option can be disabled to highlight only the current page/hit.
+  - Rectangles per page stored and drawn over the rasterized images;
+  - General occurrences with yellow overlay; current occurrence with orange overlay and border to emphasize focus;
+  - “Highlight all” option can be turned off to highlight only the current occurrence.
 
-Related files:
+Related files (PDF):
 - source/modules/leitor/leitor_acessivel/lta_27_pdf_findbar.py
 - source/modules/leitor/leitor_acessivel/lta_28_pdf_find_actions.py
-- source/modules/leitor/leitor_acessivel/lta_26_pymupdf_view.py
+- source/modules/leitor/leitor_acessivel/lta_26_pdf_view.py
 
-3) Custom PDF viewer (MuPDFView)
-- New viewer based on QScrollArea + per-page widgets (MuPDFPageWidget), focused on performance and compatibility:
-  - Incremental rendering (lazy render): pages are rendered on demand when they enter the visible area (with extra margin), reducing initial cost.
-  - Pixmap cache per (page, zoom) with a limit (simple LRU by insertion order) to avoid excessive re-rendering.
-  - Current-page calculation by scrolling: detects the page whose “middle” is visible and emits current_page_changed(page, total).
-  - Zoom:
-    - setZoomFactor with clamp (0.25–5.0) and cache invalidation/cleanup.
-    - fit_width and fit_page based on page 0 rect.
-  - Search and navigation:
-    - goto_next_hit / goto_prev_hit with automatic scroll to the hit (vertical positioning with ~25% viewport offset).
-    - configurable highlight_all.
-- Safety and logs:
-  - All critical flows (render/search/scroll) protected with try/except and recorded via LogManager.
+3) Custom PDF viewer (multi-backend)
+- Implemented viewer based on `QScrollArea` with per-page widgets (page widgets) and incremental rendering:
+  - Lazy render: pages rasterized on demand (with extra margin) to reduce initial cost;
+  - Image cache (pixmaps) by (page, zoom) with a simple size/LRU limit policy to avoid excessive re-rendering;
+  - Current page calculation by scrolling: identifies the page whose center is visible and emits `current_page_changed(page, total)`;
+  - Zoom with `setZoomFactor` (clamped between 0.25–5.0) and proper cache invalidation;
+  - `fit_width` and `fit_page` calculated from the first page's rectangle;
+  - Navigation by hits (`goto_next_hit` / `goto_prev_hit`) with automatic scrolling positioning the occurrence with a comfortable visual offset (~25% of the viewport);
+  - `highlight_all` controllable to reduce cost when many occurrences exist.
+- Robustness: rendering, extraction and search flows protected by `try/except` with logs via `LogManager`.
 
 Related file:
-- source/modules/leitor/leitor_acessivel/lta_26_pymupdf_view.py
+- source/modules/leitor/leitor_acessivel/lta_26_pdf_view.py
 
-4) PDF toolbar (navigation/zoom/tools)
-- Expanded and consolidated toolbar featuring:
-  - Navigation: first, previous, next, last, page spin box + total.
-  - Zoom: +/- buttons and an editable combo (percentages); support for special modes “Width” and “Page”.
-  - “Hand” tool (pan/drag): toggles mode in PDFMouseHandler and applies a visual style when active.
-  - “🔎 Search” button to open the PDF search bar.
-  - Safe enable/disable of widgets depending on whether a PDF is loaded.
-- Translation integration:
-  - atualizar_traducoes keeps labels and special texts (“Width/Page”) consistent when switching language.
+4) PDF Toolbar (navigation/zoom/tools)
+- Consolidated toolbar with:
+  - Navigation: first, previous, next, last, page spin + total;
+  - Zoom: ± buttons, editable combo with percentages; special modes “📄 Width” and “📃 Page”;
+  - “Hand” tool (pan/drag) integrated with `PDFMouseHandler` (hand mode changes mouse behavior and cursor style);
+  - “🔎 Search” button to open the PDF search bar;
+  - Widgets enabled/disabled safely according to document state;
+  - Translation: `retranslate()` for labels and entries that change with language.
 
 Related files:
 - source/modules/leitor/leitor_acessivel/lta_22_pdf_toolbar.py
 - source/modules/leitor/leitor_acessivel/lta_02_atualizar_traducoes.py
 
-5) Unified Ctrl+F shortcut (Text/PDF)
-- Ctrl+F toggles search according to the active tab:
-  - In the Text tab: opens/closes TextFindBar and ensures PDFFindBar is closed.
-  - In the PDF tab: opens/closes PDFFindBar and ensures TextFindBar is closed.
-- The shortcut context is configured as ApplicationShortcut to work consistently in the Accessible Reader window.
+5) Unified `Ctrl+F` shortcut (Text/PDF)
+- `Ctrl+F` toggles search according to the active tab:
+  - Text tab: opens/closes `TextFindBar` and ensures `PDFFindBar` is closed;
+  - PDF tab: opens/closes `PDFFindBar` and ensures `TextFindBar` is closed;
+  - The shortcut is set with ApplicationShortcut context to work consistently in the main window.
 
-Related file:
+Main changed / introduced files (Accessible Reader)
 - source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py
+- source/modules/leitor/leitor_acessivel/lta_02_atualizar_traducoes.py
+- source/modules/leitor/leitor_acessivel/lta_22_pdf_toolbar.py
+- source/modules/leitor/leitor_acessivel/lta_26_pdf_view.py
+- source/modules/leitor/leitor_acessivel/lta_27_pdf_findbar.py
+- source/modules/leitor/leitor_acessivel/lta_28_pdf_find_actions.py
+- source/modules/leitor/leitor_acessivel/lta_29_text_findbar.py
+- source/modules/leitor/leitor_acessivel/lta_30_text_find_actions.py
+
+File path and organization changes
+- UI files were moved from `source/gui` to `source/gui/ui`. The new paths are listed below:
+  - source/gui/ui/__init__.py
+  - source/gui/ui/ui_01_setup_ui.py
+  - source/gui/ui/ui_02_sincronizar_regua_menu.py
+  - source/gui/ui/ui_03_setup_menubar.py
+  - source/gui/ui/ui_04_executar_acao_modulo.py
+  - source/gui/ui/ui_05_mudar_idioma.py
+  - source/gui/ui/ui_06_exibir_sobre.py
+  - source/gui/ui/ui_07_atualizar_interface.py
+  - source/gui/ui/ui_08_atualizar_menu.py
+  - source/gui/ui/ui_09_get_persist_file.py
+  - source/gui/ui/ui_10_salvar_voz_persistente.py
+  - source/gui/ui/ui_11_carregar_voz_persistente.py
+  - source/gui/ui/ui_12_carregar_vozes.py
+  - source/gui/ui/ui_13_definir_voz.py
+  - source/gui/ui/ui_14_atualizar_modulos.py
+  - source/gui/ui/ui_15_setup_shortcuts.py
+  - source/gui/ui/ui_16_setup_statusbar.py
+  - source/gui/ui/ui_17_switch_to_tab.py
+  - source/gui/ui/ui_18_on_tab_changed.py
+  - source/gui/ui/ui_19_show_help.py
+  - source/gui/ui/ui_20_closeEvent.py
+  - source/gui/ui/ui_21_changeEvent.py
+  - source/gui/ui/ui_22_font_config_dialog.py
+  - source/gui/ui/ui_23_sound_config_dialog.py
+
+- The main GUI module was also reorganized from `source` to `source/gui`:
+  - source/gui/__init__.py
+  - source/gui/gui_01_estudo_acessivel.py
 
 How to test (quick steps)
 1. Accessible Reader → “Text” tab:
-   - Type a text with repetitions; use Ctrl+F and search for a term.
-   - Test Enter / Shift+Enter and F3 / Shift+F3; verify the counter and highlighting (current vs others).
+   - Type repeated text; press `Ctrl+F` and search a term.
+   - Test Enter / Shift+Enter and F3 / Shift+F3; check counter and highlights (current vs others).
    - Disable “Highlight all” and confirm only the current occurrence is highlighted.
 2. Accessible Reader → load a PDF and go to the “PDF” tab:
-   - Verify the toolbar is enabled and total pages is correct.
+   - Check toolbar enabled and total pages.
    - Test zoom (± and percentages), “📄 Width” and “📃 Page”.
-   - Ctrl+F or “🔎 Search”: search for a common term, navigate hits, and confirm highlighting in the document.
-3. Switch the app language:
-   - Confirm toolbars and FindBars update placeholder/tooltips/labels and that the zoom combo respects “Width/Page” when applicable.
+   - Use `Ctrl+F` or the “🔎 Search” button: search a common term, navigate occurrences and confirm highlights on the document.
+3. Switch app language:
+   - Confirm toolbars and FindBars update placeholder/tooltips/labels and that the zoom combo respects “Width/Page”.
 4. Check logs:
-   - In case of rendering/search failures, confirm errors are recorded via LogManager without crashing the UI.
+   - In case of rendering/search failures, confirm errors are logged via `LogManager` without freezing the UI.
 
-Main files changed / introduced (Accessible Reader)
-- source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py
-- source/modules/leitor/leitor_acessivel/lta_02_atualizar_traducoes.py
-- source/modules/leitor/leitor_acessivel/lta_22_pdf_toolbar.py
+Compatibility notes and dependencies
+- The new PDF stack adds optional dependencies: `pypdfium2`, `pdf2image`, `pdfplumber`, and `Pillow`/`PIL` depending on the environment. The viewer attempts to use `pypdfium2` when available and falls back to `pdf2image`; `pdfplumber` is used for text/box extraction when present.
+- The code is written to degrade gracefully when any of these libraries are not installed, logging warnings via `LogManager` and keeping basic functionality (e.g., text reading when possible).
+
+Main changed/new files (summary)
+- GUI reorganized: `source/gui/__init__.py`, `source/gui/gui_01_estudo_acessivel.py` and the files under `source/gui/ui/` listed above.
+- Accessible Reader (PDF/Text): files under `source/modules/leitor/leitor_acessivel/` highlighted in the "Main changed / introduced files" section.
+
+End of notes.
 - source/modules/leitor/leitor_acessivel/lta_26_pymupdf_view.py
 - source/modules/leitor/leitor_acessivel/lta_27_pdf_findbar.py
 - source/modules/leitor/leitor_acessivel/lta_28_pdf_find_actions.py

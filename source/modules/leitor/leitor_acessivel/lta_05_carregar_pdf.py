@@ -103,10 +103,22 @@ def carregar_pdf(self):
                     logger.debug(f"Erro ao habilitar toolbar PDF: {e}", exc_info=True)
 
                 try:
-                    self._pdf_zoom_fit_width()
+                    try:
+                        if getattr(self, "pdf_view", None) and hasattr(self.pdf_view, "setZoomFactor"):
+                            self.pdf_view.setZoomFactor(1.0)
+
+                        else:
+                            try:
+                                self._pdf_zoom_fit_width()
+
+                            except Exception:
+                                pass
+
+                    except Exception:
+                        pass
 
                 except Exception as e:
-                    logger.debug(f"Erro ao aplicar zoom largura: {e}", exc_info=True)
+                    logger.debug(f"Erro ao aplicar zoom padrão (100%): {e}", exc_info=True)
 
                 try:
                     if hasattr(self, "_content_stack"):

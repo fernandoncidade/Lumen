@@ -55,8 +55,7 @@ def _text_find_clear(self):
 def _text_find_set_highlight_all(self, enable: bool):
     try:
         self._text_find_highlight_all = bool(enable)
-        _text_find_apply(
-            self,
+        self._text_find_apply(
             (getattr(self, "_text_find_query", "") or "").strip(),
             match_case=bool(getattr(self, "_text_find_match_case", False)),
             whole_words=bool(getattr(self, "_text_find_whole_words", False)),
@@ -77,24 +76,37 @@ def _text_find_apply(self, query: str, match_case: bool = False, whole_words: bo
         self._text_find_whole_words = bool(whole_words)
 
         if not q:
-            _text_find_clear(self)
+            self._text_find_clear()
             return
 
         doc: QTextDocument = ta.document()
 
-        flags = QTextDocument.FindFlags()
+        flag_list = []
         if match_case:
-            flags |= QTextDocument.FindFlag.FindCaseSensitively
+            flag_list.append(QTextDocument.FindFlag.FindCaseSensitively)
 
         if whole_words:
-            flags |= QTextDocument.FindFlag.FindWholeWords
+            flag_list.append(QTextDocument.FindFlag.FindWholeWords)
+
+        if flag_list:
+            flags = flag_list[0]
+            for f in flag_list[1:]:
+                flags = flags | f
+
+        else:
+            flags = None
 
         hits: List[Tuple[int, int]] = []
         cur = QTextCursor(doc)
         cur.movePosition(QTextCursor.MoveOperation.Start)
 
         while True:
-            cur = doc.find(q, cur, flags)
+            if flags is not None:
+                cur = doc.find(q, cur, flags)
+
+            else:
+                cur = doc.find(q, cur)
+
             if cur.isNull():
                 break
 
@@ -111,14 +123,14 @@ def _text_find_apply(self, query: str, match_case: bool = False, whole_words: bo
             ta.setTextCursor(c)
             ta.ensureCursorVisible()
 
-        _text_find_apply_highlights(self)
+        self._text_find_apply_highlights()
 
         if getattr(self, "_text_find_bar", None) is not None:
             self._text_find_bar.update_count(1 if hits else 0, len(hits))
 
     except Exception as e:
         logger.error(f"Erro ao aplicar busca no Texto: {e}", exc_info=True)
-        _text_find_clear(self)
+        self._text_find_clear()
 
 def _text_find_next(self):
     try:
@@ -130,7 +142,7 @@ def _text_find_next(self):
         idx = (idx + 1) % len(hits)
         self._text_find_hit_cursor = idx
 
-        _text_find_goto_hit(self, idx)
+        self._text_find_goto_hit(idx)
 
     except Exception as e:
         logger.debug(f"Erro ao ir para próximo resultado (Texto): {e}", exc_info=True)
@@ -145,7 +157,7 @@ def _text_find_prev(self):
         idx = (idx - 1) % len(hits)
         self._text_find_hit_cursor = idx
 
-        _text_find_goto_hit(self, idx)
+        self._text_find_goto_hit(idx)
 
     except Exception as e:
         logger.debug(f"Erro ao ir para resultado anterior (Texto): {e}", exc_info=True)
@@ -168,7 +180,7 @@ def _text_find_goto_hit(self, idx: int):
     ta.setTextCursor(c)
     ta.ensureCursorVisible()
 
-    _text_find_apply_highlights(self)
+    self._text_find_apply_highlights()
 
     if getattr(self, "_text_find_bar", None) is not None:
         self._text_find_bar.update_count(idx + 1, len(hits))

@@ -20,7 +20,7 @@ from source.gui.ui.ui_19_show_help import show_help
 from source.gui.ui.ui_20_closeEvent import closeEvent
 from source.gui.ui.ui_21_changeEvent import changeEvent
 from source.gui.ui.ui_22_font_config_dialog import FontConfigDialog
-from source.gui.ui.ui_24_detach_module_tab import detach_module_tab, _reattach_module_tab
+from source.gui.ui.ui_23_sound_config_dialog import SoundConfigDialog
 
 __all__ = [
     "setup_ui",
@@ -45,6 +45,5 @@ __all__ = [
     "closeEvent",
     "changeEvent",
     "FontConfigDialog",
-    "detach_module_tab",
-    "_reattach_module_tab",
+    "SoundConfigDialog"
 ]

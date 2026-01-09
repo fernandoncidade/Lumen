@@ -92,6 +92,8 @@ from source.modules.leitor.leitor_acessivel import (
     _text_find_apply,
     _text_find_next,
     _text_find_prev,
+    _text_find_goto_hit,
+    _text_find_apply_highlights,
     _text_find_set_highlight_all,
     _pdf_find_toggle,
     _text_find_toggle,
@@ -149,6 +151,8 @@ LeitorAcessivel._text_find_clear = _text_find_clear
 LeitorAcessivel._text_find_apply = _text_find_apply
 LeitorAcessivel._text_find_next = _text_find_next
 LeitorAcessivel._text_find_prev = _text_find_prev
+LeitorAcessivel._text_find_goto_hit = _text_find_goto_hit
+LeitorAcessivel._text_find_apply_highlights = _text_find_apply_highlights
 LeitorAcessivel._text_find_set_highlight_all = _text_find_set_highlight_all
 LeitorAcessivel._pdf_find_toggle = _pdf_find_toggle
 LeitorAcessivel._text_find_toggle = _text_find_toggle

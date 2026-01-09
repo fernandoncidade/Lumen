@@ -23,41 +23,9 @@ except Exception as e:
 
 
 class EstudoAcessivel(QMainWindow):
-    def __init__(
-        self,
-        only_module_ids=None,
-        detached: bool = False,
-        detached_origin=None,
-        provided_tabs=None,
-        detached_module_id: str | None = None,
-        detached_origin_index: int | None = None,
-        detached_title: str | None = None,
-        detached_widget=None,
-    ):
+    def __init__(self):
         super().__init__()
         try:
-            self.only_module_ids = only_module_ids
-            self.detached = detached
-            self.detached_origin = detached_origin
-            self.provided_tabs = provided_tabs or {}
-
-            self.detached_module_id = detached_module_id
-            self.detached_origin_index = detached_origin_index
-            self.detached_title = detached_title
-            self.detached_widget = detached_widget
-            self.detached_reattached = False
-
-            try:
-                from source.gui.gui_03_events import EventBus
-                from source.gui.gui_02_interfaces import ModuleContext
-                from PySide6.QtWidgets import QApplication
-                self.event_bus = EventBus()
-                self._module_context = ModuleContext(event_bus=self.event_bus, app=QApplication.instance(), host=self)
-
-            except Exception:
-                self.event_bus = None
-                self._module_context = None
-
             self.tradutor = GerenciadorTraducao()
             self.tradutor.idioma_alterado.connect(self.atualizar_interface)
             self.tradutor.aplicar_traducao()
@@ -109,9 +77,7 @@ from source.gui.ui import (
     on_tab_changed,
     show_help,
     closeEvent,
-    changeEvent,
-    detach_module_tab,
-    _reattach_module_tab
+    changeEvent
 )
 
 EstudoAcessivel.setup_ui = setup_ui
@@ -135,5 +101,3 @@ EstudoAcessivel.on_tab_changed = on_tab_changed
 EstudoAcessivel.show_help = show_help
 EstudoAcessivel.closeEvent = closeEvent
 EstudoAcessivel.changeEvent = changeEvent
-EstudoAcessivel.detach_module_tab = detach_module_tab
-EstudoAcessivel._reattach_module_tab = _reattach_module_tab

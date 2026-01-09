@@ -199,16 +199,6 @@ def setup_menubar(self):
         self.action_sair.triggered.connect(self.close)
         self.menu_arquivo.addAction(self.action_sair)
 
-        try:
-            if getattr(self, "detached", False):
-                self.menu_arquivo.addSeparator()
-                self.action_reanexar = QAction(QCoreApplication.translate("App", "📌 Reanexar ao Host"), self)
-                self.action_reanexar.triggered.connect(self.close)
-                self.menu_arquivo.addAction(self.action_reanexar)
-
-        except Exception:
-            pass
-
         self.menu_config = self.menubar.addMenu(QCoreApplication.translate("App", "⚙️ Configurações"))
 
         self.menu_idiomas = self.menu_config.addMenu(QCoreApplication.translate("App", "🌐 Idiomas"))

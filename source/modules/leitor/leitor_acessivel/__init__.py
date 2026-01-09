@@ -61,6 +61,8 @@ from .lta_30_text_find_actions import (
     _text_find_apply,
     _text_find_next,
     _text_find_prev,
+    _text_find_goto_hit,
+    _text_find_apply_highlights,
     _text_find_set_highlight_all,
 )
 
@@ -119,6 +121,8 @@ __all__ = [
     "_text_find_apply",
     "_text_find_next",
     "_text_find_prev",
+    "_text_find_goto_hit",
+    "_text_find_apply_highlights",
     "_text_find_set_highlight_all",
     "_pdf_find_toggle",
     "_text_find_toggle",
