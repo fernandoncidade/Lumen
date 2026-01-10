@@ -6,53 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="02f93f84-518f-4e9e-97ae-36ae501fd277" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/assets/ABOUT/ABOUT_en_US.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/ABOUT/ABOUT_en_US.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/assets/ABOUT/ABOUT_pt_BR.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/ABOUT/ABOUT_pt_BR.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/assets/CLC/CLC_en_US.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/CLC/CLC_en_US.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/assets/CLC/CLC_pt_BR.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/CLC/CLC_pt_BR.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/assets/COPYRIGHT/AVISO DE COPYRIGHT E MARCA REGISTRA_pt_BR.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/COPYRIGHT/AVISO DE COPYRIGHT E MARCA REGISTRA_pt_BR.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/assets/COPYRIGHT/COPYRIGHT AND TRADEMARK NOTICE_en_US.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/COPYRIGHT/COPYRIGHT AND TRADEMARK NOTICE_en_US.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/assets/EULA/EULA_en_US.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/EULA/EULA_en_US.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/assets/EULA/EULA_pt_BR.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/EULA/EULA_pt_BR.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/assets/NOTICES/NOTICE_en_US.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/NOTICES/NOTICE_en_US.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/assets/NOTICES/NOTICE_pt_BR.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/NOTICES/NOTICE_pt_BR.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/assets/PRIVACY_POLICY/Privacy_Policy_en_US.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/PRIVACY_POLICY/Privacy_Policy_en_US.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/assets/RELEASE/RELEASE NOTES_en_US.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/RELEASE/RELEASE NOTES_en_US.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/assets/RELEASE/RELEASE NOTES_pt_BR.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/assets/RELEASE/RELEASE NOTES_pt_BR.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/gui/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_01_setup_ui.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_02_sincronizar_regua_menu.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_03_setup_menubar.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_04_executar_acao_modulo.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_05_mudar_idioma.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_06_exibir_sobre.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_07_atualizar_interface.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_08_atualizar_menu.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_09_get_persist_file.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_10_salvar_voz_persistente.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_11_carregar_voz_persistente.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_12_carregar_vozes.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_13_definir_voz.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_14_atualizar_modulos.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_15_setup_shortcuts.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_16_setup_statusbar.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_17_switch_to_tab.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_18_on_tab_changed.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_19_show_help.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_20_closeEvent.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_21_changeEvent.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_22_font_config_dialog.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui/gui_23_sound_config_dialog.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gui_01_estudo_acessivel.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/leitor/leitor_acessivel/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/leitor/leitor_acessivel/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/leitor/leitor_acessivel/lta_05_carregar_pdf.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/leitor/leitor_acessivel/lta_05_carregar_pdf.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/leitor/leitor_acessivel/lta_26_pymupdf_view.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/modules/mod_07_exibir_public.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/modules/mod_07_exibir_public.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,7 +50,7 @@
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.language.and.region&quot;,
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
@@ -187,6 +140,8 @@
       <workItem from="1767649580199" duration="7844000" />
       <workItem from="1767707470621" duration="3480000" />
       <workItem from="1767787552507" duration="2167000" />
+      <workItem from="1767845187905" duration="16676000" />
+      <workItem from="1767938362953" duration="31000" />
     </task>
     <servers />
   </component>

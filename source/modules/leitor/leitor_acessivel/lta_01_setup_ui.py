@@ -285,5 +285,22 @@ def setup_ui(self):
 
         self._sc_find_toggle.activated.connect(_toggle_find_active_tab)
 
+        self._sc_copy_pdf = QShortcut(QKeySequence.Copy, self)
+        self._sc_copy_pdf.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+
+        def _copy_pdf_selection():
+            try:
+                idx = getattr(self, "_content_stack", None)
+                if idx is not None and idx.currentIndex() == 1:
+                    handler = getattr(self, "_pdf_mouse_handler", None)
+                    if handler and hasattr(handler, "copy_selection"):
+                        if handler.copy_selection():
+                            logger.debug("Texto do PDF copiado via Ctrl+C")
+
+            except Exception as e:
+                logger.debug(f"Falha no Ctrl+C do PDF: {e}", exc_info=True)
+
+        self._sc_copy_pdf.activated.connect(_copy_pdf_selection)
+
     except Exception as e:
         logger.error(f"Erro ao configurar interface do Leitor Acessível: {str(e)}", exc_info=True)

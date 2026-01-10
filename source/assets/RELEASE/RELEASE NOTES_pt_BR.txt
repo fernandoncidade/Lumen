@@ -1,4 +1,82 @@
 NOTAS DE LANÇAMENTO — Lúmen
+Versão: 2026.1.10.0
+Data: 10 de janeiro de 2026
+Autor: Fernando Nillsson Cidade
+
+Resumo rápido
+- Seleção de texto em PDF aprimorada: seleção por caractere/linha/palavra mais precisa e responsiva, com pintura de seleção robusta sobre imagens rasterizadas.
+- Integração refinada entre PDFView, PDFMouseHandler e PDFTextSelection para comportamento consistente (arrastar para selecionar, duplo/triplo clique, copiar).
+- Melhorias de performance e memória no renderizador PDF: cache de imagens otimizado e diminuição de re-renders desnecessários.
+- Robustez e logging: proteção adicional em caminhos de extração (pdfplumber) e renderização (pypdfium2/pdf2image), evitando exceções que afetam a UI.
+- Atualizações de UX: tooltips e traduções das ferramentas de PDF revisadas; atalho Ctrl+C copia seleção do PDF quando aba ativa.
+
+Detalhamento das mudanças principais
+
+1) Seleção de Texto no PDF (PDFTextSelection)
+- Arquivo principal: lta_31_pdf_text_selection.py
+  - Representação por caractere (CharInfo) com coordenadas e índices para permitir seleção precisa e ordenada.
+  - Métodos: start_selection, update_selection, end_selection, select_word_at, select_line_at, get_insertion_point, get_nearest_char.
+  - Extração de caracteres via pdfplumber (quando disponível) com caching por página e invalidação controlada.
+  - Construção de texto selecionado preservando quebras de linha por mudança de linha/página e tolerâncias configuráveis.
+  - Ação de copiar para clipboard integrada (copy_selection_to_clipboard) com log de tamanho do texto copiado.
+
+2) Pintura da Seleção e Rendering no Canvas
+- Arquivos: lta_31_pdf_text_selection.py (paint_selection) e lta_26_pdf_view.py (PDFPageWidget.paintEvent)
+  - paint_selection agrupa caracteres por linha com tolerância de y para formar rects contínuos e preenche com overlay sem borda.
+  - Uso de offset/zoom corretos para desenhar retângulos alinhados à imagem rasterizada.
+  - Cor de seleção configurada e translúcida para não ocultar o conteúdo do PDF.
+
+3) Manipulação do Mouse e Modos (Mão / Seleção)
+- Arquivo: lta_23_pdf_mouse_handler.py
+  - Sincronização refinada do contador de cliques (single/double/triple) com tolerância espacial/temporal para evitar seleção incorreta.
+  - Comportamento: clique único inicia seleção e arrasto; duplo clique seleciona palavra; triplo clique seleciona linha inteira.
+  - Conversão de coordenadas do viewport → coordenadas PDF com offset calculado pelo pixmap centralizado e zoom aplicado.
+  - Integração com botões da toolbar para alternar modos (mão / seleção) preservando cursor e estado de seleção.
+
+4) PDFView / Cache / Renderização
+- Arquivo: lta_26_pdf_view.py
+  - Cache de imagens (pil) por chave (página, zoom) com mecanismo LRU e limite configurável.
+  - Renderização lazy das páginas visíveis com margem extra para scroll suave.
+  - Aplicação de highlights e seleção atualizados apenas após render válido da página.
+  - Tratamento robusto quando backends ausentes (pypdfium2 / pdf2image / pdfplumber / PIL).
+
+5) Toolbar e Traduções
+- Arquivo: lta_22_pdf_toolbar.py e lta_02_atualizar_traducoes.py
+  - Botões de modo (✋ Mão / 📝 Seleção) reforçados com tooltips explicativos e estado visual.
+  - Atalho Ctrl+F mantém comportamento unificado entre abas Texto/PDF; Ctrl+C copia seleção de PDF quando aba PDF ativa.
+  - retranslate() chamado corretamente para combo de zoom e modos especiais (Largura / Página).
+
+6) Observabilidade e Robustez
+- Logger ampliado em pontos críticos: extração de caracteres, render_page_pil, pintura de seleção e conversão de coordenadas.
+- Proteções try/except para evitar travamentos quando pdfplumber ou PIL não estiverem disponíveis; mensagens de log contextuais para diagnóstico.
+- Clear_cache/clear_selection expostos para permitir invalidação quando documento mudar.
+
+Arquivos relacionados (principais)
+- source/modules/leitor/leitor_acessivel/lta_31_pdf_text_selection.py
+- source/modules/leitor/leitor_acessivel/lta_26_pdf_view.py
+- source/modules/leitor/leitor_acessivel/lta_23_pdf_mouse_handler.py
+- source/modules/leitor/leitor_acessivel/lta_22_pdf_toolbar.py
+- source/modules/leitor/leitor_acessivel/lta_02_atualizar_traducoes.py
+
+Como testar (passos rápidos)
+1. Abrir Leitor Acessível → aba "PDF" e carregar um PDF com texto extraível (preferencialmente com pdfplumber disponível).
+2. Ativar modo "✋ Mão" e arrastar o documento — pan deve funcionar sem selecionar texto.
+3. Ativar modo "📝 Seleção":
+   - Clique e arraste para selecionar trecho; solte e confirme que a área selecionada é destacada corretamente.
+   - Duplo clique em uma palavra para seleção da palavra; triplo clique para seleção de linha.
+   - Pressionar Ctrl+C com aba PDF ativa deve copiar o texto selecionado para o clipboard.
+4. Testar seleção que cruza linhas e páginas (quando possível) para validar inserção de quebras.
+5. Ajustar zoom (±, % , Largura, Página) e confirmar que seleção escala corretamente e pintura acompanha o zoom.
+6. Verificar logs em caso de falha de extração/render para identificar backend faltante ou erro específico.
+
+Notas de compatibilidade e dependências
+- A seleção de caracteres depende de pdfplumber para extração fina; quando ausente, seleção por proximidade ainda funciona via heurísticas de posicionamento.
+- Requer PIL (Pillow) para conversão de imagens; pypdfium2 e pdf2image continuam como backends opcionais de render.
+- O sistema foi projetado para degradar graciosamente se bibliotecas não estiverem instaladas, com logs informativos via LogManager.
+
+_________________________________________________
+
+NOTAS DE LANÇAMENTO — Lúmen
 Versão: 2026.1.8.0
 Data: 8 de janeiro de 2026
 Autor: Fernando Nillsson Cidade
@@ -140,13 +218,6 @@ Notas de compatibilidade e dependências
 Arquivos principais alterados/novos (resumo)
 - GUI reorganizada: `source/gui/__init__.py`, `source/gui/gui_01_estudo_acessivel.py` e os arquivos em `source/gui/ui/` listados acima.
 - Leitor Acessível (PDF/Texto): arquivos em `source/modules/leitor/leitor_acessivel/` destacados na seção "Arquivos principais alterados / introduzidos".
-
-Fim das notas.
-- source/modules/leitor/leitor_acessivel/lta_26_pymupdf_view.py
-- source/modules/leitor/leitor_acessivel/lta_27_pdf_findbar.py
-- source/modules/leitor/leitor_acessivel/lta_28_pdf_find_actions.py
-- source/modules/leitor/leitor_acessivel/lta_29_text_findbar.py
-- source/modules/leitor/leitor_acessivel/lta_30_text_find_actions.py
 
 _________________________________________________
 

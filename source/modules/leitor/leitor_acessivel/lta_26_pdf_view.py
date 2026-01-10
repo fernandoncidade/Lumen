@@ -123,7 +123,13 @@ class PDFPageWidget(QWidget):
         self._highlights: List[SimpleRect] = []
         self._current_hit_idx: Optional[int] = None
 
+        self._selected_chars: List[Any] = []
+
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+    def set_selected_chars(self, chars: List[Any]):
+        self._selected_chars = [c for c in chars if c.page_index == self.page_index]
+        self.update()
 
     def set_highlights(self, rects: List[SimpleRect], current_idx: Optional[int]):
         self._highlights = rects or []
@@ -185,6 +191,15 @@ class PDFPageWidget(QWidget):
         y = 0
         p.drawPixmap(x, y, self._pixmap)
 
+        if self._selected_chars and self._owner:
+            try:
+                from .lta_31_pdf_text_selection import paint_selection
+                z = float(self._owner._zoom)
+                paint_selection(p, self._selected_chars, z, x, y)
+
+            except Exception as e:
+                logger.debug(f"Erro ao pintar seleção: {e}")
+
         if self._highlights:
             z = float(self._owner._zoom)
             brush_all = QColor(255, 235, 59, 110)
@@ -219,6 +234,7 @@ class PDFPageWidget(QWidget):
 class PDFView(QScrollArea):
     search_results_changed = Signal(int)
     current_page_changed = Signal(int, int)
+    text_selected = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)

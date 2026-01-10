@@ -150,8 +150,15 @@ def atualizar_traducoes(self):
                 self.btn_mode_hand.setText(QCoreApplication.translate("App", "✋ Mão"))
                 self.btn_mode_hand.setToolTip(QCoreApplication.translate("App", "Arrastar documento\n(Clique e arraste para mover)"))
 
+            if hasattr(self, "btn_mode_select"):
+                self.btn_mode_select.setText(QCoreApplication.translate("App", "📝 Seleção"))
+                self.btn_mode_select.setToolTip(QCoreApplication.translate("App", "Selecionar texto\n(Clique e arraste para selecionar, duplo clique para palavra, triplo para linha)"))
+
             if hasattr(self, "label_mode"):
                 self.label_mode.setText(QCoreApplication.translate("App", "Ferramentas:"))
+
+            if hasattr(self, "btn_find"):
+                self.btn_find.setText(QCoreApplication.translate("App", "🔎 Buscar"))
 
         except Exception as e:
             logger.debug(f"Erro ao atualizar traduções do toolbar PDF: {e}", exc_info=True)

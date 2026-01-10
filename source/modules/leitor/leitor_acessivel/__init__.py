@@ -65,6 +65,12 @@ from .lta_30_text_find_actions import (
     _text_find_apply_highlights,
     _text_find_set_highlight_all,
 )
+from .lta_31_pdf_text_selection import (
+    PDFTextSelection,
+    CharInfo,
+    paint_selection,
+    get_selection_color,
+)
 
 __all__ = [
     "setup_ui",
@@ -126,4 +132,8 @@ __all__ = [
     "_text_find_set_highlight_all",
     "_pdf_find_toggle",
     "_text_find_toggle",
+    "PDFTextSelection",
+    "CharInfo",
+    "paint_selection",
+    "get_selection_color",
 ]

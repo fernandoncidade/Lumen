@@ -1581,6 +1581,11 @@ Isso pode levar alguns minutos.</translation>
     </message>
 
     <message>
+        <source>📝 Seleção</source>
+        <translation>📝 Seleção</translation>
+    </message>
+
+    <message>
         <source>Ferramentas:</source>
         <translation>Ferramentas:</translation>
     </message>
@@ -1601,10 +1606,17 @@ Isso pode levar alguns minutos.</translation>
     </message>
 
     <message>
-      <source>Arrastar documento
+        <source>Arrastar documento
 (Clique e arraste para mover)</source>
-      <translation>Arrastar documento
+        <translation>Arrastar documento
 (Clique e arraste para mover)</translation>
+    </message>
+
+    <message>
+        <source>Selecionar texto
+(Clique e arraste para selecionar, duplo clique para palavra, triplo para linha)</source>
+        <translation>Selecionar texto
+(Clique e arraste para selecionar, duplo clique para palavra, triplo para linha)</translation>
     </message>
 
     <message>

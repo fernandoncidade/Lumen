@@ -85,6 +85,13 @@ def setup_pdf_toolbar(self):
         self.label_mode = QLabel(QCoreApplication.translate("App", "Ferramentas:"))
         toolbar.addWidget(self.label_mode)
 
+        self.btn_mode_select = QPushButton(QCoreApplication.translate("App", "📝 Seleção"))
+        self.btn_mode_select.setCheckable(True)
+        self.btn_mode_select.setChecked(False)
+        self.btn_mode_select.setToolTip(QCoreApplication.translate("App", "Selecionar texto\n(Clique e arraste para selecionar, duplo clique para palavra, triplo para linha)"))
+        self.btn_mode_select.clicked.connect(self._pdf_set_selection_mode)
+        toolbar.addWidget(self.btn_mode_select)
+
         self.btn_mode_hand = QPushButton(QCoreApplication.translate("App", "✋ Mão"))
         self.btn_mode_hand.setCheckable(True)
         self.btn_mode_hand.setChecked(False)
@@ -96,7 +103,7 @@ def setup_pdf_toolbar(self):
             self.btn_first_page, self.btn_prev_page, self.btn_next_page,
             self.btn_last_page, self.spin_page, self.btn_zoom_in,
             self.btn_zoom_out, self.btn_zoom_fit_width, self.btn_zoom_fit_page,
-            self.combo_zoom, self.btn_mode_hand, self.btn_find
+            self.combo_zoom, self.btn_mode_hand, self.btn_mode_select, self.btn_find
         ]
         for w in self._pdf_toolbar_widgets:
             w.setEnabled(False)
@@ -242,6 +249,10 @@ def _pdf_set_hand_mode(self):
             self._pdf_mouse_handler.set_mode("hand")
             self.btn_mode_hand.setStyleSheet("background-color: #2196F3; color: white; font-weight: bold;")
 
+            if hasattr(self, "btn_mode_select"):
+                self.btn_mode_select.setChecked(False)
+                self.btn_mode_select.setStyleSheet("")
+
         else:
             self._pdf_mouse_handler.set_mode("default")
             self.btn_mode_hand.setStyleSheet("")
@@ -251,16 +262,21 @@ def _pdf_set_hand_mode(self):
 
 def _pdf_set_selection_mode(self):
     try:
-        if getattr(self, "_pdf_mouse_handler", None) is not None:
-            try:
-                self._pdf_mouse_handler.set_mode("select")
+        if not hasattr(self, "btn_mode_select") or not getattr(self, "_pdf_mouse_handler", None):
+            return
 
-            except Exception:
-                self._pdf_mouse_handler.set_mode("default")
+        checked = self.btn_mode_select.isChecked()
+        if checked:
+            self._pdf_mouse_handler.set_mode("select")
+            self.btn_mode_select.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold;")
 
-        if hasattr(self, "btn_mode_hand"):
-            self.btn_mode_hand.setChecked(False)
-            self.btn_mode_hand.setStyleSheet("")
+            if hasattr(self, "btn_mode_hand"):
+                self.btn_mode_hand.setChecked(False)
+                self.btn_mode_hand.setStyleSheet("")
+
+        else:
+            self._pdf_mouse_handler.set_mode("default")
+            self.btn_mode_select.setStyleSheet("")
 
     except Exception as e:
         logger.error(f"Erro ao definir modo de seleção do PDF: {e}", exc_info=True)

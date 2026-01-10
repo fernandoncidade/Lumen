@@ -1,6 +1,6 @@
 CONTRATO DE LICENCIAMENTO COMERCIAL — Lúmen
-Versão: 2026.1.8.0
-Data: 8 de janeiro de 2026
+Versão: 2026.1.10.0
+Data: 10 de janeiro de 2026
 
 Este Contrato de Licenciamento Comercial ("Contrato") é celebrado entre:
 

@@ -1,4 +1,82 @@
 RELEASE NOTES — Lúmen
+Version: 2026.1.10.0
+Date: January 10, 2026
+Author: Fernando Nillsson Cidade
+
+Quick summary
+- Improved PDF text selection: more precise and responsive character/line/word selection, with robust selection painting over rasterized images.
+- Refined integration between PDFView, PDFMouseHandler and PDFTextSelection for consistent behavior (drag to select, double/triple click, copy).
+- Performance and memory improvements in the PDF renderer: optimized image cache and reduced unnecessary re-renders.
+- Robustness and logging: additional protection in extraction paths (pdfplumber) and rendering (pypdfium2/pdf2image), avoiding exceptions that affect the UI.
+- UX updates: revised tooltips and translations for PDF tools; Ctrl+C copies PDF selection when the PDF tab is active.
+
+Details of main changes
+
+1) PDF Text Selection (PDFTextSelection)
+- Main file: lta_31_pdf_text_selection.py
+  - Character-level representation (CharInfo) with coordinates and indices to allow precise and ordered selection.
+  - Methods: start_selection, update_selection, end_selection, select_word_at, select_line_at, get_insertion_point, get_nearest_char.
+  - Character extraction via pdfplumber (when available) with per-page caching and controlled invalidation.
+  - Building of selected text preserving line/page breaks with configurable tolerances.
+  - Clipboard copy action integrated (copy_selection_to_clipboard) with logging of copied text size.
+
+2) Selection Painting and Canvas Rendering
+- Files: lta_31_pdf_text_selection.py (paint_selection) and lta_26_pdf_view.py (PDFPageWidget.paintEvent)
+  - paint_selection groups characters by line using y-tolerance to form continuous rects and fills them with a borderless overlay.
+  - Correct use of offset/zoom to draw rectangles aligned with the rasterized image.
+  - Configured translucent selection color to avoid hiding PDF content.
+
+3) Mouse Handling and Modes (Hand / Select)
+- File: lta_23_pdf_mouse_handler.py
+  - Refined synchronization of click counting (single/double/triple) with spatial/temporal tolerance to avoid incorrect selections.
+  - Behavior: single click starts selection and drag; double click selects a word; triple click selects the entire line.
+  - Conversion from viewport → PDF coordinates with offset computed from the centered pixmap and applied zoom.
+  - Integration with toolbar buttons to toggle modes (hand / select) preserving cursor and selection state.
+
+4) PDFView / Caching / Rendering
+- File: lta_26_pdf_view.py
+  - Image (PIL) cache by key (page, zoom) with LRU mechanism and configurable limit.
+  - Lazy rendering of visible pages with extra margin for smooth scrolling.
+  - Highlights and selection applied only after a valid page render.
+  - Robust handling when backends are missing (pypdfium2 / pdf2image / pdfplumber / PIL).
+
+5) Toolbar and Translations
+- Files: lta_22_pdf_toolbar.py and lta_02_atualizar_traducoes.py
+  - Mode buttons (✋ Hand / 📝 Selection) reinforced with explanatory tooltips and visual state.
+  - Ctrl+F shortcut keeps unified behavior between Text/PDF tabs; Ctrl+C copies PDF selection when the PDF tab is active.
+  - retranslate() called correctly for zoom combo and special modes (Fit Width / Fit Page).
+
+6) Observability and Robustness
+- Expanded logging at critical points: character extraction, render_page_pil, selection painting and coordinate conversion.
+- try/except protections to avoid crashes when pdfplumber or PIL are not available; contextual log messages for diagnostics.
+- clear_cache / clear_selection exposed to allow invalidation when the document changes.
+
+Related files (primary)
+- source/modules/leitor/leitor_acessivel/lta_31_pdf_text_selection.py
+- source/modules/leitor/leitor_acessivel/lta_26_pdf_view.py
+- source/modules/leitor/leitor_acessivel/lta_23_pdf_mouse_handler.py
+- source/modules/leitor/leitor_acessivel/lta_22_pdf_toolbar.py
+- source/modules/leitor/leitor_acessivel/lta_02_atualizar_traducoes.py
+
+How to test (quick steps)
+1. Open Accessible Reader → "PDF" tab and load a PDF with extractable text (preferably with pdfplumber available).
+2. Enable "✋ Hand" mode and drag the document — panning should work without selecting text.
+3. Enable "📝 Selection" mode:
+   - Click and drag to select a passage; release and confirm the selected area is highlighted correctly.
+   - Double click a word to select the word; triple click to select the line.
+   - Press Ctrl+C with the PDF tab active to copy the selected text to the clipboard.
+4. Test selections that cross lines and pages (when possible) to validate insertion of breaks.
+5. Adjust zoom (±, %, Fit Width, Fit Page) and confirm selection scales correctly and painting follows the zoom.
+6. Check logs in case of extraction/render failures to identify missing backends or specific errors.
+
+Compatibility notes and dependencies
+- Character-level selection depends on pdfplumber for fine extraction; when absent, proximity-based selection still works via positioning heuristics.
+- Requires PIL (Pillow) for image conversion; pypdfium2 and pdf2image remain optional rendering backends.
+- The system is designed to degrade gracefully if libraries are not installed, with informative logs via LogManager.
+
+_________________________________________________
+
+RELEASE NOTES — Lúmen
 Version: 2026.1.8.0
 Date: January 8, 2026
 Author: Fernando Nillsson Cidade
@@ -140,13 +218,6 @@ Compatibility notes and dependencies
 Main changed/new files (summary)
 - GUI reorganized: `source/gui/__init__.py`, `source/gui/gui_01_estudo_acessivel.py` and the files under `source/gui/ui/` listed above.
 - Accessible Reader (PDF/Text): files under `source/modules/leitor/leitor_acessivel/` highlighted in the "Main changed / introduced files" section.
-
-End of notes.
-- source/modules/leitor/leitor_acessivel/lta_26_pymupdf_view.py
-- source/modules/leitor/leitor_acessivel/lta_27_pdf_findbar.py
-- source/modules/leitor/leitor_acessivel/lta_28_pdf_find_actions.py
-- source/modules/leitor/leitor_acessivel/lta_29_text_findbar.py
-- source/modules/leitor/leitor_acessivel/lta_30_text_find_actions.py
 
 _________________________________________________
 
