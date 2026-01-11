@@ -1,4 +1,135 @@
 NOTAS DE LANÇAMENTO — Lúmen
+Versão: 2026.1.11.0
+Data: 11 de janeiro de 2026
+Autor: Fernando Nillsson Cidade
+
+Resumo rápido
+- Integração completa e estabilização do recurso de Leitura Assistida (speech highlight) para abas Texto e PDF, com modos Palavras, Frases e Parágrafos.
+- Suporte robusto a timestamps gerados por Edge TTS (EdgeTTSWithTimestamps) com sincronização contínua entre chunks de áudio.
+- Correções em limpeza de arquivos temporários (.part / .mp3) gerados pelo Edge TTS.
+- Novos controles de UI: botão toggle "Leitura Assistida" e combo "Modo" com redimensionamento automático e tradução.
+- Diversas melhorias de mapeamento texto → posições em PDF, estabilidade do highlight e tratamento de casos limites (offsets, normalização de tokens).
+- Correções de UX: cor consistente do botão de leitura assistida e reinício correto do highlight após desativação/reativação.
+- Resolução de bugs de sincronização que causavam realce em posições erráticas ou realce parcial de palavras.
+
+Detalhamento das mudanças principais
+
+1) Leitura Assistida (Texto e PDF)
+- Implementado botão toggle "🔦 Leitura Assistida" e combo com opções:
+  - Palavras, Frases, Parágrafos.
+- Comportamento:
+  - Ao ativar, o SpeechHighlightManager (texto) e o PDFSpeechHighlightManager (PDF) são habilitados e vinculados ao player.
+  - Ao receber timestamps (por chunk), os managers acumulam e aplicam timestamps, mantendo um base_offset por chunk para que a posição atual do player seja traduzida em posição global no texto.
+  - Ao trocar chunk de áudio (quando um áudio termina e o próximo começa), o manager é notificado com notify_new_chunk_started(chunk_index, base_offset_ms) para atualizar o offset base e continuar o realce exatamente na próxima palavra.
+  - Modos Frase/Parágrafo: managers calculam limites robustos (inicio/fim) usando o texto original (editor ou texto extraído do PDF) e garantem limites válidos dentro do documento.
+
+2) Edge TTS com Timestamps
+- EdgeTTSWithTimestamps (thread de geração):
+  - Split seguro de texto em chunks (heurística por sentenças) para evitar cortes que comprometam offsets.
+  - Matching sequencial entre palavras sintetizadas e texto original para calcular text_offset global (evita “quebrar” palavras ou desalinhamento).
+  - Emissão de timestamps por chunk (offset_ms, duration_ms, text_offset, text) e signal chunk_ready com áudio pronto.
+  - Melhor tratamento de cancelamento/stop com limpeza de arquivos .part.
+- Tolerância a tokens com pontuação/aspas e fallback de matching quando há divergências.
+
+3) PDF — Extração, Mapeamento e Highlight
+- Extração de palavras/caixas via pdfplumber (quando disponível) em extract_word_positions_from_pdf:
+  - Constrói texto concatenado (preservando quebras entre páginas) e mapping (offset -> PDFWordRect).
+  - Gera lista de PDFWordRect com coordenadas e texto.
+- Correção e aperfeiçoamento do fluxo de carregamento de texto extraído de PDFs (lta_05_carregar_pdf.py):
+  - Implementado algoritmo de "reflow" que remove quebras de linha artificiais presentes no texto extraído, recompondo parágrafos corretamente e preservando quebras apenas em parágrafos, listas e subtítulos.
+  - Reconhecimento ampliado de padrões estruturais: bullets (lista extensa de marcadores Unicode e numerações como "1)", "1." e "1:"), sub-bullets, seções numeradas e subtítulos por palavras‑chave; adicionada linha em branco antes de subtítulos para melhor separação visual.
+  - Heurísticas de fim de sentença robustas: detecção de terminadores (. ? ! : ; …) com exceções para abreviaturas comuns e códigos (ex.: "Dr.", "etc.", "CID 6A02.0"), reduzindo quebras incorretas após abreviações.
+  - Tratamento de hifenização (ex.: "neuro-\ndesenvolvimento" → "neurodesenvolvimento") e junção segura de linhas quando apropriado.
+  - Normalização e escapes Unicode em fechadores tipográficos (aspas curvas) para evitar erros de parsing/linters e garantir compatibilidade com Python.
+  - Resultado: texto na aba "Texto" agora apresenta layout mais limpo e legível, facilitando leitura humana e pós‑processamento (TTS, busca, realce).
+- PDFSpeechHighlightManager:
+  - Busca binária + janela de busca tokenizada para localizar o retângulo correspondente a um text_offset.
+  - Funções _get_sentence_rects e _get_paragraph_rects que varrem o mapeamento usando limites detectados no texto extraído.
+  - Renderização dos highlights via PDFView: set_speech_highlight (palavra única) e set_speech_highlights (múltiplos) com scroll automático configurável.
+- Robustez: janelas de busca e limites conservadores para evitar perda de highlights por pequenas diferenças entre extração e TTS.
+
+4) UI / Controles / Traduções
+- lta_01_setup_ui.py:
+  - Adicionado layout de Leitura Assistida com btn_leitura_assistida, label_modo_leitura, combo_modo_leitura, dica_leitura_assistida.
+  - btn_leitura_assistida criado via GerenciadorBotoesUI para dimensionamento automático.
+  - Removido quebra de linha indevida na dica (evita wrap).
+- lta_02_atualizar_traducoes.py:
+  - Atualizado para usar gerenciador_botoes.set_button_text() ao definir texto do botão (garante resize).
+  - Traduções adicionadas para Palavras / Frases / Parágrafos e dicas.
+- Estado inicial: _init_leitura_assistida_state sincroniza botão com manager e ativa combo conforme estado.
+
+5) Gerenciador de Botões (GerenciadorBotoesUI)
+- Uso centralizado de set_button_text para ajustar texto e recalcular tamanho do botão quando rótulos mudam (ex.: "🔦 Ativar..." / "🔦 Desativar...").
+- Garante aparência consistente e evita truncamento de rótulos longos.
+
+6) Limpeza de arquivos temporários TTS
+- lta_25_audio_temp_cleanup.py:
+  - Suporte estendido para padrões tts_edge_ts_ e tts_edge_part_.
+  - cleanup_edge_tts_temp_in_outdir e cleanup_edge_tts_parts_in_outdir removem .mp3 e .part conforme flags.
+  - Função cleanup_paths_with_retry tenta remover com retries (usado ao finalizar leitura e falhas de mídia).
+
+7) Fluxo de reprodução / fila de chunks
+- lta_10_on_media_status.py:
+  - Ao detectar EndOfMedia, o player carrega e inicia o próximo chunk da fila _generated_queue e incrementa _current_chunk_index.
+  - Determina base_offset consultando _chunk_base_offsets / _pdf_chunk_base_offsets (preenchidos quando timestamps chegam) e notifica managers via _notify_chunk_changed / _notify_pdf_chunk_changed com o base_offset correto.
+  - Ao terminar a fila, faz limpeza final e chama leitura_finalizada().
+
+8) Correções e melhorias importantes
+- Corrigido RuntimeWarning de desconexão de sinal; agora desconecta handlers armazenados (self._chunk_ready_handler).
+- Corrigido comportamento onde desativar/reativar Leitura Assistida não reiniciava o highlight: ao reativar, managers verificam timestamps acumulados e reiniciam automaticamente se necessário.
+- Corrigida diferença de cores do botão ativado: estilo aplicado consistentemente na criação para evitar discrepância entre primeira renderização e interações subsequentes.
+- Prevenção de “realce silábico”: offsets agora calculados com busca sequencial no texto completo, evitando divisão parcial de palavras.
+- Normalização de tokens (aspas curtas, acentos comuns) para melhorar matching entre TTS e textos extraídos.
+- PDF: fallback conservador na busca de retângulos (distância máxima ajustável) para reduzir misses em PDFs com extração ruidosa.
+
+Arquivos principais alterados / adicionados
+- source/modules/leitor/lt_04_EdgeTTSWithTimestamps.py (melhorias em cálculo de text_offset e geração de timestamps por chunk)
+- source/modules/leitor/leitor_acessivel/lta_32_speech_highlight.py (SpeechHighlightManager; suporte a chunks, modes palavra/frase/parágrafo)
+- source/modules/leitor/leitor_acessivel/lta_33_speech_highlight_controls.py (controles, toggle, modo, notificações de chunk)
+- source/modules/leitor/leitor_acessivel/lta_34_pdf_speech_highlight.py (PDFSpeechHighlightManager, mapeamento e buscas robustas)
+- source/modules/leitor/leitor_acessivel/lta_35_pdf_speech_highlight_controls.py (integração PDF, setup de leitura, mapping)
+- source/modules/leitor/leitor_acessivel/lta_26_pdf_view.py (renderização dos speech highlights; API set_speech_highlight(s)/clear/scroll)
+- source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py (UI Leitura Assistida)
+- source/modules/leitor/leitor_acessivel/lta_02_atualizar_traducoes.py (traduções e uso do GerenciadorBotoesUI)
+- source/modules/leitor/leitor_acessivel/lta_25_audio_temp_cleanup.py (limpeza de .part/.mp3)
+- source/modules/leitor/leitor_acessivel/lta_10_on_media_status.py (notificação de mudança de chunk, limpeza e fila)
+- source/modules/leitor/lt_03_LeitorAcessivel.py (vinculação dos novos controles e métodos)
+
+Como testar (passos rápidos)
+1. Abrir Leitor Acessível → aba Texto:
+   - Carregar/colar um texto longo (>3500 chars) que force split em múltiplos chunks.
+   - Ativar "🔦 Leitura Assistida" (deve ficar verde) e selecionar modo "Palavras".
+   - Iniciar leitura: o realce deve seguir palavra a palavra; ao término de cada chunk o realce continua na palavra exata do próximo áudio.
+   - Trocar para "Frases" e "Parágrafos": o highlight deve agrupar corretamente por sentenças/parágrafos sem cortar palavras.
+   - Pausar/retomar: highlight pausa e retoma sincronizado.
+   - Desativar e reativar durante a leitura: realce reinicia no ponto atual, sem perder posição.
+2. Aba PDF:
+   - Carregar PDF com texto extraível (preferencialmente com pdfplumber disponível).
+   - Ativar "Leitura Assistida" e iniciar leitura (modo contínuo ou por página).
+   - O realce no PDF deve corresponder à palavra/linha/parágrafo lidos; scroll automático posiciona a área corretamente.
+   - Testar PDFs com pequenas divergências de extração (aspas, hífens) para validar robustez do matching.
+3. Arquivos temporários:
+   - Durante/parar leitura: verificar em %LOCALAPPDATA%\Lumen que arquivos .part e .mp3 são removidos (ou tentativas com retries registradas em log).
+4. Stress test:
+   - Gerar leitura longa com geração rápida de chunks e alternar pause/stop várias vezes para validar limpeza e comportamento do thread TTS.
+
+Notas de compatibilidade e dependências
+- Recursos PDF dependem de pdfplumber para extração precisa; quando ausente, heurísticas de posição são usadas com menor precisão.
+- Edge TTS requer internet e permissões para uso do serviço remoto (edge-tts). Recomendado ter conectividade estável.
+- PySide6 (Qt) para UI e QMediaPlayer; comportamentos de QMediaPlayer podem variar por plataforma.
+- Logs detalhados disponíveis via LogManager; ver pasta de logs em %LOCALAPPDATA%\Lumen para triagem.
+
+Problemas conhecidos / Observações
+- Em PDFs com extração muito ruidosa (OCR parcial), alguns tokens muito curtos ou compostos por símbolos podem não mapear perfeitamente — a busca inclui fallback conservador, mas pode haver misses isolados.
+- Caso ainda ocorra realce parcial de palavras em PDFs específicos, fornecer trecho e voz utilizada permite ajustar normalização de tokens.
+- Se o EdgeTTS gerar chunks muito rapidamente e o player demorar para iniciar o áudio, o cálculo de base_offset é robusto mas o ambiente de I/O pode exibir leves variações; logs ajudam a diagnosticar.
+
+Agradecimentos
+- Obrigado aos testadores que reportaram regressões no realce por frases/parágrafos e problemas de limpeza de arquivos. Essas correções melhoram significativamente a experiência de leitura assistida com TTS.
+
+_________________________________________________
+
+NOTAS DE LANÇAMENTO — Lúmen
 Versão: 2026.1.10.0
 Data: 10 de janeiro de 2026
 Autor: Fernando Nillsson Cidade

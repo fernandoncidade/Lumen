@@ -1,12 +1,46 @@
 from __future__ import annotations
 from typing import List, Optional, Tuple, Dict
 from dataclasses import dataclass
-from PySide6.QtCore import Qt, Signal, QObject
-from PySide6.QtGui import QColor, QPainter
-from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import Qt, Signal, QObject, QTimer
+from PySide6.QtGui import QColor, QPainter, QPen, QPalette
+from PySide6.QtWidgets import QApplication, QStyle
 from source.utils.LogManager import LogManager
 logger = LogManager.get_logger()
 
+
+def _get_cursor_flash_time() -> int:
+    try:
+        flash_time = QApplication.cursorFlashTime()
+        if flash_time > 0:
+            return flash_time // 2
+
+        return 530
+
+    except Exception:
+        return 530
+
+def _get_cursor_width() -> int:
+    try:
+        app = QApplication.instance()
+        if app and app.style():
+            return app.style().pixelMetric(QStyle.PM_TextCursorWidth)
+
+        return 1
+
+    except Exception:
+        return 1
+
+def _get_cursor_color() -> QColor:
+    try:
+        app = QApplication.instance()
+        if app:
+            palette = app.palette()
+            return palette.color(QPalette.ColorRole.Text)
+
+        return QColor(0, 0, 0)
+
+    except Exception:
+        return QColor(0, 0, 0)
 
 @dataclass
 class CharInfo:
@@ -44,9 +78,20 @@ class PDFTextSelection(QObject):
         self._chars_by_page: Dict[int, List[CharInfo]] = {}
         self._selection_start: Optional[Tuple[int, int]] = None
         self._selection_end: Optional[Tuple[int, int]] = None
+        self._selection_start_before: bool = True
+        self._selection_end_before: bool = True
         self._selected_chars: List[CharInfo] = []
         self._is_selecting: bool = False
         self._last_extracted_path: Optional[str] = None
+
+        self._caret_page_index: Optional[int] = None
+        self._caret_x: Optional[float] = None
+        self._caret_y0: Optional[float] = None
+        self._caret_y1: Optional[float] = None
+        self._caret_visible: bool = True
+        self._caret_timer = QTimer(self)
+        self._caret_timer.setInterval(_get_cursor_flash_time())
+        self._caret_timer.timeout.connect(self._toggle_caret)
 
     def clear_cache(self):
         self._chars_by_page.clear()
@@ -55,9 +100,132 @@ class PDFTextSelection(QObject):
     def clear_selection(self):
         self._selection_start = None
         self._selection_end = None
+        self._selection_start_before = True
+        self._selection_end_before = True
         self._selected_chars = []
         self._is_selecting = False
+        self._clear_caret()
         self.selection_changed.emit("")
+
+    def _toggle_caret(self):
+        try:
+            if self._caret_page_index is None:
+                self._caret_timer.stop()
+                return
+
+            self._caret_visible = not self._caret_visible
+            self._request_caret_repaint()
+
+        except Exception:
+            try:
+                self._caret_timer.stop()
+
+            except Exception:
+                pass
+
+    def _request_caret_repaint(self):
+        try:
+            if self._caret_page_index is None or not self.pdf_view:
+                return
+
+            caret_data = {
+                "x": float(self._caret_x or 0.0),
+                "y0": float(self._caret_y0 or 0.0),
+                "y1": float(self._caret_y1 or 0.0),
+                "visible": bool(self._caret_visible),
+            }
+
+            pws = getattr(self.pdf_view, "_page_widgets", None) or []
+            for pw in pws:
+                if getattr(pw, "page_index", None) == self._caret_page_index:
+                    pw._caret = caret_data
+                    pw.update()
+                    break
+
+        except Exception as e:
+            logger.debug(f"Erro em _request_caret_repaint: {e}")
+
+    def _clear_caret(self):
+        self._caret_page_index = None
+        self._caret_x = None
+        self._caret_y0 = None
+        self._caret_y1 = None
+        self._caret_visible = True
+        try:
+            self._caret_timer.stop()
+
+        except Exception:
+            pass
+
+    def _set_caret_at_char(self, char: CharInfo, before: bool):
+        if not char:
+            return
+
+        self._caret_page_index = char.page_index
+        self._caret_x = float(char.x0 if before else char.x1)
+        self._caret_y0 = float(char.y0)
+        self._caret_y1 = float(char.y1)
+        self._caret_visible = True
+
+        try:
+            if not self._caret_timer.isActive():
+                self._caret_timer.start()
+
+        except Exception:
+            pass
+
+        self._request_caret_repaint()
+
+    def set_caret_from_position(self, page_index: int, x: float, y: float):
+        try:
+            char = self.get_char_at_position(page_index, x, y)
+            if not char:
+                char = self.get_nearest_char(page_index, x, y)
+            
+            if char:
+                is_before = x < char.center_x
+                self._set_caret_at_char(char, before=is_before)
+                return
+
+            self._set_caret_at_coords(page_index, x, y)
+
+        except Exception as e:
+            logger.debug(f"Erro ao definir caret na posição: {e}")
+            try:
+                self._set_caret_at_coords(page_index, x, y)
+
+            except Exception:
+                pass
+
+    def _set_caret_at_coords(self, page_index: int, x: float, y: float, height: float = 16.0):
+        try:
+            self._caret_page_index = page_index
+            self._caret_x = float(x)
+            self._caret_y0 = float(y)
+            self._caret_y1 = float(y + height)
+            self._caret_visible = True
+
+            if not self._caret_timer.isActive():
+                self._caret_timer.start()
+
+            self._request_caret_repaint()
+
+
+        except Exception as e:
+            logger.debug(f"Erro ao definir caret por coords: {e}")
+
+    def get_caret_by_page(self) -> Dict[int, Optional[dict]]:
+        if self._caret_page_index is None or self._caret_x is None:
+            return {}
+
+        return {
+            int(self._caret_page_index): {
+                "x": float(self._caret_x),
+                "y0": float(self._caret_y0 or 0.0),
+                "y1": float(self._caret_y1 or 0.0),
+                "visible": bool(self._caret_visible),
+            }
+        }
 
     def _extract_chars_for_page(self, page_index: int) -> List[CharInfo]:
         if page_index in self._chars_by_page:
@@ -144,14 +312,26 @@ class PDFTextSelection(QObject):
         return (char, is_before)
 
     def start_selection(self, page_index: int, x: float, y: float):
-        self.clear_selection()
+        self._selection_start = None
+        self._selection_end = None
+        self._selection_start_before = True
+        self._selection_end_before = True
+        self._selected_chars = []
         self._is_selecting = True
 
         char = self.get_char_at_position(page_index, x, y)
+        if not char:
+            char = self.get_nearest_char(page_index, x, y)
+
         if char:
             self._selection_start = (page_index, char.char_index)
-            self._selection_end = (page_index, char.char_index)
-            self._update_selected_chars()
+            
+            is_before = x < char.center_x
+            self._selection_start_before = is_before
+            self._set_caret_at_char(char, before=is_before)
+
+        else:
+            self._set_caret_at_coords(page_index, x, y)
 
     def update_selection(self, page_index: int, x: float, y: float):
         if not self._is_selecting or self._selection_start is None:
@@ -163,6 +343,9 @@ class PDFTextSelection(QObject):
 
         if char:
             self._selection_end = (page_index, char.char_index)
+            is_before = x < char.center_x
+            self._selection_end_before = is_before
+            self._set_caret_at_char(char, before=is_before)
             self._update_selected_chars()
 
     def end_selection(self):
@@ -180,25 +363,48 @@ class PDFTextSelection(QObject):
 
         start_page, start_idx = self._selection_start
         end_page, end_idx = self._selection_end
+        start_before = self._selection_start_before
+        end_before = self._selection_end_before
 
+        if start_page == end_page and start_idx == end_idx:
+            if start_before == end_before:
+                return
+
+            chars = self._extract_chars_for_page(start_page)
+            for char in chars:
+                if char.char_index == start_idx:
+                    self._selected_chars.append(char)
+                    break
+
+            return
+
+        forward = True
         if start_page > end_page or (start_page == end_page and start_idx > end_idx):
             start_page, end_page = end_page, start_page
             start_idx, end_idx = end_idx, start_idx
+            start_before, end_before = end_before, start_before
+            forward = False
+
+        effective_start_idx = start_idx if start_before else start_idx + 1
+        effective_end_idx = end_idx if not end_before else end_idx - 1
+
+        if start_page == end_page and effective_start_idx > effective_end_idx:
+            return
 
         for page_idx in range(start_page, end_page + 1):
             chars = self._extract_chars_for_page(page_idx)
 
             for char in chars:
                 if page_idx == start_page == end_page:
-                    if start_idx <= char.char_index <= end_idx:
+                    if effective_start_idx <= char.char_index <= effective_end_idx:
                         self._selected_chars.append(char)
 
                 elif page_idx == start_page:
-                    if char.char_index >= start_idx:
+                    if char.char_index >= effective_start_idx:
                         self._selected_chars.append(char)
 
                 elif page_idx == end_page:
-                    if char.char_index <= end_idx:
+                    if char.char_index <= effective_end_idx:
                         self._selected_chars.append(char)
 
                 else:
@@ -293,7 +499,16 @@ class PDFTextSelection(QObject):
         if start_idx <= end_idx:
             self._selection_start = (page_index, line_chars[start_idx].char_index)
             self._selection_end = (page_index, line_chars[end_idx].char_index)
+
+            self._selection_start_before = True
+            self._selection_end_before = False
             self._update_selected_chars()
+            try:
+                self._set_caret_at_char(line_chars[end_idx], before=False)
+
+            except Exception:
+                pass
+
             self._is_selecting = False
             if self._selected_chars:
                 self.selection_changed.emit(self.get_selected_text())
@@ -320,7 +535,16 @@ class PDFTextSelection(QObject):
 
         self._selection_start = (page_index, line_chars[0].char_index)
         self._selection_end = (page_index, line_chars[-1].char_index)
+
+        self._selection_start_before = True
+        self._selection_end_before = False
         self._update_selected_chars()
+        try:
+            self._set_caret_at_char(line_chars[-1], before=False)
+
+        except Exception:
+            pass
+
         self._is_selecting = False
 
         if self._selected_chars:
@@ -382,3 +606,44 @@ def paint_selection(painter: QPainter, chars: List[CharInfo], zoom: float, offse
         painter.fillRect(rect_x, rect_y, rect_w, rect_h, color)
 
     painter.restore()
+
+def paint_caret(painter: QPainter, caret: dict, zoom: float, offset_x: int, offset_y: int):
+    try:
+        if not caret:
+            return
+
+        if caret.get("visible") is False:
+            return
+
+        x = float(caret.get("x", 0.0))
+        y0 = float(caret.get("y0", 0.0))
+        y1 = float(caret.get("y1", y0 + 16.0))
+
+        if y1 - y0 < 10:
+            y1 = y0 + 16.0
+
+        px = offset_x + int(x * zoom)
+        py0 = offset_y + int(y0 * zoom)
+        py1 = offset_y + int(y1 * zoom)
+
+        if py1 - py0 < 12:
+            py1 = py0 + 16
+
+        cursor_width = max(1, _get_cursor_width())
+        cursor_color = QColor(0, 0, 0)
+
+        painter.save()
+
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+
+        pen = QPen(cursor_color)
+        pen.setWidth(cursor_width)
+        pen.setCapStyle(Qt.PenCapStyle.FlatCap)
+        painter.setPen(pen)
+        painter.drawLine(px, py0, px, py1)
+
+        painter.restore()
+
+    except Exception as e:
+        logger.debug(f"Erro ao pintar caret: {e}")
+        return

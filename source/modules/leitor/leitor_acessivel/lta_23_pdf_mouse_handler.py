@@ -43,7 +43,17 @@ class PDFMouseHandler(QObject):
             self.is_dragging = False
             self.drag_start_pos = None
             viewport.setCursor(QCursor(Qt.IBeamCursor))
+            try:
+                if viewport.focusPolicy() == Qt.FocusPolicy.NoFocus:
+                    viewport.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+
+                viewport.setFocus(Qt.FocusReason.MouseFocusReason)
+
+            except Exception:
+                pass
+
             self._ensure_text_selection()
+            self._update_page_widgets()
             logger.debug("Modo seleção ativado - cursor IBeam")
 
         else:
@@ -57,7 +67,7 @@ class PDFMouseHandler(QObject):
         if self._text_selection is None:
             try:
                 from .lta_31_pdf_text_selection import PDFTextSelection
-                self._text_selection = PDFTextSelection(self.pdf_view)
+                self._text_selection = PDFTextSelection(self.pdf_view, parent=self.pdf_view)
                 self._text_selection.selection_changed.connect(self._on_selection_changed)
                 logger.debug("PDFTextSelection criado")
 
@@ -79,12 +89,19 @@ class PDFMouseHandler(QObject):
         try:
             if self.pdf_view and hasattr(self.pdf_view, "_page_widgets"):
                 selected_chars = []
+                caret_by_page = {}
                 if self._text_selection:
                     selected_chars = self._text_selection.get_selected_chars()
+                    try:
+                        caret_by_page = self._text_selection.get_caret_by_page() or {}
+
+                    except Exception:
+                        caret_by_page = {}
 
                 for pw in self.pdf_view._page_widgets:
                     page_chars = [c for c in selected_chars if c.page_index == pw.page_index]
                     pw._selected_chars = page_chars
+                    pw._caret = caret_by_page.get(pw.page_index)
                     pw.update()
 
         except Exception as e:
@@ -191,6 +208,8 @@ class PDFMouseHandler(QObject):
                         page_idx, pdf_x, pdf_y = self._viewport_to_pdf_coords(event.pos())
 
                         if page_idx is not None:
+                            self._text_selection.set_caret_from_position(page_idx, pdf_x, pdf_y)
+                            
                             current_pos = event.pos()
 
                             if (self._last_click_pos and
@@ -238,6 +257,12 @@ class PDFMouseHandler(QObject):
                     page_idx, pdf_x, pdf_y = self._viewport_to_pdf_coords(event.pos())
 
                     if page_idx is not None:
+                        try:
+                            self._text_selection.set_caret_from_position(page_idx, pdf_x, pdf_y)
+
+                        except Exception:
+                            pass
+
                         current_pos = event.pos()
 
                         if (self._last_click_pos and

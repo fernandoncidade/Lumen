@@ -1,7 +1,6 @@
 import os
 from PySide6.QtCore import QTimer
 from source.utils.LogManager import LogManager
-
 logger = LogManager.get_logger()
 
 def _safe_remove(path: str) -> bool:
@@ -70,20 +69,29 @@ def cleanup_edge_tts_temp_in_outdir(self, remove_mp3: bool = True, remove_part: 
             outdir = None
 
         if not outdir or not os.path.isdir(outdir):
+            try:
+                from source.utils.CaminhoPersistenteUtils import obter_caminho_persistente
+                outdir = obter_caminho_persistente()
+
+            except Exception:
+                return
+
+        if not outdir or not os.path.isdir(outdir):
             return
 
         leftovers = []
         try:
             for name in os.listdir(outdir):
                 low = name.lower()
-                if not low.startswith("tts_edge_part_"):
+                is_tts_file = low.startswith("tts_edge_part_") or low.startswith("tts_edge_ts_")
+                if not is_tts_file:
                     continue
 
                 if remove_part and (low.endswith(".part") or low.endswith(".mp3.part")):
                     leftovers.append(os.path.join(outdir, name))
                     continue
 
-                if remove_mp3 and low.endswith(".mp3"):
+                if remove_mp3 and low.endswith(".mp3") and not low.endswith(".mp3.part"):
                     leftovers.append(os.path.join(outdir, name))
                     continue
 
@@ -92,11 +100,11 @@ def cleanup_edge_tts_temp_in_outdir(self, remove_mp3: bool = True, remove_part: 
             return
 
         if leftovers:
+            logger.debug(f"Arquivos TTS temporários a remover: {leftovers}")
             cleanup_paths_with_retry(self, leftovers)
 
     except Exception as e:
         logger.error(f"Erro em cleanup_edge_tts_temp_in_outdir: {e}", exc_info=True)
-
 
 def cleanup_edge_tts_parts_in_outdir(self):
     try:

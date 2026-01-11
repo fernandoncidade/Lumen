@@ -1,6 +1,5 @@
 from PySide6.QtCore import QThread, QUrl
 from source.utils.LogManager import LogManager
-
 logger = LogManager.get_logger()
 
 def parar_leitura(self):
@@ -32,7 +31,9 @@ def parar_leitura(self):
                 t = getattr(self, "tts_thread", None)
                 if t is not None:
                     try:
-                        t.chunk_ready.disconnect(self._play_generated_audio)
+                        handler = getattr(self, "_chunk_ready_handler", None)
+                        if handler is not None:
+                            t.chunk_ready.disconnect(handler)
 
                     except Exception:
                         pass
@@ -121,6 +122,10 @@ def parar_leitura(self):
 
         self._is_paused = False
         self._update_pause_button()
+        self._stop_speech_highlight()
+        self._stop_pdf_speech_highlight()
+        self._current_chunk_index = 0
+
         try:
             cursor = self.texto_area.textCursor()
             cursor.clearSelection()

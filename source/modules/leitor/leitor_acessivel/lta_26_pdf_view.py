@@ -124,8 +124,22 @@ class PDFPageWidget(QWidget):
         self._current_hit_idx: Optional[int] = None
 
         self._selected_chars: List[Any] = []
+        self._caret: Optional[dict] = None
+
+        self._speech_highlight: Optional[SimpleRect] = None
+        self._speech_highlights_list: List[SimpleRect] = []
 
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+    def set_speech_highlight(self, rect: Optional[SimpleRect]):
+        self._speech_highlight = rect
+        self._speech_highlights_list = []
+        self.update()
+
+    def set_speech_highlights_list(self, rects: List[SimpleRect]):
+        self._speech_highlight = None
+        self._speech_highlights_list = rects or []
+        self.update()
 
     def set_selected_chars(self, chars: List[Any]):
         self._selected_chars = [c for c in chars if c.page_index == self.page_index]
@@ -191,14 +205,20 @@ class PDFPageWidget(QWidget):
         y = 0
         p.drawPixmap(x, y, self._pixmap)
 
-        if self._selected_chars and self._owner:
+        if self._owner:
             try:
-                from .lta_31_pdf_text_selection import paint_selection
+                from .lta_31_pdf_text_selection import paint_selection, paint_caret
                 z = float(self._owner._zoom)
-                paint_selection(p, self._selected_chars, z, x, y)
+
+                if self._selected_chars:
+                    paint_selection(p, self._selected_chars, z, x, y)
+
+                caret = getattr(self, "_caret", None)
+                if caret:
+                    paint_caret(p, caret, z, x, y)
 
             except Exception as e:
-                logger.debug(f"Erro ao pintar seleção: {e}")
+                logger.debug(f"Erro ao pintar seleção/caret: {e}")
 
         if self._highlights:
             z = float(self._owner._zoom)
@@ -222,6 +242,23 @@ class PDFPageWidget(QWidget):
 
                     else:
                         p.fillRect(rr, brush_all)
+
+                except Exception:
+                    continue
+
+        if self._speech_highlight or self._speech_highlights_list:
+            z = float(self._owner._zoom)
+            speech_brush = QColor(255, 152, 0, 180)
+            speech_pen = QColor(255, 87, 34, 220)
+
+            rects_to_draw = self._speech_highlights_list if self._speech_highlights_list else ([self._speech_highlight] if self._speech_highlight else [])
+
+            for r in rects_to_draw:
+                try:
+                    rr = QRectF(x + (r.x0 * z), y + (r.y0 * z), r.width * z, r.height * z,)
+                    p.fillRect(rr, speech_brush)
+                    p.setPen(speech_pen)
+                    p.drawRect(rr)
 
                 except Exception:
                     continue
@@ -1015,7 +1052,7 @@ class PDFView(QScrollArea):
             self.goto_page(cur.page_index)
 
             z = float(self._zoom)
-            y = int(cur.rect[1] * z)  # y0
+            y = int(cur.rect[1] * z)
             target = max(0, self._page_widgets[cur.page_index].y() + y - int(self.viewport().height() * 0.25))
             self.verticalScrollBar().setValue(target)
 
@@ -1057,3 +1094,57 @@ class PDFView(QScrollArea):
 
         except Exception:
             pass
+
+    def set_speech_highlight(self, page_index: int, rect: SimpleRect):
+        try:
+            if page_index < 0 or page_index >= len(self._page_widgets):
+                return
+
+            for w in self._page_widgets:
+                w.set_speech_highlight(None)
+
+            self._page_widgets[page_index].set_speech_highlight(rect)
+
+        except Exception as e:
+            logger.debug(f"Erro em set_speech_highlight: {e}", exc_info=True)
+
+    def set_speech_highlights(self, by_page: Dict[int, List[SimpleRect]]):
+        try:
+            for w in self._page_widgets:
+                w.set_speech_highlight(None)
+
+            for page_index, rects in by_page.items():
+                if 0 <= page_index < len(self._page_widgets):
+                    self._page_widgets[page_index].set_speech_highlights_list(rects)
+
+        except Exception as e:
+            logger.debug(f"Erro em set_speech_highlights: {e}", exc_info=True)
+
+    def clear_speech_highlight(self):
+        try:
+            for w in self._page_widgets:
+                w.set_speech_highlight(None)
+
+        except Exception as e:
+            logger.debug(f"Erro em clear_speech_highlight: {e}", exc_info=True)
+
+    def scroll_to_highlight(self, page_index: int, y_pos: float):
+        try:
+            if page_index < 0 or page_index >= len(self._page_widgets):
+                return
+
+            if page_index != self._current_page:
+                self.goto_page(page_index)
+
+            z = float(self._zoom)
+            widget = self._page_widgets[page_index]
+            widget_y = widget.y()
+            y_scaled = int(y_pos * z)
+
+            target_scroll = widget_y + y_scaled - int(self.viewport().height() * 0.3)
+            target_scroll = max(0, target_scroll)
+
+            self.verticalScrollBar().setValue(target_scroll)
+
+        except Exception as e:
+            logger.debug(f"Erro em scroll_to_highlight: {e}", exc_info=True)

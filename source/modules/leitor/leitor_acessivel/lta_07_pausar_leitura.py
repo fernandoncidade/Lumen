@@ -2,7 +2,6 @@ from PySide6.QtWidgets import QMessageBox
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtMultimedia import QMediaPlayer
 from source.utils.LogManager import LogManager
-
 logger = LogManager.get_logger()
 
 def pausar_leitura(self):
@@ -13,11 +12,15 @@ def pausar_leitura(self):
                 self.player.pause()
                 self._is_paused = True
                 self._update_pause_button()
+                self._pause_speech_highlight()
+                self._pause_pdf_speech_highlight()
 
             elif estado == QMediaPlayer.PausedState:
                 self.player.play()
                 self._is_paused = False
                 self._update_pause_button()
+                self._resume_speech_highlight()
+                self._resume_pdf_speech_highlight()
 
             else:
                 pass

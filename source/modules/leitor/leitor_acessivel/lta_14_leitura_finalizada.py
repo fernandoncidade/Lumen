@@ -1,5 +1,4 @@
 from source.utils.LogManager import LogManager
-
 logger = LogManager.get_logger()
 
 def leitura_finalizada(self):
@@ -11,6 +10,9 @@ def leitura_finalizada(self):
         self.btn_pause.setChecked(False)
         if self.btn_stop is not None:
             self.btn_stop.setEnabled(False)
+
+        self._stop_speech_highlight()
+        self._stop_pdf_speech_highlight()
 
     except Exception as e:
         logger.error(f"Erro ao finalizar leitura: {str(e)}", exc_info=True)

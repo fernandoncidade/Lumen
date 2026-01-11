@@ -2,7 +2,6 @@ from PySide6.QtMultimedia import QMediaPlayer
 from PySide6.QtCore import QUrl
 from source.utils.LogManager import LogManager
 import os
-
 logger = LogManager.get_logger()
 
 def _on_media_status(self, status):
@@ -16,6 +15,68 @@ def _on_media_status(self, status):
                     self._current_generated = next_path
                     self.player.setSource(QUrl.fromLocalFile(next_path))
                     self.player.play()
+
+                    if not hasattr(self, "_current_chunk_index"):
+                        self._current_chunk_index = 0
+
+                    self._current_chunk_index += 1
+
+                    try:
+                        active_idx = 0
+                        if hasattr(self, "_content_stack") and self._content_stack is not None:
+                            try:
+                                active_idx = self._content_stack.currentIndex()
+
+                            except Exception:
+                                active_idx = 0
+
+                        if active_idx == 0:
+                            base_offset = None
+                            try:
+                                offsets = getattr(self, "_chunk_base_offsets", None)
+                                if isinstance(offsets, list) and 0 <= self._current_chunk_index < len(offsets):
+                                    base_offset = offsets[self._current_chunk_index]
+
+                            except Exception:
+                                base_offset = None
+
+                            if base_offset is None:
+                                try:
+                                    acc = getattr(self, "_accumulated_timestamps", None) or []
+                                    if acc:
+                                        last = acc[-1]
+                                        base_offset = int(last.get("offset_ms", 0)) + int(last.get("duration_ms", 0))
+
+                                except Exception:
+                                    base_offset = None
+
+                            self._notify_chunk_changed(self._current_chunk_index, base_offset)
+
+                        else:
+                            base_offset = None
+                            try:
+                                offsets = getattr(self, "_pdf_chunk_base_offsets", None)
+                                if isinstance(offsets, list) and 0 <= self._current_chunk_index < len(offsets):
+                                    base_offset = offsets[self._current_chunk_index]
+
+                            except Exception:
+                                base_offset = None
+
+                            if base_offset is None:
+                                try:
+                                    acc = getattr(self, "_pdf_accumulated_timestamps", None) or []
+                                    if acc:
+                                        last = acc[-1]
+                                        base_offset = int(last.get("offset_ms", 0)) + int(last.get("duration_ms", 0))
+
+                                except Exception:
+                                    base_offset = None
+
+                            self._notify_pdf_chunk_changed(self._current_chunk_index, base_offset)
+
+                    except Exception as e:
+                        logger.debug(f"Erro ao notificar mudança de chunk: {e}", exc_info=True)
+
                     if prev and os.path.exists(prev):
                         try:
                             os.remove(prev)

@@ -1966,6 +1966,61 @@ Defina 0 para repetir imediatamente após o áudio terminar.</translation>
     </message>
 
     <message>
+      <source>Palavras</source>
+      <translation>Palavras</translation>
+    </message>
+
+    <message>
+      <source>Frases</source>
+      <translation>Frases</translation>
+    </message>
+
+    <message>
+      <source>Parágrafos</source>
+      <translation>Parágrafos</translation>
+    </message>
+
+    <message>
+      <source>🔦 Desativar Leitura Assistida</source>
+      <translation>🔦 Desativar Leitura Assistida</translation>
+    </message>
+
+    <message>
+      <source>🔦 Ativar Leitura Assistida</source>
+      <translation>🔦 Ativar Leitura Assistida</translation>
+    </message>
+
+    <message>
+      <source>Modo:</source>
+      <translation>Modo:</translation>
+    </message>
+
+    <message>
+      <source>💡 Realça o texto sincronizado com a leitura por voz</source>
+      <translation>💡 Realça o texto sincronizado com a leitura por voz</translation>
+    </message>
+
+    <message>
+      <source>Pausar/continuar está disponível apenas com as vozes neurais (Edge TTS).</source>
+      <translation>Pausar/continuar está disponível apenas com as vozes neurais (Edge TTS).</translation>
+    </message>
+
+    <message>
+      <source>Pausar</source>
+      <translation>Pausar</translation>
+    </message>
+
+    <message>
+      <source>🔦 Desativar Realce</source>
+      <translation>🔦 Desativar Realce</translation>
+    </message>
+
+    <message>
+      <source>🔦 Ativar Realce</source>
+      <translation>🔦 Ativar Realce</translation>
+    </message>
+
+    <message>
       <source>Destacar tudo</source>
       <translation>Destacar tudo</translation>
     </message>

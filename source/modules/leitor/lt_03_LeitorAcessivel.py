@@ -97,6 +97,34 @@ from source.modules.leitor.leitor_acessivel import (
     _text_find_set_highlight_all,
     _pdf_find_toggle,
     _text_find_toggle,
+    _init_speech_highlight,
+    _setup_speech_highlight_for_reading,
+    _on_timestamps_received,
+    _start_speech_highlight,
+    _pause_speech_highlight,
+    _resume_speech_highlight,
+    _stop_speech_highlight,
+    toggle_speech_highlight,
+    set_speech_highlight_mode,
+    set_speech_highlight_style,
+    set_speech_highlight_auto_scroll,
+    is_speech_highlight_enabled,
+    _on_toggle_leitura_assistida,
+    _on_modo_leitura_changed,
+    _update_leitura_assistida_button,
+    _init_leitura_assistida_state,
+    _notify_chunk_changed,
+    _notify_pdf_chunk_changed,
+    _init_pdf_speech_highlight,
+    _setup_pdf_speech_highlight_for_reading,
+    _on_pdf_timestamps_received,
+    _start_pdf_speech_highlight,
+    _pause_pdf_speech_highlight,
+    _resume_pdf_speech_highlight,
+    _stop_pdf_speech_highlight,
+    toggle_pdf_speech_highlight,
+    set_pdf_speech_highlight_mode,
+    is_pdf_speech_highlight_enabled,
 )
 
 LeitorAcessivel.setup_ui = setup_ui
@@ -156,3 +184,31 @@ LeitorAcessivel._text_find_apply_highlights = _text_find_apply_highlights
 LeitorAcessivel._text_find_set_highlight_all = _text_find_set_highlight_all
 LeitorAcessivel._pdf_find_toggle = _pdf_find_toggle
 LeitorAcessivel._text_find_toggle = _text_find_toggle
+LeitorAcessivel._init_speech_highlight = _init_speech_highlight
+LeitorAcessivel._setup_speech_highlight_for_reading = _setup_speech_highlight_for_reading
+LeitorAcessivel._on_timestamps_received = _on_timestamps_received
+LeitorAcessivel._start_speech_highlight = _start_speech_highlight
+LeitorAcessivel._pause_speech_highlight = _pause_speech_highlight
+LeitorAcessivel._resume_speech_highlight = _resume_speech_highlight
+LeitorAcessivel._stop_speech_highlight = _stop_speech_highlight
+LeitorAcessivel.toggle_speech_highlight = toggle_speech_highlight
+LeitorAcessivel.set_speech_highlight_mode = set_speech_highlight_mode
+LeitorAcessivel.set_speech_highlight_style = set_speech_highlight_style
+LeitorAcessivel.set_speech_highlight_auto_scroll = set_speech_highlight_auto_scroll
+LeitorAcessivel.is_speech_highlight_enabled = is_speech_highlight_enabled
+LeitorAcessivel._on_toggle_leitura_assistida = _on_toggle_leitura_assistida
+LeitorAcessivel._on_modo_leitura_changed = _on_modo_leitura_changed
+LeitorAcessivel._update_leitura_assistida_button = _update_leitura_assistida_button
+LeitorAcessivel._init_leitura_assistida_state = _init_leitura_assistida_state
+LeitorAcessivel._notify_chunk_changed = _notify_chunk_changed
+LeitorAcessivel._notify_pdf_chunk_changed = _notify_pdf_chunk_changed
+LeitorAcessivel._init_pdf_speech_highlight = _init_pdf_speech_highlight
+LeitorAcessivel._setup_pdf_speech_highlight_for_reading = _setup_pdf_speech_highlight_for_reading
+LeitorAcessivel._on_pdf_timestamps_received = _on_pdf_timestamps_received
+LeitorAcessivel._start_pdf_speech_highlight = _start_pdf_speech_highlight
+LeitorAcessivel._pause_pdf_speech_highlight = _pause_pdf_speech_highlight
+LeitorAcessivel._resume_pdf_speech_highlight = _resume_pdf_speech_highlight
+LeitorAcessivel._stop_pdf_speech_highlight = _stop_pdf_speech_highlight
+LeitorAcessivel.toggle_pdf_speech_highlight = toggle_pdf_speech_highlight
+LeitorAcessivel.set_pdf_speech_highlight_mode = set_pdf_speech_highlight_mode
+LeitorAcessivel.is_pdf_speech_highlight_enabled = is_pdf_speech_highlight_enabled

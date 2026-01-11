@@ -1966,6 +1966,61 @@ Set 0 to repeat immediately after the audio finishes.</translation>
     </message>
 
     <message>
+      <source>Palavras</source>
+      <translation>Words</translation>
+    </message>
+
+    <message>
+      <source>Frases</source>
+      <translation>Sentences</translation>
+    </message>
+
+    <message>
+      <source>Parágrafos</source>
+      <translation>Paragraphs</translation>
+    </message>
+
+    <message>
+      <source>🔦 Desativar Leitura Assistida</source>
+      <translation>🔦 Disable Assisted Reading</translation>
+    </message>
+
+    <message>
+      <source>🔦 Ativar Leitura Assistida</source>
+      <translation>🔦 Enable Assisted Reading</translation>
+    </message>
+
+    <message>
+      <source>Modo:</source>
+      <translation>Mode:</translation>
+    </message>
+
+    <message>
+      <source>💡 Realça o texto sincronizado com a leitura por voz</source>
+      <translation>💡 Highlights the text synchronized with voice reading</translation>
+    </message>
+
+    <message>
+      <source>Pausar/continuar está disponível apenas com as vozes neurais (Edge TTS).</source>
+      <translation>Pause/resume is only available with neural voices (Edge TTS).</translation>
+    </message>
+
+    <message>
+      <source>Pausar</source>
+      <translation>Pause</translation>
+    </message>
+
+    <message>
+      <source>🔦 Desativar Realce</source>
+      <translation>🔦 Disable Highlight</translation>
+    </message>
+
+    <message>
+      <source>🔦 Ativar Realce</source>
+      <translation>🔦 Enable Highlight</translation>
+    </message>
+
+    <message>
       <source>Destacar tudo</source>
       <translation>Highlight All</translation>
     </message>

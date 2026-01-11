@@ -68,8 +68,38 @@ def atualizar_traducoes(self):
 
         self.gerenciador_botoes.set_button_text(self.btn_regua, texto_regua)
 
-        self.dica_regua.setText(QCoreApplication.translate("App", 
-            "💡 Dica: Arraste para mover, clique nas bordas para redimensionar, use setas ↑↓←→ para ajuste fino, ESC para fechar"))
+        self.dica_regua.setText(QCoreApplication.translate("App", "💡 Dica: Arraste para mover, clique nas bordas para redimensionar, use setas ↑↓←→ para ajuste fino, ESC para fechar"))
+
+        try:
+            if hasattr(self, "btn_leitura_assistida") and self.btn_leitura_assistida is not None:
+                if self.btn_leitura_assistida.isChecked():
+                    texto_leitura = QCoreApplication.translate("App", "🔦 Desativar Leitura Assistida")
+
+                else:
+                    texto_leitura = QCoreApplication.translate("App", "🔦 Ativar Leitura Assistida")
+
+                self.gerenciador_botoes.set_button_text(self.btn_leitura_assistida, texto_leitura)
+
+            if hasattr(self, "label_modo_leitura") and self.label_modo_leitura is not None:
+                self.label_modo_leitura.setText(QCoreApplication.translate("App", "Modo:"))
+
+            if hasattr(self, "combo_modo_leitura") and self.combo_modo_leitura is not None:
+                current_idx = self.combo_modo_leitura.currentIndex()
+                self.combo_modo_leitura.blockSignals(True)
+                self.combo_modo_leitura.clear()
+                self.combo_modo_leitura.addItems([
+                    QCoreApplication.translate("App", "Palavras"),
+                    QCoreApplication.translate("App", "Frases"),
+                    QCoreApplication.translate("App", "Parágrafos")
+                ])
+                self.combo_modo_leitura.setCurrentIndex(current_idx)
+                self.combo_modo_leitura.blockSignals(False)
+
+            if hasattr(self, "dica_leitura_assistida") and self.dica_leitura_assistida is not None:
+                self.dica_leitura_assistida.setText(QCoreApplication.translate("App", "💡 Realça o texto sincronizado com a leitura por voz"))
+
+        except Exception as e:
+            logger.debug(f"Erro ao atualizar traduções de Leitura Assistida: {e}", exc_info=True)
 
         try:
             if hasattr(self, "btn_first_page"):

@@ -256,6 +256,37 @@ def setup_ui(self):
         regua_layout.addWidget(self.dica_regua)
 
         layout.addLayout(regua_layout)
+
+        leitura_assistida_layout = QHBoxLayout()
+
+        self.btn_leitura_assistida = self.gerenciador_botoes.create_button()
+        self.btn_leitura_assistida.setIcon(QIcon(get_icon_path("highlight")))
+        self.btn_leitura_assistida.clicked.connect(self._on_toggle_leitura_assistida)
+        self.btn_leitura_assistida.setCheckable(True)
+        self.btn_leitura_assistida.setChecked(True)
+        self.btn_leitura_assistida.setStyleSheet("background-color: #28a745; color: white; font-weight: bold;")
+        leitura_assistida_layout.addWidget(self.btn_leitura_assistida)
+
+        self.label_modo_leitura = QLabel()
+        leitura_assistida_layout.addWidget(self.label_modo_leitura)
+
+        self.combo_modo_leitura = QComboBox()
+        self.combo_modo_leitura.addItems([
+            QCoreApplication.translate("App", "Palavras"),
+            QCoreApplication.translate("App", "Frases"),
+            QCoreApplication.translate("App", "Parágrafos")
+        ])
+        self.combo_modo_leitura.setCurrentIndex(0)
+        self.combo_modo_leitura.currentIndexChanged.connect(self._on_modo_leitura_changed)
+        self.combo_modo_leitura.setMinimumWidth(100)
+        leitura_assistida_layout.addWidget(self.combo_modo_leitura)
+
+        self.dica_leitura_assistida = QLabel()
+        self.dica_leitura_assistida.setStyleSheet("color: #666; font-size: 10pt;")
+        leitura_assistida_layout.addWidget(self.dica_leitura_assistida)
+
+        leitura_assistida_layout.addStretch()
+        layout.addLayout(leitura_assistida_layout)
         self.setLayout(layout)
         self.atualizar_traducoes()
 
