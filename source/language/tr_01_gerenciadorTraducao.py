@@ -4,7 +4,6 @@ import json
 from PySide6.QtCore import QTranslator, QCoreApplication, Signal, QObject
 from source.utils.CaminhoPersistenteUtils import obter_caminho_persistente
 from source.utils.LogManager import LogManager
-
 logger = LogManager.get_logger()
 
 

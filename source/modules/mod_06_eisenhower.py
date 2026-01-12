@@ -1,8 +1,11 @@
 import os
-from PySide6.QtCore import QCoreApplication, Qt, QThread, QObject, Signal, Slot
+from PySide6.QtCore import QCoreApplication, Qt, QThread, QObject, Signal, Slot, QTimer
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QPushButton
 from source.utils.CaminhoPersistenteUtils import obter_caminho_persistente
 from source.language.tr_01_gerenciadorTraducao import GerenciadorTraducao
+from source.utils.EventBus import get_event_bus
+from source.modules.tempo.tmp_01_Tarefa import Tarefa
+from uuid import uuid4
 from source.modules.eisenhower.services import (
     init_ui,
     add_placeholder,
@@ -49,6 +52,8 @@ class EisenhowerMatrixApp(QWidget):
 
         self.initUI()
         self.load_tasks()
+        self._integracao_ids_recebidos = set()
+        self._setup_integracao_gestao_tempo()
 
         try:
             class _EisenhowerWorker(QObject):
@@ -269,13 +274,182 @@ class EisenhowerMatrixApp(QWidget):
             i += 1
 
     def add_task(self):
+        task_text = ""
+        selected_quadrant = 0
+        date_iso = None
+        time_str = None
+        try:
+            task_text = (self.task_input.text() or "").strip()
+            selected_quadrant = int(self.quadrant_selector.currentIndex())
+
+            if hasattr(self, "date_checkbox") and self.date_checkbox.isChecked():
+                try:
+                    date_iso = self.date_input.date().toString(Qt.ISODate)
+
+                except Exception:
+                    date_iso = None
+
+                if hasattr(self, "time_checkbox") and hasattr(self, "time_input") and self.time_checkbox.isChecked():
+                    try:
+                        time_str = self.time_input.time().toString("HH:mm")
+
+                    except Exception:
+                        time_str = None
+
+        except Exception:
+            pass
+
         add_task(self)
         try:
             if hasattr(self, "calendar_pane") and self.calendar_pane:
                 self.calendar_pane.calendar_panel.update_task_list()
 
+            try:
+                if hasattr(self, "integrate_time_button") and self.integrate_time_button and self.integrate_time_button.isChecked():
+                    if task_text:
+                        prioridades = [
+                            "Importante e Urgente",
+                            "Importante, mas Não Urgente",
+                            "Não Importante, mas Urgente",
+                            "Não Importante e Não Urgente",
+                        ]
+                        prioridade = prioridades[selected_quadrant] if 0 <= selected_quadrant < len(prioridades) else "Importante e Urgente"
+                        payload = {
+                            "integration_id": str(uuid4()),
+                            "origin": "eisenhower",
+                            "titulo": task_text,
+                            "prioridade": Tarefa.normalizar_prioridade(prioridade),
+                            "date": date_iso,
+                            "time": time_str,
+                        }
+                        get_event_bus().send_tarefa(payload)
+
+            except Exception as e:
+                logger.debug(f"Falha ao enviar tarefa do Eisenhower para Gestão de Tempo: {e}", exc_info=True)
+
         except Exception as e:
             logger.error(f"Erro ao atualizar lista de tarefas no calendário: {e}", exc_info=True)
+
+    def _setup_integracao_gestao_tempo(self):
+        try:
+            try:
+                if hasattr(self, "integrate_time_button") and self.integrate_time_button:
+                    self.integrate_time_button.setToolTip(
+                        get_text("Quando ativado, tarefas adicionadas na Matriz também são enviadas para o quadro 📋 A Fazer (Gestão de Tempo).")
+                    )
+
+            except Exception:
+                pass
+
+            self._event_bus = get_event_bus()
+            try:
+                self._event_bus.tarefa_integracao.connect(self._on_event_bus_tarefa)
+
+            except Exception:
+                pass
+
+            try:
+                self._event_bus.drain_pending_tarefas()
+
+            except Exception:
+                pass
+
+        except Exception as e:
+            logger.debug(f"Falha ao configurar integração Gestão de Tempo: {e}", exc_info=True)
+
+    def _on_event_bus_tarefa(self, dados: dict):
+        try:
+            payload = dados or {}
+            if payload.get("origin") != "tempo":
+                return
+
+            integration_id = payload.get("integration_id")
+            if integration_id and integration_id in self._integracao_ids_recebidos:
+                return
+
+            if integration_id:
+                self._integracao_ids_recebidos.add(integration_id)
+
+            titulo = (payload.get("titulo") or "").strip()
+            prioridade = payload.get("prioridade") or "Importante e Urgente"
+            if not titulo:
+                return
+
+            self._adicionar_tarefa_integrada_do_tempo(titulo=titulo, prioridade=prioridade)
+
+        except Exception as e:
+            logger.debug(f"Falha ao receber tarefa do Tempo no Eisenhower: {e}", exc_info=True)
+
+    def _lista_por_prioridade(self, prioridade: str):
+        try:
+            p = Tarefa.normalizar_prioridade(prioridade)
+        except Exception:
+            p = "Importante e Urgente"
+
+        if p == "Importante e Urgente":
+            return getattr(self, "quadrant1_list", None)
+
+        if p == "Importante, mas Não Urgente":
+            return getattr(self, "quadrant2_list", None)
+
+        if p == "Não Importante, mas Urgente":
+            return getattr(self, "quadrant3_list", None)
+
+        return getattr(self, "quadrant4_list", None)
+
+    def _adicionar_tarefa_integrada_do_tempo(self, titulo: str, prioridade: str):
+        try:
+            lst = self._lista_por_prioridade(prioridade)
+            if lst is None:
+                return
+
+            try:
+                for i in range(lst.count()):
+                    it = lst.item(i)
+                    if not it:
+                        continue
+
+                    if not (it.flags() & Qt.ItemIsSelectable):
+                        continue
+
+                    data = it.data(Qt.UserRole) or {}
+                    base = (data.get("text") or it.text() or "").strip()
+                    if base == titulo:
+                        return
+
+            except Exception:
+                pass
+
+            if lst.count() == 1 and not (lst.item(0).flags() & Qt.ItemIsSelectable):
+                lst.clear()
+
+            from PySide6.QtWidgets import QListWidgetItem
+            task_item = QListWidgetItem(titulo)
+            task_item.setFlags(task_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+            task_item.setCheckState(Qt.Unchecked)
+            task_item.setData(Qt.UserRole, {"text": titulo, "date": None, "time": None})
+
+            if hasattr(self, "insert_task_into_quadrant_list"):
+                self.insert_task_into_quadrant_list(lst, task_item)
+
+            else:
+                lst.addItem(task_item)
+
+            try:
+                self.save_tasks()
+
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self, "calendar_pane") and self.calendar_pane:
+                    self.calendar_pane.calendar_panel.update_task_list()
+
+            except Exception:
+                pass
+
+        except Exception as e:
+            logger.error(f"Erro ao adicionar tarefa integrada do Tempo: {e}", exc_info=True)
 
     def handle_item_checked(self, item, source_list, target_list):
         handle_item_checked(self, item, source_list, target_list)
@@ -345,13 +519,20 @@ class EisenhowerMatrixApp(QWidget):
             logger.error(f"Erro ao carregar tarefas: {e}", exc_info=True)
 
     def atualizar_textos(self):
-        atualizar_textos(self)
-        try:
-            if hasattr(self, "calendar_pane") and self.calendar_pane:
-                self.calendar_pane.on_language_changed()
+        def _apply_updates():
+            try:
+                atualizar_textos(self)
+                if hasattr(self, "calendar_pane") and self.calendar_pane:
+                    self.calendar_pane.on_language_changed()
 
-        except Exception as e:
-            logger.error(f"Erro ao atualizar textos: {e}", exc_info=True)
+            except Exception as e:
+                logger.error(f"Erro ao atualizar textos: {e}", exc_info=True)
+
+        try:
+            QTimer.singleShot(0, _apply_updates)
+
+        except Exception:
+            _apply_updates()
 
     def atualizar_placeholders(self):
         atualizar_placeholders(self)

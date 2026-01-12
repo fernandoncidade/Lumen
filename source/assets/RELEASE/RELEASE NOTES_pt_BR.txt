@@ -1,4 +1,124 @@
 NOTAS DE LANÇAMENTO — Lúmen
+Versão: 2026.1.12.0
+Data: 12 de janeiro de 2026
+Autor: Fernando Nillsson Cidade
+
+Resumo executivo
+- Melhoria da integração entre módulos de Gestão de Tempo e Matriz de Eisenhower (EventBus unificado para troca de tarefas).
+- Aperfeiçoamento do Gerenciador de Tarefas (Kanban) com sincronização robusta após drag & drop, suporte a reset de contadores e melhor UX em movimentação/edição.
+- Novo GerenciadorTempo com integração bidirecional, coluna "Em Progresso" e worker assíncrono para eventos de pomodoro.
+- Aperfeiçoamentos no Pomodoro: alarme repetitivo confiável, integração com SoundManager e notificação correta ao finalizar ciclos.
+- Robustez e consistência UI: placeholders dinâmicos, sincronização de paleta (theme), locale dinâmico para data/horário e traduções runtime.
+- Performance/IO: persistência de tarefas em thread separada para salvamento não bloqueante; loaders/savers com tratamento de erros.
+- Correções gerais de estabilidade: tratamento de exceções, logging centralizado e proteções em pontos críticos (eventos Qt, threads, file I/O).
+
+Detalhamento das mudanças principais
+
+1) Integração via EventBus
+- Implementado singleton EventBus (source/utils/EventBus.py) com sinais:
+  - conceito_atualizado (dict) e tarefa_integracao (dict).
+- Suporte a enfileiramento de mensagens pendentes (drain_pending_*) para evitar perda de eventos quando módulos ainda não estiverem conectados.
+- Métodos utilitários send_conceito / send_tarefa + drain_pending_* para confiabilidade de integração entre Mapa Mental, Método Feynman, Eisenhower e Gestão de Tempo.
+
+2) Matriz de Eisenhower (source/modules/mod_06_eisenhower.py + services/ui)
+- UI reorganizada com Calendar integrado (painel lateral) quando em modo embedded.
+- Suporte a agrupamento por horário (group headers) nas listas por hora, com funções insert_task_into_quadrant_list e cleanup_time_groups.
+- Integração com GerenciadorTempo via EventBus:
+  - Ao adicionar tarefa com integração ativa, Eisenhower envia payload com integration_id, origem e metadados.
+  - Recebe tarefas do tempo, prevenindo duplicatas por integration_id.
+- Persistência de tasks:
+  - Salvamento por worker em QThread (_EisenhowerWorker) usando sinal request_save para evitar bloqueio da UI.
+  - Fallback síncrono caso worker indisponível.
+- Placeholders e atualização dinâmica de textos tradutíveis (atualizar_textos / atualizar_placeholders).
+- Melhoria nas operações de remoção/adição: cleanup de grupos de horário, inserção ordenada por hora e texto base robusto.
+
+3) Gerenciador de Tarefas (Kanban) — gerenciamento local de tarefas (source/modules/tempo/tmp_03_GerenciadorTarefas.py)
+- Estrutura de colunas Todo/Doing/Done com drag & drop e suporte a operações em lote.
+- Correção e aprimoramento da sincronização de estado pós-movimento:
+  - rowsMoved e evento customizado (tarefas_soltadas) tratados para atualizar model e persistir status corretamente.
+  - _sincronizar_status_pos_movimento atualiza objetos Tarefa correspondentes conforme movimentação.
+- Funcionalidades UX:
+  - Reset de contadores com escopos (tarefa, coluna, global) via diálogo.
+  - Menu de contexto para mover/remover itens e mover por seleção.
+  - Ajuste dinâmico de largura de combo de prioridade para evitar truncamento.
+- Persistência local em JSON via CaminhoPersistenteUtils.
+
+4) GerenciadorTempo e Pomodoro (source/modules/tempo/tmp_04_GerenciadorTempo.py, tmp_02_PomodoroTimer.py)
+- Composição de GerenciadorTempo com:
+  - PomodoroTimer (ciclo_completado sinalizado ao worker).
+  - Coluna "Em Progresso" atualizada a partir do GerenciadorTarefas.
+  - Botão para integrar/de-integrar Eisenhower (envio/recebimento de tarefas via EventBus).
+- TimeWorker (threaded) para despachar eventos de pomodoro sem bloquear UI; registro de pomodoros incrementa contadores em tarefas "Doing".
+- Pomodoro:
+  - Integração com SoundManager para reprodução de alarme em loop até confirmação do usuário.
+  - Emissão de sinal ciclo_completado com tipo ("foco"/"descanso") para integração com outros módulos.
+  - Atualizações de tradução e preservação de estado ao alterar configurações de tempo.
+
+5) Representação de Tarefa e normalização (source/modules/tempo/tmp_01_Tarefa.py)
+- Classe Tarefa com serialização/deserialização (to_dict/from_dict) e normalização de prioridade robusta (suporta emojis, textos em pt/en, variantes acentuadas e legacy keys).
+- Atribui id único (uuid) e metadados (criação, pomodoros completados).
+
+6) UI, locais e sincronia de temas
+- Aplicação consistente de paleta como Base/AlternateBase para listas, combos e viewports (helpers _apply_window_as_base / _apply_window_as_base_em_Eisenhower).
+- EventFilter para reagir a mudanças de paleta/tema (PaletteChange, ApplicationPaletteChange, ThemeChange e ColorSchemeChange quando disponível).
+- Locale dinâmico para QDateEdit/QTimeEdit:
+  - _apply_locale_to_date_input e _apply_locale_to_time_input adaptam displayFormat e QLocale conforme GerenciadorTraducao.
+  - Ajustes para formatar ano como yyyy quando necessário.
+- Traduções runtime nos diálogos Sobre / Manual e labels das interfaces.
+
+7) Placeholders, agrupamentos e tooltip de data/hora
+- Placeholders adicionados e atualizados de forma consistente (svc_02_add_placeholder.py, svc_05_atualizar_placeholders.py).
+- svc_08_atualizar_itens_tarefas.py reconstrói textos das QListWidgetItems usando locale, exibe tooltips com Data/Horário e preserva metadados em Qt.UserRole.
+- Cabeçalhos de grupo por hora (group_header_role) inseridos/limpos automaticamente para listas com tarefas marcadas por horário.
+
+8) Robustez, logs e tratamento de exceções
+- Uso consistente de LogManager para logging (debug/error) com exc_info em pontos críticos.
+- Proteções try/except amplas em handlers de evento, workers, IO e integração entre módulos para evitar travamentos.
+- Métodos com blockSignals e validações para prevenir repinturas e efeitos colaterais durante atualizações de listas.
+
+Arquivos alterados / introduzidos (principais)
+- source/utils/EventBus.py (novo: singleton + enfileiramento)
+- source/modules/mod_06_eisenhower.py (integração, UI embedding, worker de salvamento)
+- source/modules/eisenhower/services/svc_01_initUI.py (UI, DragDropTaskList, CustomTimeEdit, palette sync)
+- source/modules/eisenhower/services/svc_02_add_placeholder.py
+- source/modules/eisenhower/services/svc_04_atualizar_textos.py
+- source/modules/eisenhower/services/svc_05_atualizar_placeholders.py
+- source/modules/eisenhower/services/svc_08_atualizar_itens_tarefas.py
+- source/modules/tempo/tmp_01_Tarefa.py
+- source/modules/tempo/tmp_02_PomodoroTimer.py
+- source/modules/tempo/tmp_03_GerenciadorTarefas.py
+- source/modules/tempo/tmp_04_GerenciadorTempo.py
+- source/modules/mod_07_exibir_public.py (melhorias em Sobre/Manual: traduções runtime, render manual)
+
+Como testar (passos rápidos)
+1. Abrir Matriz de Eisenhower:
+   - Adicionar tarefas com e sem data/hora; verificar agrupamento por hora e exibição correta no calendário.
+   - Verificar placeholders aparecem/atualizam quando listas ficam vazias.
+2. Testar integração com Gestão de Tempo:
+   - Ativar integração em um dos módulos; adicionar tarefa e confirmar chegada no outro lado via EventBus (evitar duplicatas).
+3. Testar GerenciadorTarefas (Kanban):
+   - Adicionar tarefas, arrastar entre colunas; confirmar persistência e atualização de status.
+   - Usar resetar contagem nos três escopos.
+4. Testar Pomodoro:
+   - Rodar ciclo curto; confirmar alarme toca imediatamente e repete até fechar diálogo; contagem de pomodoros incrementa em tarefas Doing.
+5. Trocar tema e idioma:
+   - Confirmar que listas, combos e viewers atualizam paleta e que data/hora exibem o formato correto conforme locale.
+6. Checar logs:
+   - Verificar logs em caso de erro (persistence, worker, integração) para rastreabilidade.
+
+Notas de compatibilidade e dependências
+- PySide6 (Qt for Python) com suporte a QtMultimedia para reprodução de alarmes.
+- Persistência local em %LOCALAPPDATA% via CaminhoPersistenteUtils.
+- Fallbacks implementados para ambientes com backends ausentes (ex.: QWebEngine, formatos de áudio não-WAV para detecção de duração).
+
+Observações finais
+- As mudanças priorizam confiabilidade da integração entre módulos, responsividade da UI (IO em threads), e robustez frente a temas/idiomas variados.
+- Problemas detectados em cenários extremos (listas com extração incompleta de horas, arquivos de áudio não suportados) possuem fallbacks e logs para diagnóstico.
+- Recomenda‑se testes funcionais integrados (fluxos Eisenhower ↔ Tempo ↔ Pomodoro) e revisão dos logs após execuções de longa duração.
+
+_________________________________________________
+
+NOTAS DE LANÇAMENTO — Lúmen
 Versão: 2026.1.11.0
 Data: 11 de janeiro de 2026
 Autor: Fernando Nillsson Cidade

@@ -3,6 +3,7 @@ from PySide6.QtCore import QObject, Signal
 
 class EventBus(QObject):
     conceito_atualizado = Signal(dict)
+    tarefa_integracao = Signal(dict)
     _instance = None
     _initialized = False
 
@@ -19,6 +20,7 @@ class EventBus(QObject):
         super().__init__()
         self._initialized = True
         self._pending_conceitos = []
+        self._pending_tarefas = []
 
     def send_conceito(self, dados: dict) -> None:
         try:
@@ -41,6 +43,31 @@ class EventBus(QObject):
                     pass
 
             self._pending_conceitos.clear()
+
+        except Exception:
+            pass
+
+    def send_tarefa(self, dados: dict) -> None:
+        try:
+            self._pending_tarefas.append(dados)
+            self.tarefa_integracao.emit(dados)
+
+        except Exception:
+            pass
+
+    def drain_pending_tarefas(self) -> None:
+        try:
+            if not self._pending_tarefas:
+                return
+
+            for dados in list(self._pending_tarefas):
+                try:
+                    self.tarefa_integracao.emit(dados)
+
+                except Exception:
+                    pass
+
+            self._pending_tarefas.clear()
 
         except Exception:
             pass

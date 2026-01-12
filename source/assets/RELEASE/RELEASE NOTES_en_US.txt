@@ -1,4 +1,124 @@
 RELEASE NOTES — Lúmen
+Version: 2026.1.12.0
+Date: January 12, 2026
+Author: Fernando Nillsson Cidade
+
+Executive summary
+- Improved integration between Time Management and Eisenhower Matrix modules (unified EventBus for task exchange).
+- Enhancements to the Task Manager (Kanban) with robust synchronization after drag & drop, support for counter resets and improved UX for moving/editing.
+- New TimeManager with bidirectional integration, a "In Progress" column and an asynchronous worker for pomodoro events.
+- Pomodoro improvements: reliable repeating alarm, integration with SoundManager and correct notifications when cycles finish.
+- UI robustness and consistency: dynamic placeholders, palette (theme) synchronization, dynamic locale for date/time and runtime translations.
+- Performance/IO: task persistence in a separate thread for non-blocking saves; loaders/savers with error handling.
+- General stability fixes: exception handling, centralized logging and protections in critical points (Qt events, threads, file I/O).
+
+Detailed description of main changes
+
+1) Integration via EventBus
+- Implemented singleton EventBus (source/utils/EventBus.py) with signals:
+  - conceito_atualizado (dict) and tarefa_integracao (dict).
+- Added support for queuing pending messages (drain_pending_*) to avoid losing events when modules are not yet connected.
+- Utility methods send_conceito / send_tarefa + drain_pending_* to ensure reliable integration between Mind Map, Feynman Method, Eisenhower and Time Management.
+
+2) Eisenhower Matrix (source/modules/mod_06_eisenhower.py + services/ui)
+- UI reorganized with integrated Calendar (side panel) when running embedded.
+- Support for time-based grouping (group headers) in hourly lists, implemented via insert_task_into_quadrant_list and cleanup_time_groups.
+- Integration with TimeManager via EventBus:
+  - When adding a task with integration active, Eisenhower sends a payload with integration_id, origin and metadata.
+  - Receives tasks from TimeManager, preventing duplicates by integration_id.
+- Task persistence:
+  - Saving via a worker in QThread (_EisenhowerWorker) using request_save signal to avoid blocking the UI.
+  - Synchronous fallback if the worker is unavailable.
+- Dynamic placeholders and translatable text updates (atualizar_textos / atualizar_placeholders).
+- Improved add/remove operations: cleanup of time groups, ordered insertion by time and robust base-text extraction.
+
+3) Task Manager (Kanban) — local task management (source/modules/tempo/tmp_03_GerenciadorTarefas.py)
+- Columns Todo/Doing/Done with drag & drop and support for bulk operations.
+- Fixes and improvements to post-move state synchronization:
+  - rowsMoved and custom event (tarefas_soltadas) handled to update the model and persist statuses correctly.
+  - _sincronizar_status_pos_movimento updates Tarefa objects based on movements.
+- UX features:
+  - Counter reset with scopes (task, column, global) via dialog.
+  - Context menu to move/remove items and move by selection.
+  - Dynamic adjustment of priority combo width to avoid truncation.
+- Local JSON persistence via CaminhoPersistenteUtils.
+
+4) TimeManager and Pomodoro (source/modules/tempo/tmp_04_GerenciadorTempo.py, tmp_02_PomodoroTimer.py)
+- TimeManager composed of:
+  - PomodoroTimer (ciclo_completado signaled to the worker).
+  - "In Progress" column updated from the Task Manager.
+  - Button to integrate/unintegrate with Eisenhower (send/receive tasks via EventBus).
+- Threaded TimeWorker to dispatch pomodoro events without blocking the UI; pomodoro registrations increment counters on "Doing" tasks.
+- Pomodoro:
+  - Integration with SoundManager to play alarm in a loop until user confirmation.
+  - Emits ciclo_completado signal with type ("focus"/"break") for integration with other modules.
+  - Translation updates and state preservation when changing time settings.
+
+5) Task representation and normalization (source/modules/tempo/tmp_01_Tarefa.py)
+- Tarefa class with serialization/deserialization (to_dict/from_dict) and robust priority normalization (supports emojis, pt/en texts, accented variants and legacy keys).
+- Assigns unique id (uuid) and metadata (creation time, completed pomodoros).
+
+6) UI, locales and theme synchronization
+- Consistent application of palette as Base/AlternateBase for lists, combos and viewports (helpers _apply_window_as_base / _apply_window_as_base_em_Eisenhower).
+- EventFilter to react to palette/theme changes (PaletteChange, ApplicationPaletteChange, ThemeChange and ColorSchemeChange when available).
+- Dynamic locale for QDateEdit/QTimeEdit:
+  - _apply_locale_to_date_input and _apply_locale_to_time_input adapt displayFormat and QLocale according to GerenciadorTraducao.
+  - Adjustments to ensure year is formatted as yyyy when needed.
+- Runtime translations in About / Manual dialogs and interface labels.
+
+7) Placeholders, grouping and date/time tooltips
+- Placeholders consistently added and updated (svc_02_add_placeholder.py, svc_05_atualizar_placeholders.py).
+- svc_08_atualizar_itens_tarefas.py rebuilds QListWidgetItem texts using locale, shows tooltips with Date/Time and preserves metadata in Qt.UserRole.
+- Hour group headers (group_header_role) inserted/cleaned automatically for lists with time-marked tasks.
+
+8) Robustness, logging and exception handling
+- Consistent use of LogManager for logging (debug/error) with exc_info at critical points.
+- Broad try/except protections in event handlers, workers, I/O and module integrations to avoid crashes.
+- Methods use blockSignals and validations to prevent repaint storms and side effects during list updates.
+
+Files changed / introduced (main)
+- source/utils/EventBus.py (new: singleton + queuing)
+- source/modules/mod_06_eisenhower.py (integration, embedded UI, save worker)
+- source/modules/eisenhower/services/svc_01_initUI.py (UI, DragDropTaskList, CustomTimeEdit, palette sync)
+- source/modules/eisenhower/services/svc_02_add_placeholder.py
+- source/modules/eisenhower/services/svc_04_atualizar_textos.py
+- source/modules/eisenhower/services/svc_05_atualizar_placeholders.py
+- source/modules/eisenhower/services/svc_08_atualizar_itens_tarefas.py
+- source/modules/tempo/tmp_01_Tarefa.py
+- source/modules/tempo/tmp_02_PomodoroTimer.py
+- source/modules/tempo/tmp_03_GerenciadorTarefas.py
+- source/modules/tempo/tmp_04_GerenciadorTempo.py
+- source/modules/mod_07_exibir_public.py (About/Manual improvements: runtime translations, manual rendering)
+
+How to test (quick steps)
+1. Open the Eisenhower Matrix:
+   - Add tasks with and without date/time; verify hourly grouping and correct calendar display.
+   - Verify placeholders appear/update when lists become empty.
+2. Test integration with Time Management:
+   - Enable integration in one module; add a task and confirm it arrives on the other side via EventBus (no duplicates).
+3. Test Task Manager (Kanban):
+   - Add tasks, drag between columns; confirm persistence and status updates.
+   - Use counter reset across the three scopes.
+4. Test Pomodoro:
+   - Run a short cycle; confirm the alarm plays immediately and repeats until the dialog is closed; pomodoro counts increment on Doing tasks.
+5. Change theme and language:
+   - Confirm lists, combos and viewers update palette and that date/time formats follow the locale.
+6. Check logs:
+   - Inspect logs for errors (persistence, worker, integration) for traceability.
+
+Compatibility notes and dependencies
+- PySide6 (Qt for Python) with QtMultimedia support for alarm playback.
+- Local persistence in %LOCALAPPDATA% via CaminhoPersistenteUtils.
+- Fallbacks implemented for environments missing certain backends (e.g., QWebEngine, non-WAV audio formats for duration detection).
+
+Final notes
+- Changes prioritize reliable integration between modules, UI responsiveness (I/O in threads), and robustness across themes/languages.
+- Edge-case issues (lists with incomplete hour extraction, unsupported audio files) include fallbacks and logging for diagnosis.
+- Recommend integrated functional tests (Eisenhower ↔ Time ↔ Pomodoro flows) and log review after long runs.
+
+_________________________________________________
+
+RELEASE NOTES — Lúmen
 Version: 2026.1.11.0
 Date: January 11, 2026
 Author: Fernando Nillsson Cidade

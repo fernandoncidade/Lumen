@@ -1,6 +1,6 @@
 from PySide6.QtGui import QIcon, QPalette
 from PySide6.QtCore import Qt, QCoreApplication, QDate, QLocale, QTime, QObject, QEvent
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QListWidget, QComboBox, QDateEdit, QCheckBox, QTimeEdit
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QListWidget, QComboBox, QDateEdit, QCheckBox, QTimeEdit, QFrame
 from source.utils.IconUtils import get_icon_path
 from source.utils.LogManager import LogManager
 logger = LogManager.get_logger()
@@ -161,15 +161,27 @@ class DragDropTaskList(QListWidget):
 
 def init_ui(app):
     app.main_layout = QVBoxLayout()
-    input_layout = QHBoxLayout()
+    input_layout_row1 = QHBoxLayout()
+    input_layout_row2 = QHBoxLayout()
+
+    input_layout_row2.setAlignment(Qt.AlignLeft)
 
     app.task_input = QLineEdit(app)
     app.task_input.setPlaceholderText(get_text("Adicione uma tarefa..."))
-    input_layout.addWidget(app.task_input)
+
+    try:
+        fm = app.task_input.fontMetrics()
+        target_h = int(fm.height() * 1) + 10
+        app.task_input.setMinimumHeight(max(24, target_h))
+
+    except Exception:
+        app.task_input.setMinimumHeight(24)
+
+    input_layout_row1.addWidget(app.task_input)
 
     app.date_checkbox = QCheckBox(get_text("Vincular data"))
     app.date_checkbox.setChecked(True)
-    input_layout.addWidget(app.date_checkbox)
+    input_layout_row2.addWidget(app.date_checkbox)
 
     app.date_input = QDateEdit(app)
     app.date_input.setCalendarPopup(True)
@@ -191,6 +203,7 @@ def init_ui(app):
             locale = QLocale.system()
 
         app.date_input.setLocale(locale)
+
         try:
             fmt = locale.dateFormat(QLocale.ShortFormat)
 
@@ -216,16 +229,16 @@ def init_ui(app):
         except Exception as e:
             logger.error(f"Erro ao conectar sinal de idioma_alterado para data: {e}", exc_info=True)
 
-    input_layout.addWidget(app.date_input)
+    input_layout_row2.addWidget(app.date_input)
 
     app.time_checkbox = QCheckBox(get_text("Vincular horário"))
     app.time_checkbox.setChecked(True)
-    input_layout.addWidget(app.time_checkbox)
+    input_layout_row2.addWidget(app.time_checkbox)
 
     app.time_input = CustomTimeEdit(app)
     app.time_input.setDisplayFormat("HH:mm")
     app.time_input.setEnabled(True)
-    input_layout.addWidget(app.time_input)
+    input_layout_row2.addWidget(app.time_input)
 
     def _apply_locale_to_time_input():
         try:
@@ -267,12 +280,12 @@ def init_ui(app):
 
     app.quadrant_selector = QComboBox(app)
     app.quadrant_selector.addItems([
-        get_text("Importante e Urgente"),
-        get_text("Importante, mas Não Urgente"),
-        get_text("Não Importante, mas Urgente"),
-        get_text("Não Importante e Não Urgente")
+        get_text("🔴 Importante e Urgente"),
+        get_text("🟠 Importante, mas Não Urgente"),
+        get_text("🟡 Não Importante, mas Urgente"),
+        get_text("🟢 Não Importante e Não Urgente")
     ])
-    input_layout.addWidget(app.quadrant_selector)
+    input_layout_row2.addWidget(app.quadrant_selector)
 
     app.add_button = QPushButton(get_text("Adicionar Tarefa"))
     add_icon_path = get_icon_path("organizador.png")
@@ -280,7 +293,7 @@ def init_ui(app):
         app.add_button.setIcon(QIcon(add_icon_path))
 
     app.add_button.clicked.connect(app.add_task)
-    input_layout.addWidget(app.add_button)
+    input_layout_row1.addWidget(app.add_button)
 
     app.calendar_button = QPushButton(get_text("Calendário"))
     add_icon_path = get_icon_path("calendar.png")
@@ -288,14 +301,48 @@ def init_ui(app):
         app.calendar_button.setIcon(QIcon(add_icon_path))
 
     app.calendar_button.clicked.connect(app.open_calendar)
-    input_layout.addWidget(app.calendar_button)
+    input_layout_row1.addWidget(app.calendar_button)
 
-    app.main_layout.addLayout(input_layout)
+    def _update_integrate_time_button_text() -> None:
+        try:
+            if not hasattr(app, "integrate_time_button") or not app.integrate_time_button:
+                return
+
+            if app.integrate_time_button.isChecked():
+                app.integrate_time_button.setText(get_text("⏱️ Gestão de Tempo Conectado"))
+
+            else:
+                app.integrate_time_button.setText(get_text("⏱️ Gestão de Tempo Desconectado"))
+
+        except Exception:
+            pass
+
+    app._update_integrate_time_button_text = _update_integrate_time_button_text
+
+    app.integrate_time_button = QPushButton(get_text("⏱️ Gestão de Tempo Desconectado"))
+    app.integrate_time_button.setCheckable(True)
+    app.integrate_time_button.setChecked(False)
+
+    try:
+        app.integrate_time_button.toggled.connect(lambda _: _update_integrate_time_button_text())
+
+    except Exception:
+        pass
+
+    input_layout_row1.addWidget(app.integrate_time_button)
+
+    app.main_layout.addLayout(input_layout_row1)
+    app.main_layout.addLayout(input_layout_row2)
+
+    separator = QFrame()
+    separator.setFrameShape(QFrame.HLine)
+    separator.setFrameShadow(QFrame.Sunken)
+    app.main_layout.addWidget(separator)
 
     quadrant_layout = QHBoxLayout()
 
     app.quadrant1_layout = QVBoxLayout()
-    app.quadrant1_label = QLabel(get_text("Importante e Urgente"))
+    app.quadrant1_label = QLabel(get_text("🔴 Importante e Urgente"))
     app.quadrant1_list = DragDropTaskList(app, is_completed_list=False)
     app.add_placeholder(app.quadrant1_list, get_text("1º Quadrante"))
     app.quadrant1_completed_label = QLabel(get_text("Concluídas"))
@@ -307,7 +354,7 @@ def init_ui(app):
     app.quadrant1_layout.addWidget(app.quadrant1_completed_list)
 
     app.quadrant2_layout = QVBoxLayout()
-    app.quadrant2_label = QLabel(get_text("Importante, mas Não Urgente"))
+    app.quadrant2_label = QLabel(get_text("🟠 Importante, mas Não Urgente"))
     app.quadrant2_list = DragDropTaskList(app, is_completed_list=False)
     app.add_placeholder(app.quadrant2_list, get_text("2º Quadrante"))
     app.quadrant2_completed_label = QLabel(get_text("Concluídas"))
@@ -319,7 +366,7 @@ def init_ui(app):
     app.quadrant2_layout.addWidget(app.quadrant2_completed_list)
 
     app.quadrant3_layout = QVBoxLayout()
-    app.quadrant3_label = QLabel(get_text("Não Importante, mas Urgente"))
+    app.quadrant3_label = QLabel(get_text("🟡 Não Importante, mas Urgente"))
     app.quadrant3_list = DragDropTaskList(app, is_completed_list=False)
     app.add_placeholder(app.quadrant3_list, get_text("3º Quadrante"))
     app.quadrant3_completed_label = QLabel(get_text("Concluídas"))
@@ -331,7 +378,7 @@ def init_ui(app):
     app.quadrant3_layout.addWidget(app.quadrant3_completed_list)
 
     app.quadrant4_layout = QVBoxLayout()
-    app.quadrant4_label = QLabel(get_text("Não Importante e Não Urgente"))
+    app.quadrant4_label = QLabel(get_text("🟢 Não Importante e Não Urgente"))
     app.quadrant4_list = DragDropTaskList(app, is_completed_list=False)
     app.add_placeholder(app.quadrant4_list, get_text("4º Quadrante"))
     app.quadrant4_completed_label = QLabel(get_text("Concluídas"))

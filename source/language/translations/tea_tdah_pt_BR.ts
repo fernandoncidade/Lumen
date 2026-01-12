@@ -1115,23 +1115,53 @@ Isso pode levar alguns minutos.</translation>
     </message>
 
     <message>
-        <source>Importante e Urgente</source>
-        <translation>Importante e Urgente</translation>
+        <source>🔴 Importante e Urgente</source>
+        <translation>🔴 Importante e Urgente</translation>
     </message>
 
     <message>
-        <source>Importante, mas Não Urgente</source>
-        <translation>Importante, mas Não Urgente</translation>
+        <source>🟠 Importante, mas Não Urgente</source>
+        <translation>🟠 Importante, mas Não Urgente</translation>
     </message>
 
     <message>
-        <source>Não Importante, mas Urgente</source>
-        <translation>Não Importante, mas Urgente</translation>
+        <source>🟡 Não Importante, mas Urgente</source>
+        <translation>🟡 Não Importante, mas Urgente</translation>
     </message>
 
     <message>
-        <source>Não Importante e Não Urgente</source>
-        <translation>Não Importante e Não Urgente</translation>
+        <source>🟢 Não Importante e Não Urgente</source>
+        <translation>🟢 Não Importante e Não Urgente</translation>
+    </message>
+
+    <message>
+        <source>🗂️ Matriz Eisenhower Conectada</source>
+        <translation>🗂️ Matriz Eisenhower Conectada</translation>
+    </message>
+
+    <message>
+        <source>🗂️ Matriz Eisenhower Desconectada</source>
+        <translation>🗂️ Matriz Eisenhower Desconectada</translation>
+    </message>
+
+    <message>
+        <source>Quando ativado, tarefas adicionadas aqui também são enviadas para a Matriz de Eisenhower.</source>
+        <translation>Quando ativado, tarefas adicionadas aqui também são enviadas para a Matriz de Eisenhower.</translation>
+    </message>
+
+    <message>
+        <source>⏱️ Gestão de Tempo Conectado</source>
+        <translation>⏱️ Gestão de Tempo Conectado</translation>
+    </message>
+
+    <message>
+        <source>⏱️ Gestão de Tempo Desconectado</source>
+        <translation>⏱️ Gestão de Tempo Desconectado</translation>
+    </message>
+
+    <message>
+        <source>Quando ativado, tarefas adicionadas na Matriz também são enviadas para o quadro 📋 A Fazer (Gestão de Tempo).</source>
+        <translation>Quando ativado, tarefas adicionadas na Matriz também são enviadas para o quadro 📋 A Fazer (Gestão de Tempo).</translation>
     </message>
 
     <message>

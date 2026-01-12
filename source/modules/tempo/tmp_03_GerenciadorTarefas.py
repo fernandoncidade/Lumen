@@ -19,6 +19,7 @@ class _KanbanListWidget(QListWidget):
 
 class GerenciadorTarefas(QWidget):
     listas_atualizadas = Signal()
+    tarefa_adicionada = Signal(dict)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -125,11 +126,12 @@ class GerenciadorTarefas(QWidget):
 
             self.combo_prioridade.clear()
             self.combo_prioridade.addItems([
-                QCoreApplication.translate("App", "🔴 Alta"),
-                QCoreApplication.translate("App", "🟡 Média"),
-                QCoreApplication.translate("App", "🟢 Baixa")
+                QCoreApplication.translate("App", "🔴 Importante e Urgente"),
+                QCoreApplication.translate("App", "🟠 Importante, mas Não Urgente"),
+                QCoreApplication.translate("App", "🟡 Não Importante, mas Urgente"),
+                QCoreApplication.translate("App", "🟢 Não Importante e Não Urgente")
             ])
-            self.combo_prioridade.setCurrentText(QCoreApplication.translate("App", "🟡 Média"))
+            self.combo_prioridade.setCurrentText(QCoreApplication.translate("App", "🔴 Importante e Urgente"))
             self._ajustar_largura_combo(self.combo_prioridade)
 
             self.btn_adicionar.setText(QCoreApplication.translate("App", "➕ Adicionar"))
@@ -227,7 +229,13 @@ class GerenciadorTarefas(QWidget):
                         continue
 
                     tid = it.data(Qt.UserRole)
-                    titulo = it.text().split('\n')[0].replace('🔴 ', '').replace('🟡 ', '').replace('🟢 ', '')
+                    titulo = (
+                        it.text().split('\n')[0]
+                        .replace('🔴 ', '')
+                        .replace('🟠 ', '')
+                        .replace('🟡 ', '')
+                        .replace('🟢 ', '')
+                    )
 
                     for t in self.tarefas:
                         if (tid and getattr(t, 'id', None) == tid) or (not tid and t.titulo == titulo):
@@ -257,18 +265,62 @@ class GerenciadorTarefas(QWidget):
                 return
 
             idx = self.combo_prioridade.currentIndex()
-            prioridades = ["Alta", "Média", "Baixa"]
-            prioridade = prioridades[idx] if 0 <= idx < len(prioridades) else "Média"
+            prioridades = [
+                "Importante e Urgente",
+                "Importante, mas Não Urgente",
+                "Não Importante, mas Urgente",
+                "Não Importante e Não Urgente",
+            ]
+            prioridade = prioridades[idx] if 0 <= idx < len(prioridades) else "Importante e Urgente"
 
-            tarefa = Tarefa(titulo, prioridade=prioridade)
-            self.tarefas.append(tarefa)
-
-            self.input_tarefa.clear()
-            self.salvar_tarefas()
-            self.atualizar_listas()
+            tarefa = self._adicionar_tarefa_interna(titulo=titulo, prioridade=prioridade, status="Todo", emitir_sinal=True)
+            if tarefa is not None:
+                self.input_tarefa.clear()
 
         except Exception as e:
             self.logger.error(f"Erro ao adicionar tarefa: {str(e)}", exc_info=True)
+
+    def _adicionar_tarefa_interna(self, titulo: str, prioridade: str, status: str = "Todo", emitir_sinal: bool = True):
+        try:
+            tarefa = Tarefa(titulo, prioridade=prioridade, status=status)
+            self.tarefas.append(tarefa)
+            self.salvar_tarefas()
+            self.atualizar_listas()
+
+            if emitir_sinal:
+                try:
+                    self.tarefa_adicionada.emit({
+                        "id": getattr(tarefa, "id", None),
+                        "titulo": getattr(tarefa, "titulo", titulo),
+                        "prioridade": getattr(tarefa, "prioridade", prioridade),
+                        "status": getattr(tarefa, "status", status),
+                    })
+
+                except Exception:
+                    pass
+
+            return tarefa
+
+        except Exception as e:
+            self.logger.error(f"Erro ao adicionar tarefa internamente: {str(e)}", exc_info=True)
+            return None
+
+    def adicionar_tarefa_externa(self, titulo: str, prioridade: str = "Importante e Urgente") -> None:
+        try:
+            titulo = (titulo or "").strip()
+            if not titulo:
+                return
+
+            prioridade_norm = Tarefa.normalizar_prioridade(prioridade)
+
+            for t in getattr(self, 'tarefas', []):
+                if getattr(t, 'titulo', None) == titulo and Tarefa.normalizar_prioridade(getattr(t, 'prioridade', '')) == prioridade_norm:
+                    return
+
+            self._adicionar_tarefa_interna(titulo=titulo, prioridade=prioridade_norm, status="Todo", emitir_sinal=False)
+
+        except Exception as e:
+            self.logger.error(f"Erro ao adicionar tarefa externa: {str(e)}", exc_info=True)
 
     def mover_tarefa(self, item, status_atual):
         try:
@@ -280,7 +332,13 @@ class GerenciadorTarefas(QWidget):
                     break
 
             if not alvo:
-                texto = item.text().split('\n')[0].replace('🔴 ', '').replace('🟡 ', '').replace('🟢 ', '')
+                texto = (
+                    item.text().split('\n')[0]
+                    .replace('🔴 ', '')
+                    .replace('🟠 ', '')
+                    .replace('🟡 ', '')
+                    .replace('🟢 ', '')
+                )
                 for tarefa in self.tarefas:
                     if tarefa.titulo == texto:
                         alvo = tarefa
@@ -311,8 +369,13 @@ class GerenciadorTarefas(QWidget):
             self.col_done.lista.clear()
 
             for tarefa in self.tarefas:
-                prioridade_norm = Tarefa.normalizar_prioridade(getattr(tarefa, 'prioridade', 'Média'))
-                emoji = {"Alta": "🔴", "Média": "🟡", "Baixa": "🟢"}.get(prioridade_norm, "🟡")
+                prioridade_norm = Tarefa.normalizar_prioridade(getattr(tarefa, 'prioridade', 'Importante e Urgente'))
+                emoji = {
+                    "Importante e Urgente": "🔴",
+                    "Importante, mas Não Urgente": "🟠",
+                    "Não Importante, mas Urgente": "🟡",
+                    "Não Importante e Não Urgente": "🟢",
+                }.get(prioridade_norm, "🔴")
                 pomodoros_texto = QCoreApplication.translate("App", "🍅 {n} pomodoros").format(n=tarefa.pomodoros_completados)
                 texto = f"{emoji} {tarefa.titulo}\n{pomodoros_texto}"
 
@@ -391,7 +454,13 @@ class GerenciadorTarefas(QWidget):
                 self.tarefas = [t for t in self.tarefas if getattr(t, 'id', None) != tarefa_id]
 
             else:
-                titulo = item.text().split('\n')[0].replace('🔴 ', '').replace('🟡 ', '').replace('🟢 ', '')
+                titulo = (
+                    item.text().split('\n')[0]
+                    .replace('🔴 ', '')
+                    .replace('🟠 ', '')
+                    .replace('🟡 ', '')
+                    .replace('🟢 ', '')
+                )
                 self.tarefas = [t for t in self.tarefas if t.titulo != titulo]
 
             self.salvar_tarefas()
@@ -414,7 +483,13 @@ class GerenciadorTarefas(QWidget):
                             ids_para_remover.add(tid)
 
                         else:
-                            titulo = it.text().split('\n')[0].replace('🔴 ', '').replace('🟡 ', '').replace('🟢 ', '')
+                            titulo = (
+                                it.text().split('\n')[0]
+                                .replace('🔴 ', '')
+                                .replace('🟠 ', '')
+                                .replace('🟡 ', '')
+                                .replace('🟢 ', '')
+                            )
                             titulos_para_remover.add(titulo)
 
             if not ids_para_remover and not titulos_para_remover:
@@ -560,7 +635,13 @@ class GerenciadorTarefas(QWidget):
                     it = lista.item(i)
                     if it.checkState() == Qt.Checked:
                         tid = it.data(Qt.UserRole)
-                        titulo = it.text().split('\n')[0].replace('🔴 ', '').replace('🟡 ', '').replace('🟢 ', '')
+                        titulo = (
+                            it.text().split('\n')[0]
+                            .replace('🔴 ', '')
+                            .replace('🟠 ', '')
+                            .replace('🟡 ', '')
+                            .replace('🟢 ', '')
+                        )
                         selecionados.append((tid, titulo))
 
             if not selecionados:
@@ -608,7 +689,13 @@ class GerenciadorTarefas(QWidget):
                 return
 
             tarefa_id = item.data(Qt.UserRole)
-            titulo_item = item.text().split('\n')[0].replace('🔴 ', '').replace('🟡 ', '').replace('🟢 ', '')
+            titulo_item = (
+                item.text().split('\n')[0]
+                .replace('🔴 ', '')
+                .replace('🟠 ', '')
+                .replace('🟡 ', '')
+                .replace('🟢 ', '')
+            )
 
             alvo = None
             for t in self.tarefas:

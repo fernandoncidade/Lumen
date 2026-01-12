@@ -1,5 +1,6 @@
 from PySide6.QtCore import QCoreApplication
 from source.utils.LogManager import LogManager
+from source.modules.eisenhower.services.svc_08_atualizar_itens_tarefas import atualizar_itens_tarefas
 logger = LogManager.get_logger()
 
 def get_text(text):
@@ -11,18 +12,33 @@ def atualizar_textos(app):
         app.task_input.setPlaceholderText(get_text("Adicione uma tarefa..."))
         app.add_button.setText(get_text("Adicionar Tarefa"))
         app.calendar_button.setText(get_text("Calendário"))
+        if hasattr(app, "integrate_time_button") and app.integrate_time_button:
+            try:
+                if hasattr(app, "_update_integrate_time_button_text"):
+                    app._update_integrate_time_button_text()
+
+                else:
+                    if app.integrate_time_button.isChecked():
+                        app.integrate_time_button.setText(get_text("⏱️ Gestão de Tempo Conectado"))
+
+                    else:
+                        app.integrate_time_button.setText(get_text("⏱️ Gestão de Tempo Desconectado"))
+
+            except Exception:
+                pass
+
         app.date_checkbox.setText(get_text("Vincular data"))
         app.quadrant_selector.clear()
         app.quadrant_selector.addItems([
-            get_text("Importante e Urgente"),
-            get_text("Importante, mas Não Urgente"),
-            get_text("Não Importante, mas Urgente"),
-            get_text("Não Importante e Não Urgente")
+            get_text("🔴 Importante e Urgente"),
+            get_text("🟠 Importante, mas Não Urgente"),
+            get_text("🟡 Não Importante, mas Urgente"),
+            get_text("🟢 Não Importante e Não Urgente")
         ])
-        app.quadrant1_label.setText(get_text("Importante e Urgente"))
-        app.quadrant2_label.setText(get_text("Importante, mas Não Urgente"))
-        app.quadrant3_label.setText(get_text("Não Importante, mas Urgente"))
-        app.quadrant4_label.setText(get_text("Não Importante e Não Urgente"))
+        app.quadrant1_label.setText(get_text("🔴 Importante e Urgente"))
+        app.quadrant2_label.setText(get_text("🟠 Importante, mas Não Urgente"))
+        app.quadrant3_label.setText(get_text("🟡 Não Importante, mas Urgente"))
+        app.quadrant4_label.setText(get_text("🟢 Não Importante e Não Urgente"))
 
         app.quadrant1_completed_label.setText(get_text("Concluídas"))
         app.quadrant2_completed_label.setText(get_text("Concluídas"))
@@ -53,6 +69,7 @@ def atualizar_textos(app):
         if app.quadrant4_completed_list.count() == 0:
             app.add_placeholder(app.quadrant4_completed_list, get_text("Nenhuma Tarefa Concluída"))
 
+        atualizar_itens_tarefas(app)
         app.atualizar_placeholders()
 
     except Exception as e:
