@@ -1,4 +1,113 @@
 NOTAS DE LANÇAMENTO — Lúmen
+Versão: 2026.1.13.0
+Data: 13 de janeiro de 2026
+Autor: Fernando Nillsson Cidade
+
+Resumo executivo
+- Melhorias de robustez, usabilidade e integração nos módulos Método Feynman, Gerenciador de Tarefas / Gerenciador de Tempo e Leitor Acessível (Texto/PDF). Foco em consistência de paleta/tema, sincronização de eventos (pomodoro ↔ tarefas), mecanismo de busca (Texto/PDF) com opções avançadas e proteção extensiva por logging/try-except.
+
+Mudanças e melhorias detalhadas
+
+1) Método Feynman (source/modules/feynman/fey_02_setup_ui.py, fey_03_atualizar_traducoes.py)
+- UI consolidada com layout em splitter (lista de conceitos ↔ editor) e controles CRUD padronizados (btn_novo, btn_deletar, btn_salvar).
+- Substituição/uso consistente de QTextEdit para campos de entrada (título, explicação, lacunas, revisão) para permitir edição rica.
+- Integração com Gerenciador de Botões (gerenciador_botoes) para criação e tradução dinâmica do botão salvar.
+- Sincronização de paleta/tema:
+  - Implementado _apply_window_as_base e filtro de evento _PaletteThemeSyncFilter para reaplicar cores Base/AlternateBase em widgets e viewports quando a paleta do aplicativo muda.
+  - Proteções envolvendo verificação de QApplication e blocos try/except para evitar falhas em ambientes limitados.
+- Traduções dinâmicas:
+  - atualizar_traducoes centraliza todos os rótulos, placeholders e conteúdo instrucional com QCoreApplication.translate.
+  - Preservação do índice selecionado em combo_dominio ao recarregar itens traduzidos.
+- Robustez:
+  - Try/except em pontos críticos com LogManager para registrar falhas sem quebrar a UI.
+  - Chamadas iniciais a atualizar_traducoes() e atualizar_lista() no setup para estado consistente na inicialização.
+
+2) Gerenciador de Tarefas (Kanban) (source/modules/tempo/tmp_03_GerenciadorTarefas.py)
+- Drag & Drop e sincronização:
+  - Nova subclasse _KanbanListWidget que emite tarefas_soltadas após drop para processamento controlado.
+  - Conexão ao sinal rowsMoved do model para detectar rearranjos internos e chamar _on_rows_moved.
+  - Implementado _sincronizar_status_pos_movimento que reconstrói mapeamento entre QListWidgets e status ("Todo", "Doing", "Done") e atualiza objetos Tarefa consultando Qt.UserRole (id) ou texto-base.
+  - Evita inconsistências quando o Qt tenta aplicar MoveAction automaticamente — a remoção/atualização agora é controlada pela aplicação.
+- UX e operações em lote:
+  - Itens configurados com Qt.ItemIsUserCheckable para marcação e seleção em operações em lote (mover/remover).
+  - Ações para mover/remover tarefas marcadas, mover por item via diálogo e reset de contadores com escopos (tarefa/coluna/global).
+  - Ajuste dinâmico de largura do combo de prioridade para evitar truncamentos.
+- Persistência e compatibilidade:
+  - Salvar/carregar em tarefas.json no diretório obtido por obter_caminho_persistente().
+  - Serialização robusta via to_dict/from_dict de Tarefa (tratamento de exceções durante I/O).
+- Polimento visual:
+  - Aplicação de máscaras arredondadas (rounded mask) para colunas e viewports e sincronização de paleta para listas/combos.
+- Observabilidade:
+  - Logging amplo via LogManager em pontos críticos (drop, rowsMoved, salvar, carregar, mover).
+
+3) Gerenciador de Tempo / Pomodoro (source/modules/tempo/tmp_04_GerenciadorTempo.py)
+- Arquitetura de worker para eventos de tempo:
+  - _TimeWorker executando em QThread; recebe sinal do PomodoroTimer e reemite pomodoro_completed para GUI.
+  - Conexões seguras e parada/limpeza do thread/worker no cleanup e __del__.
+- Integração com GerenciadorTarefas:
+  - Ao completar ciclo do tipo "foco", registrar_pomodoro incrementa pomodoros_completados nas tarefas com status "Doing", persiste e atualiza listas/visões.
+- Integração com Matriz Eisenhower via EventBus:
+  - Envio de tarefas adicionadas localmente (quando integração ativada) com integration_id e normalização de prioridade.
+  - Recepção de tarefas originadas em Eisenhower, prevenção de duplicatas por integration_id e adição via adicionar_tarefa_externa.
+- UI e tema:
+  - Coluna "Em Progresso" (col_doing_timer_list) atualizada via signal listas_atualizadas do GerenciadorTarefas.
+  - Botão de toggle de integração com rótulos dinâmicos e ToolTip traduzido.
+  - Aplicação de tema dinâmico na lista e sincronização via eventFilter.
+
+4) Leitor Acessível — Texto / PDF (source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py, lta_22_pdf_toolbar.py, lta_27_pdf_findbar.py, lta_29_text_findbar.py)
+- FindBars (Texto e PDF):
+  - Implementados TextFindBar e PDFFindBar com opções: diferenciar maiúsculas/minúsculas (Aa), somente palavra inteira, destacar tudo.
+  - Shortcuts: F3/Shift+F3 para navegar ocorrências, Esc para fechar, Ctrl+F como ApplicationShortcut para alternância por aba (Texto ↔ PDF).
+  - Sincronização de paleta via filtros de evento para manter contraste e integração visual em temas claros/escuros.
+  - Hooks para owner._text_find_apply / _pdf_find_apply, owner._text_find_next/_prev e highlight toggles — design desacoplado para reutilização pela lógica de busca do owner.
+- Toolbar PDF:
+  - Navegação de páginas (primeira/anterior/próxima/última), spinbox de página, label de total de páginas; combo de zoom (editable) com valores percentuais e parsing robusto.
+  - Fit width / Fit page, zoom in/out com limites (0.25–5.0) e preservação de estado _pdf_zoom_special.
+  - Sincronização de paleta para spinbox/combo e suas views; instalação de filtro para reagir a mudanças de tema.
+  - Integração preguiçosa com PDFMouseHandler (criado quando habilitado) para seleção/copiar e modos mão/selecao.
+  - Habilitação/atualização da toolbar somente após documento carregado.
+- Setup do Leitor:
+  - Estrutura de abas Texto / PDF com TextFindBar e PDFFindBar integradas.
+  - Controles de playback (carregar, play, pause, stop) e sliders de velocidade/volume com labels reativos.
+  - Configuração de fonte via FontManager com fallback seguro e aplicação ao QTextEdit.
+  - Leitura assistida: botão toggle com estilos, combo de modo (Palavras/Frases/Parágrafos) e placeholders/dicas traduzidas.
+  - Aplicação consistente de palette para QTextEdit, combos e spinboxes; instalação de eventFilter para updates dinâmicos de tema.
+  - Shortcuts adicionais: Ctrl+C para copiar seleção de PDF (delegado ao PDFMouseHandler) e Find toggle (Ctrl+F) com contexto de aba.
+- Robustez:
+  - Múltiplos blocos try/except com logging para evitar crashes quando backends (PDF, mouse handler) não estiverem disponíveis.
+  - Uso de setFrame/autoFillBackground e ajustes de altura mínima para inputs.
+
+Como testar (passos rápidos)
+1. Método Feynman:
+   - Abrir aba Método Feynman → criar/editar conceito → verificar placeholders, salvar e mudanças de idioma (texts traduzidos) e mudança de tema (backgrounds atualizados).
+2. Gerenciador de Tarefas + Pomodoro:
+   - Criar várias tarefas; arrastar entre colunas; confirmar que apenas tarefa movida é atualizada.
+   - Marcar tarefas e usar mover/remover em lote; usar resetar contagem nos três escopos.
+   - Iniciar Pomodoro (ciclo "foco") com tarefa em "Doing" → confirmar incremento de pomodoros_completados e persistência.
+3. Integração com Eisenhower:
+   - Ativar btn_eisenhower_integrado → adicionar tarefa no GerenciadorTempo → verificar envio via EventBus (integration_id gerado).
+   - Enviar tarefa originada em Eisenhower → confirmar chegada e prevenção de duplicatas.
+4. Leitor Texto/PDF:
+   - Texto: abrir/colar texto → Ctrl+F → testar busca com Aa/Palavra/Destacar → navegar (F3/Shift+F3).
+   - PDF: carregar PDF compatível → toolbar habilitada → navegar páginas/zoom/fit → usar Ctrl+C para copiar seleção (quando handler disponível).
+   - Alternar tema do app → confirmar paleta aplicada nos campos e barras de busca.
+
+Arquivos alterados / adicionados (principais)
+- source/modules/feynman/fey_02_setup_ui.py
+- source/modules/feynman/fey_03_atualizar_traducoes.py
+- source/modules/tempo/tmp_03_GerenciadorTarefas.py
+- source/modules/tempo/tmp_04_GerenciadorTempo.py
+- source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py
+- source/modules/leitor/leitor_acessivel/lta_22_pdf_toolbar.py
+- source/modules/leitor/leitor_acessivel/lta_27_pdf_findbar.py
+- source/modules/leitor/leitor_acessivel/lta_29_text_findbar.py
+
+Observações finais
+- As alterações priorizam confiabilidade e experiência: sincronização de paleta/tema em runtime, sinais seguros entre threads/modules, melhores controles de busca e navegação no leitor, e um fluxo de tarefas/pomodoro consistente. Logs detalhados (LogManager) permitem diagnóstico sem interromper o uso do aplicativo.
+
+_________________________________________________
+
+NOTAS DE LANÇAMENTO — Lúmen
 Versão: 2026.1.12.0
 Data: 12 de janeiro de 2026
 Autor: Fernando Nillsson Cidade

@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QLabel, QSpinBox, QComboBox
 from PySide6.QtCore import QCoreApplication
+from PySide6.QtGui import QPalette
 from source.utils.LogManager import LogManager
 logger = LogManager.get_logger()
 
@@ -56,6 +57,91 @@ def setup_pdf_toolbar(self):
 
         if self.combo_zoom.lineEdit():
             self.combo_zoom.lineEdit().returnPressed.connect(lambda: _pdf_set_zoom_value(self, self.combo_zoom.currentText()))
+
+        from PySide6.QtWidgets import QApplication
+        from PySide6.QtCore import QObject, QEvent
+
+        def _sync_pdf_toolbar_widgets_palette():
+            try:
+                app = QApplication.instance()
+                if app is None:
+                    return
+
+                window_color = app.palette().color(QPalette.Window)
+                base_color = app.palette().color(QPalette.Base)
+
+                try:
+                    is_dark = int(window_color.lightness()) < 128
+
+                except Exception:
+                    is_dark = False
+
+                if is_dark:
+                    bg_color = base_color.darker(120)
+
+                else:
+                    bg_color = window_color.darker(103)
+
+                text_color = app.palette().color(QPalette.Text)
+                button_text_color = app.palette().color(QPalette.ButtonText)
+                highlight_color = app.palette().color(QPalette.Highlight)
+                highlighted_text_color = app.palette().color(QPalette.HighlightedText)
+
+                if hasattr(self, 'spin_page') and self.spin_page is not None:
+                    pal = self.spin_page.palette()
+                    pal.setColor(QPalette.Base, bg_color)
+                    pal.setColor(QPalette.Button, bg_color)
+                    self.spin_page.setPalette(pal)
+
+                if hasattr(self, 'combo_zoom') and self.combo_zoom is not None:
+                    pal = self.combo_zoom.palette()
+                    roles = (QPalette.Base, QPalette.Button, QPalette.Window,)
+                    for role in roles:
+                        pal.setColor(role, bg_color)
+
+                    pal.setColor(QPalette.Text, text_color)
+                    pal.setColor(QPalette.ButtonText, button_text_color)
+                    pal.setColor(QPalette.Highlight, highlight_color)
+                    pal.setColor(QPalette.HighlightedText, highlighted_text_color)
+
+                    self.combo_zoom.setPalette(pal)
+
+                    le = self.combo_zoom.lineEdit()
+                    if le is not None:
+                        le.setPalette(pal)
+
+                    view = self.combo_zoom.view()
+                    if view is not None:
+                        view.setPalette(pal)
+
+            except Exception as e:
+                logger.debug(f"Falha ao sincronizar paleta dos widgets PDF: {e}", exc_info=True)
+
+        class _PDFToolbarPaletteSyncFilter(QObject):
+            def __init__(self, owner, sync_func):
+                super().__init__(owner)
+                self._sync_func = sync_func
+
+            def eventFilter(self, obj, event):
+                et = event.type()
+                if et in (QEvent.ApplicationPaletteChange, QEvent.PaletteChange, QEvent.ThemeChange,):
+                    self._sync_func()
+
+                return super().eventFilter(obj, event)
+
+        self.spin_page.setFrame(True)
+        self.combo_zoom.setFrame(True)
+
+        _sync_pdf_toolbar_widgets_palette()
+
+        try:
+            self._pdf_toolbar_palette_sync_filter = _PDFToolbarPaletteSyncFilter(self, _sync_pdf_toolbar_widgets_palette)
+            app = QApplication.instance()
+            if app is not None:
+                app.installEventFilter(self._pdf_toolbar_palette_sync_filter)
+
+        except Exception as e:
+            logger.debug(f"Falha ao instalar filtro de paleta PDF: {e}", exc_info=True)
 
         toolbar.addWidget(self.combo_zoom)
 

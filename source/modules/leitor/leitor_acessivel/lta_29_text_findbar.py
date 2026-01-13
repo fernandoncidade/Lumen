@@ -1,6 +1,6 @@
 from __future__ import annotations
-from PySide6.QtCore import Qt, QCoreApplication
-from PySide6.QtGui import QKeySequence, QShortcut
+from PySide6.QtCore import Qt, QCoreApplication, QEvent, QTimer, QObject
+from PySide6.QtGui import QKeySequence, QShortcut, QPalette, QPainterPath, QRegion
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QLabel, QCheckBox, QApplication
 from source.utils.LogManager import LogManager
 logger = LogManager.get_logger()
@@ -19,8 +19,109 @@ class TextFindBar(QWidget):
         lay.setSpacing(8)
 
         self.edt = QLineEdit()
+        try:
+            self.edt.setFrame(True)
+
+            try:
+                self.edt.clearMask()
+
+            except Exception:
+                rect = self.edt.rect()
+                if not rect.isEmpty():
+                    from PySide6.QtGui import QRegion
+                    self.edt.setMask(QRegion(rect))
+
+            self.edt.setAutoFillBackground(True)
+
+        except Exception:
+            pass
+
         self.edt.returnPressed.connect(self._on_enter_next)
         self.edt.textChanged.connect(lambda _: self._apply_search())
+
+        try:
+            fm = self.edt.fontMetrics()
+            target_h = int(fm.height() * 1)
+            self.edt.setMinimumHeight(max(24, target_h))
+
+        except Exception:
+            self.edt.setMinimumHeight(24)
+
+        try:
+            def _sync_edt_palette():
+                try:
+                    app = QApplication.instance()
+                    if app is None:
+                        return
+
+                    window_color = app.palette().color(QPalette.Window)
+                    base_color = app.palette().color(QPalette.Base)
+
+                    try:
+                        is_dark = int(window_color.lightness()) < 128
+
+                    except Exception:
+                        is_dark = False
+
+                    if is_dark:
+                        bg_color = base_color.darker(120)
+
+                    else:
+                        bg_color = window_color.darker(103)
+
+                    pal = self.edt.palette()
+                    pal.setColor(QPalette.Base, bg_color)
+                    pal.setColor(QPalette.Text, app.palette().color(QPalette.Text))
+                    pal.setColor(QPalette.Highlight, app.palette().color(QPalette.Highlight))
+                    pal.setColor(QPalette.HighlightedText, app.palette().color(QPalette.HighlightedText))
+
+                    try:
+                        pal.setColor(QPalette.PlaceholderText, app.palette().color(QPalette.PlaceholderText))
+
+                    except Exception:
+                        pass
+
+                    self.edt.setPalette(pal)
+
+                except Exception as e:
+                    logger.debug(f"Falha ao sincronizar paleta do campo de busca (Texto): {e}", exc_info=True)
+
+            class _FindBarPaletteSyncFilter(QObject):
+                def __init__(self, owner, sync_func):
+                    super().__init__(owner)
+                    self._sync_func = sync_func
+
+                def eventFilter(self, obj, event):
+                    try:
+                        tipos = (QEvent.ApplicationPaletteChange, QEvent.PaletteChange, QEvent.StyleChange, QEvent.ThemeChange,)
+                        try:
+                            tipos = tipos + (QEvent.ColorSchemeChange,)
+
+                        except AttributeError:
+                            pass
+
+                        if event.type() in tipos:
+                            self._sync_func()
+
+                    except Exception:
+                        pass
+
+                    return super().eventFilter(obj, event)
+
+            _sync_edt_palette()
+
+            try:
+                self._findbar_palette_sync_filter = _FindBarPaletteSyncFilter(self, _sync_edt_palette)
+                app = QApplication.instance()
+                if app is not None:
+                    app.installEventFilter(self._findbar_palette_sync_filter)
+
+            except Exception as e:
+                logger.debug(f"Falha ao instalar filtro de paleta no TextFindBar: {e}", exc_info=True)
+
+        except Exception:
+            pass
+
         lay.addWidget(self.edt, 2)
 
         self.btn_prev = QPushButton("🔼")

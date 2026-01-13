@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QListWidget,
                                QListWidgetItem, QComboBox, QGroupBox, QMessageBox, QMenu, QInputDialog)
 from PySide6.QtCore import Qt, Signal, QCoreApplication, QEvent
-from PySide6.QtGui import QAction, QPalette
+from PySide6.QtGui import QAction, QPalette, QPainterPath, QRegion
 import json
 import os
 from source.utils.LogManager import LogManager
@@ -76,6 +76,15 @@ class GerenciadorTarefas(QWidget):
 
             self.input_tarefa = QLineEdit()
             self.input_tarefa.returnPressed.connect(self.adicionar_tarefa)
+
+            try:
+                fm = self.input_tarefa.fontMetrics()
+                target_h = int(fm.height() * 1) + 10
+                self.input_tarefa.setMinimumHeight(max(24, target_h))
+
+            except Exception:
+                self.input_tarefa.setMinimumHeight(24)
+
             adicionar.addWidget(self.input_tarefa)
 
             self.combo_prioridade = QComboBox()
@@ -120,10 +129,7 @@ class GerenciadorTarefas(QWidget):
 
     def atualizar_traducoes(self):
         try:
-            self.input_tarefa.setPlaceholderText(
-                QCoreApplication.translate("App", "Digite uma nova tarefa... (Ex: 'Estudar Resistência dos Materiais - Cap 3')")
-            )
-
+            self.input_tarefa.setPlaceholderText(QCoreApplication.translate("App", "Digite uma nova tarefa... (Ex: 'Estudar Resistência dos Materiais - Cap 3')"))
             self.combo_prioridade.clear()
             self.combo_prioridade.addItems([
                 QCoreApplication.translate("App", "🔴 Importante e Urgente"),
@@ -178,6 +184,23 @@ class GerenciadorTarefas(QWidget):
 
             grupo.lista = lista
             grupo.status = status
+
+            try:
+                radius = 10
+                grupo._rounded_radius = radius
+                self._update_rounded_mask(grupo, radius)
+
+                try:
+                    self._update_rounded_mask(grupo.lista, max(0, radius - 2))
+                    vp = getattr(grupo.lista, "viewport", None)
+                    if callable(vp):
+                        self._update_rounded_mask(grupo.lista.viewport(), max(0, radius - 2))
+
+                except Exception:
+                    pass
+
+            except Exception:
+                pass
 
             return grupo
 
@@ -857,7 +880,45 @@ class GerenciadorTarefas(QWidget):
             if event.type() in tipos:
                 self._aplicar_tema_dinamico_inputs()
 
+            try:
+                if event.type() == QEvent.Resize:
+                    if hasattr(obj, "_rounded_radius"):
+                        self._update_rounded_mask(obj, getattr(obj, "_rounded_radius", 8))
+
+                    for g in (getattr(self, 'col_todo', None), getattr(self, 'col_doing', None), getattr(self, 'col_done', None)):
+                        if g and hasattr(g, "_rounded_radius"):
+                            self._update_rounded_mask(g, getattr(g, "_rounded_radius", 8))
+
+                            try:
+                                self._update_rounded_mask(g.lista, max(0, g._rounded_radius - 2))
+                                vp = getattr(g.lista, "viewport", None)
+                                if callable(vp):
+                                    self._update_rounded_mask(g.lista.viewport(), max(0, g._rounded_radius - 2))
+
+                            except Exception:
+                                pass
+
+            except Exception:
+                pass
+
         except Exception as e:
             self.logger.error(f"Erro no eventFilter do GerenciadorTarefas: {str(e)}", exc_info=True)
 
         return super().eventFilter(obj, event)
+
+    def _update_rounded_mask(self, widget, radius: int = 8):
+        try:
+            if widget is None:
+                return
+
+            rect = widget.rect()
+            if rect.isEmpty():
+                return
+
+            path = QPainterPath()
+            path.addRoundedRect(rect, radius, radius)
+            region = QRegion(path.toFillPolygon().toPolygon())
+            widget.setMask(region)
+
+        except Exception:
+            pass

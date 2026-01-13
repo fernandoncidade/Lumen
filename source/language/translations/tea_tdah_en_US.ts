@@ -237,28 +237,28 @@
     </message>
 
     <message>
-      <source>Conceito:</source>
-      <translation>Concept:</translation>
+      <source>1️⃣ &lt;b&gt;Conceito:&lt;/b&gt;</source>
+      <translation>1️⃣ &lt;b&gt;Concept:&lt;/b&gt;</translation>
+    </message>
+
+    <message>
+      <source>2️⃣ &lt;b&gt;Explique com Simplicidade&lt;/b&gt; (como para uma criança):</source>
+      <translation>2️⃣ &lt;b&gt;Explain Simply&lt;/b&gt; (as if to a child):</translation>
+    </message>
+
+    <message>
+      <source>3️⃣ &lt;b&gt;Lacunas Identificadas&lt;/b&gt; (o que você não conseguiu explicar bem?):</source>
+      <translation>3️⃣ &lt;b&gt;Identified Gaps&lt;/b&gt; (what you couldn't explain well?):</translation>
+    </message>
+
+    <message>
+      <source>4️⃣ &lt;b&gt;Revisão e Simplificação Final&lt;/b&gt; (depois de estudar as lacunas):</source>
+      <translation>4️⃣ &lt;b&gt;Final Review &amp; Simplification&lt;/b&gt; (after studying the gaps):</translation>
     </message>
 
     <message>
       <source>Ex: Tensão de Cisalhamento</source>
       <translation>Ex: Shear Stress</translation>
-    </message>
-
-    <message>
-      <source>1️⃣ &lt;b&gt;Explique com Simplicidade&lt;/b&gt; (como para uma criança):</source>
-      <translation>1️⃣ &lt;b&gt;Explain Simply&lt;/b&gt; (as if to a child):</translation>
-    </message>
-
-    <message>
-      <source>2️⃣ &lt;b&gt;Lacunas Identificadas&lt;/b&gt; (o que você não conseguiu explicar bem?):</source>
-      <translation>2️⃣ &lt;b&gt;Identified Gaps&lt;/b&gt; (what you couldn't explain well?):</translation>
-    </message>
-
-    <message>
-      <source>3️⃣ &lt;b&gt;Revisão e Simplificação Final&lt;/b&gt; (depois de estudar as lacunas):</source>
-      <translation>3️⃣ &lt;b&gt;Final Review &amp; Simplification&lt;/b&gt; (after studying the gaps):</translation>
     </message>
 
     <message>

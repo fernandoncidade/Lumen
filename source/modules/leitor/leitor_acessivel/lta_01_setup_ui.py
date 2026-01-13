@@ -87,6 +87,16 @@ def setup_ui(self):
             self.combo_fonte.setCurrentText("10pt")
 
         self.combo_fonte.currentTextChanged.connect(self.ajustar_fonte)
+        self.combo_fonte.setEditable(True)
+        le = self.combo_fonte.lineEdit()
+        if le is None:
+            from PySide6.QtWidgets import QLineEdit
+            le = QLineEdit()
+            self.combo_fonte.setLineEdit(le)
+
+        le.setFrame(False)
+        le.setReadOnly(True)
+        self.combo_fonte.setFrame(True)
         ajustes.addWidget(self.combo_fonte)
 
         layout.addLayout(ajustes)
@@ -126,8 +136,17 @@ def setup_ui(self):
         self.combo_bullet_style.addItems(["•", "◦", "‣", "∙", "▪", "▫", "✅", "☑️", "🔹", "🔸"])
         self.combo_bullet_style.setCurrentText("•")
         self.combo_bullet_style.setMaximumWidth(70)
-        text_toolbar.addWidget(self.combo_bullet_style)
+        self.combo_bullet_style.setEditable(True)
+        le = self.combo_bullet_style.lineEdit()
+        if le is None:
+            from PySide6.QtWidgets import QLineEdit
+            le = QLineEdit()
+            self.combo_bullet_style.setLineEdit(le)
 
+        le.setFrame(False)
+        le.setReadOnly(True)
+        self.combo_bullet_style.setFrame(True)
+        text_toolbar.addWidget(self.combo_bullet_style)
         text_toolbar.addStretch()
 
         self.label_spacing = QLabel(QCoreApplication.translate("App", "Espaçamento:"))
@@ -137,6 +156,16 @@ def setup_ui(self):
         self.combo_spacing.addItems(["1.0", "1.15", "1.5", "2.0"])
         self.combo_spacing.setCurrentText("1.0")
         self.combo_spacing.currentTextChanged.connect(lambda v: getattr(self, "set_line_spacing")(float(v)))
+        self.combo_spacing.setEditable(True)
+        le2 = self.combo_spacing.lineEdit()
+        if le2 is None:
+            from PySide6.QtWidgets import QLineEdit
+            le2 = QLineEdit()
+            self.combo_spacing.setLineEdit(le2)
+
+        le2.setFrame(False)
+        le2.setReadOnly(True)
+        self.combo_spacing.setFrame(True)
         text_toolbar.addWidget(self.combo_spacing)
 
         self.label_indent = QLabel(QCoreApplication.translate("App", "Recuo:"))
@@ -147,6 +176,13 @@ def setup_ui(self):
         self.spin_indent.setValue(0)
         self.spin_indent.setSingleStep(5)
         self.spin_indent.valueChanged.connect(lambda v: getattr(self, "set_indent")(int(v)))
+
+        palette_margin = self.spin_indent.palette()
+        darker_color_margin = palette_margin.color(QPalette.Base).darker(120)
+        palette_margin.setColor(QPalette.Base, darker_color_margin)
+        palette_margin.setColor(QPalette.Button, darker_color_margin)
+        self.spin_indent.setPalette(palette_margin)
+        self.spin_indent.setFrame(True)
         text_toolbar.addWidget(self.spin_indent)
 
         self.label_margin = QLabel(QCoreApplication.translate("App", "Margem:"))
@@ -157,7 +193,49 @@ def setup_ui(self):
         self.spin_margin.setValue(10)
         self.spin_margin.setSingleStep(1)
         self.spin_margin.valueChanged.connect(lambda v: getattr(self, "set_margins")(float(v)))
+
+        palette_margin = self.spin_margin.palette()
+        darker_color_margin = palette_margin.color(QPalette.Base).darker(120)
+        palette_margin.setColor(QPalette.Base, darker_color_margin)
+        palette_margin.setColor(QPalette.Button, darker_color_margin)
+        self.spin_margin.setPalette(palette_margin)
+        self.spin_margin.setFrame(True)
         text_toolbar.addWidget(self.spin_margin)
+
+        def _apply_frame_palette_from_spinbox(spin: QSpinBox, combo: QComboBox) -> None:
+            try:
+                src = spin.palette()
+                dst = combo.palette()
+
+                roles = (
+                    QPalette.Base,
+                    QPalette.Button,
+                    QPalette.Window,
+                    QPalette.Text,
+                    QPalette.ButtonText,
+                    QPalette.Dark,
+                    QPalette.Mid,
+                    QPalette.Shadow,
+                    QPalette.Light,
+                    QPalette.Midlight,
+                )
+
+                for role in roles:
+                    dst.setColor(role, src.color(role))
+
+                combo.setPalette(dst)
+                combo.setFrame(True)
+
+                view = combo.view()
+                if view is not None:
+                    view.setPalette(dst)
+
+            except Exception as e:
+                logger.debug(f"Falha ao aplicar paleta do SpinBox no ComboBox: {e}", exc_info=True)
+
+        _apply_frame_palette_from_spinbox(self.spin_margin, self.combo_bullet_style)
+        _apply_frame_palette_from_spinbox(self.spin_margin, self.combo_spacing)
+        _apply_frame_palette_from_spinbox(self.spin_margin, self.combo_fonte)
 
         text_layout.addLayout(text_toolbar)
 
@@ -187,18 +265,83 @@ def setup_ui(self):
             except Exception as e:
                 logger.debug(f"Falha ao sincronizar fundo do QTextEdit via QPalette: {e}", exc_info=True)
 
+        def _sync_widgets_darker_palette():
+            try:
+                app = QApplication.instance()
+                if app is None:
+                    return
+
+                window_color = app.palette().color(QPalette.Window)
+                base_color = app.palette().color(QPalette.Base)
+
+                try:
+                    is_dark = int(window_color.lightness()) < 128
+
+                except Exception:
+                    is_dark = False
+
+                if is_dark:
+                    bg_color = base_color.darker(120)
+
+                else:
+                    bg_color = window_color.darker(103)
+
+                text_color = app.palette().color(QPalette.Text)
+                button_text_color = app.palette().color(QPalette.ButtonText)
+                highlight_color = app.palette().color(QPalette.Highlight)
+                highlighted_text_color = app.palette().color(QPalette.HighlightedText)
+
+                spinboxes = [self.spin_indent, self.spin_margin]
+                for spin in spinboxes:
+                    if spin is not None:
+                        pal = spin.palette()
+                        pal.setColor(QPalette.Base, bg_color)
+                        pal.setColor(QPalette.Button, bg_color)
+                        spin.setPalette(pal)
+
+                comboboxes = [
+                    getattr(self, "combo_bullet_style", None),
+                    getattr(self, "combo_spacing", None),
+                    getattr(self, "combo_fonte", None),
+                    getattr(self, "combo_modo_leitura", None),
+                ]
+                for combo in comboboxes:
+                    if combo is not None:
+                        pal = combo.palette()
+                        roles = (QPalette.Base, QPalette.Button, QPalette.Window,)
+                        for role in roles:
+                            pal.setColor(role, bg_color)
+
+                        pal.setColor(QPalette.Text, text_color)
+                        pal.setColor(QPalette.ButtonText, button_text_color)
+                        pal.setColor(QPalette.Highlight, highlight_color)
+                        pal.setColor(QPalette.HighlightedText, highlighted_text_color)
+
+                        combo.setPalette(pal)
+
+                        le = combo.lineEdit()
+                        if le is not None:
+                            le.setPalette(pal)
+
+                        view = combo.view()
+                        if view is not None:
+                            view.setPalette(pal)
+
+            except Exception as e:
+                logger.debug(f"Falha ao sincronizar paleta dos widgets: {e}", exc_info=True)
+
+
         class _PaletteThemeSyncFilter(QObject):
             def eventFilter(self, obj, event):
                 et = event.type()
-                if et in (
-                    QEvent.ApplicationPaletteChange,
-                    QEvent.PaletteChange,
-                    QEvent.ThemeChange,
-                ):
+                if et in (QEvent.ApplicationPaletteChange, QEvent.PaletteChange, QEvent.ThemeChange,):
                     _sync_texto_area_background()
+                    _sync_widgets_darker_palette()
+
                 return super().eventFilter(obj, event)
 
         _sync_texto_area_background()
+        _sync_widgets_darker_palette()
 
         self._texto_area_palette_sync_filter = _PaletteThemeSyncFilter(self)
         app = QApplication.instance()
@@ -230,7 +373,6 @@ def setup_ui(self):
 
         pdf_tab.setLayout(pdf_layout)
         self._content_stack.addTab(pdf_tab, QCoreApplication.translate("App", "PDF"))
-
         layout.addWidget(self._content_stack)
 
         try:
@@ -279,12 +421,33 @@ def setup_ui(self):
         self.combo_modo_leitura.setCurrentIndex(0)
         self.combo_modo_leitura.currentIndexChanged.connect(self._on_modo_leitura_changed)
         self.combo_modo_leitura.setMinimumWidth(100)
+        self.combo_modo_leitura.setEditable(True)
+        le3 = self.combo_modo_leitura.lineEdit()
+        if le3 is None:
+            from PySide6.QtWidgets import QLineEdit
+            le3 = QLineEdit()
+            self.combo_modo_leitura.setLineEdit(le3)
+
+        le3.setFrame(False)
+        le3.setReadOnly(True)
+        self.combo_modo_leitura.setFrame(True)
         leitura_assistida_layout.addWidget(self.combo_modo_leitura)
+
+        try:
+            _apply_frame_palette_from_spinbox(self.spin_margin, self.combo_modo_leitura)
+
+        except Exception as e:
+            logger.debug(f"Falha ao aplicar paleta no combo_modo_leitura: {e}", exc_info=True)
+
+        try:
+            _sync_widgets_darker_palette()
+
+        except Exception:
+            pass
 
         self.dica_leitura_assistida = QLabel()
         self.dica_leitura_assistida.setStyleSheet("color: #666; font-size: 10pt;")
         leitura_assistida_layout.addWidget(self.dica_leitura_assistida)
-
         leitura_assistida_layout.addStretch()
         layout.addLayout(leitura_assistida_layout)
         self.setLayout(layout)
@@ -315,7 +478,6 @@ def setup_ui(self):
                 logger.debug(f"Falha no Ctrl+F toggle: {e}", exc_info=True)
 
         self._sc_find_toggle.activated.connect(_toggle_find_active_tab)
-
         self._sc_copy_pdf = QShortcut(QKeySequence.Copy, self)
         self._sc_copy_pdf.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
 

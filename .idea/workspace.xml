@@ -4,16 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="02f93f84-518f-4e9e-97ae-36ae501fd277" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="02f93f84-518f-4e9e-97ae-36ae501fd277" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="336" />
+    <option name="cachedIndexableFilesCount" value="343" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -142,6 +140,7 @@
       <workItem from="1767787552507" duration="2167000" />
       <workItem from="1767845187905" duration="16676000" />
       <workItem from="1767938362953" duration="31000" />
+      <workItem from="1768199623971" duration="2585000" />
     </task>
     <servers />
   </component>

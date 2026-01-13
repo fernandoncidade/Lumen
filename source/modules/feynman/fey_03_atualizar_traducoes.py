@@ -1,6 +1,5 @@
 from PySide6.QtCore import QCoreApplication
 from source.utils.LogManager import LogManager
-
 logger = LogManager.get_logger()
 
 def atualizar_traducoes(self):
@@ -17,20 +16,19 @@ def atualizar_traducoes(self):
         self.btn_novo.setText(QCoreApplication.translate("App", "➕ Novo"))
         self.btn_deletar.setText(QCoreApplication.translate("App", "🗑️ Deletar"))
 
-        self.label_conceito.setText(QCoreApplication.translate("App", "Conceito:"))
+        self.label_conceito.setText(QCoreApplication.translate("App", "1️⃣ <b>Conceito:</b>"))
 
         self.input_titulo.setPlaceholderText(QCoreApplication.translate("App", "Ex: Tensão de Cisalhamento"))
 
-        self.label_passo1.setText(QCoreApplication.translate("App", "1️⃣ <b>Explique com Simplicidade</b> (como para uma criança):"))
+        self.label_passo1.setText(QCoreApplication.translate("App", "2️⃣ <b>Explique com Simplicidade</b> (como para uma criança):"))
 
         self.texto_explicacao.setPlaceholderText(QCoreApplication.translate("App", "Escreva sua explicação usando linguagem simples e exemplos do dia-a-dia."))
 
-        self.label_passo2.setText(QCoreApplication.translate("App", "2️⃣ <b>Lacunas Identificadas</b> (o que você não conseguiu explicar bem?):"))
+        self.label_passo2.setText(QCoreApplication.translate("App", "3️⃣ <b>Lacunas Identificadas</b> (o que você não conseguiu explicar bem?):"))
 
         self.texto_lacunas.setPlaceholderText(QCoreApplication.translate("App", "Liste os pontos onde você travou ou ficou confuso."))
 
-        self.label_passo3.setText(QCoreApplication.translate("App","3️⃣ <b>Revisão e Simplificação Final</b> (depois de estudar as lacunas):"))
-
+        self.label_passo3.setText(QCoreApplication.translate("App","4️⃣ <b>Revisão e Simplificação Final</b> (depois de estudar as lacunas):"))
         self.texto_revisao.setPlaceholderText(QCoreApplication.translate("App", "Reescreva sua explicação de forma ainda mais clara e completa."))
 
         self.label_nivel.setText(QCoreApplication.translate("App", "📊 Nível de Domínio:"))

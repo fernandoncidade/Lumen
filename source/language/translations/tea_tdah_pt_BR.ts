@@ -237,28 +237,28 @@
     </message>
 
     <message>
-      <source>Conceito:</source>
-      <translation>Conceito:</translation>
+      <source>1️⃣ &lt;b&gt;Conceito:&lt;/b&gt;</source>
+      <translation>1️⃣ &lt;b&gt;Conceito:&lt;/b&gt;</translation>
+    </message>
+
+    <message>
+      <source>2️⃣ &lt;b&gt;Explique com Simplicidade&lt;/b&gt; (como para uma criança):</source>
+      <translation>2️⃣ &lt;b&gt;Explique com Simplicidade&lt;/b&gt; (como para uma criança):</translation>
+    </message>
+
+    <message>
+      <source>3️⃣ &lt;b&gt;Lacunas Identificadas&lt;/b&gt; (o que você não conseguiu explicar bem?):</source>
+      <translation>3️⃣ &lt;b&gt;Lacunas Identificadas&lt;/b&gt; (o que você não conseguiu explicar bem?):</translation>
+    </message>
+
+    <message>
+      <source>4️⃣ &lt;b&gt;Revisão e Simplificação Final&lt;/b&gt; (depois de estudar as lacunas):</source>
+      <translation>4️⃣ &lt;b&gt;Revisão e Simplificação Final&lt;/b&gt; (depois de estudar as lacunas):</translation>
     </message>
 
     <message>
       <source>Ex: Tensão de Cisalhamento</source>
       <translation>Ex: Tensão de Cisalhamento</translation>
-    </message>
-
-    <message>
-      <source>1️⃣ &lt;b&gt;Explique com Simplicidade&lt;/b&gt; (como para uma criança):</source>
-      <translation>1️⃣ &lt;b&gt;Explique com Simplicidade&lt;/b&gt; (como para uma criança):</translation>
-    </message>
-
-    <message>
-      <source>2️⃣ &lt;b&gt;Lacunas Identificadas&lt;/b&gt; (o que você não conseguiu explicar bem?):</source>
-      <translation>2️⃣ &lt;b&gt;Lacunas Identificadas&lt;/b&gt; (o que você não conseguiu explicar bem?):</translation>
-    </message>
-
-    <message>
-      <source>3️⃣ &lt;b&gt;Revisão e Simplificação Final&lt;/b&gt; (depois de estudar as lacunas):</source>
-      <translation>3️⃣ &lt;b&gt;Revisão e Simplificação Final&lt;/b&gt; (depois de estudar as lacunas):</translation>
     </message>
 
     <message>

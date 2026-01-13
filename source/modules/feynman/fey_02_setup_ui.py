@@ -3,7 +3,6 @@ from PySide6.QtCore import Qt, QObject, QEvent
 from PySide6.QtGui import QIcon, QPalette
 from source.utils.LogManager import LogManager
 from source.utils.IconUtils import get_icon_path
-
 logger = LogManager.get_logger()
 
 def setup_ui(self):
@@ -54,15 +53,13 @@ def setup_ui(self):
         painel_direito = QWidget(self)
         layout_direito = QVBoxLayout()
 
-        layout_titulo = QHBoxLayout()
         self.label_conceito = QLabel()
-        layout_titulo.addWidget(self.label_conceito)
+        self.label_conceito.setWordWrap(True)
+        layout_direito.addWidget(self.label_conceito)
 
         self.input_titulo = QTextEdit()
-        self.input_titulo.setMaximumHeight(50)
         self.input_titulo.setObjectName("feynman_user_input")
-        layout_titulo.addWidget(self.input_titulo)
-        layout_direito.addLayout(layout_titulo)
+        layout_direito.addWidget(self.input_titulo)
 
         self.label_passo1 = QLabel()
         self.label_passo1.setWordWrap(True)
@@ -77,7 +74,6 @@ def setup_ui(self):
         layout_direito.addWidget(self.label_passo2)
 
         self.texto_lacunas = QTextEdit()
-        self.texto_lacunas.setMaximumHeight(100)
         self.texto_lacunas.setObjectName("feynman_user_input")
         layout_direito.addWidget(self.texto_lacunas)
 
@@ -187,12 +183,7 @@ def setup_ui(self):
         class _PaletteThemeSyncFilter(QObject):
             def eventFilter(self, obj, event):
                 et = event.type()
-                tipos = (
-                    QEvent.ApplicationPaletteChange,
-                    QEvent.PaletteChange,
-                    QEvent.StyleChange,
-                    QEvent.ThemeChange,
-                )
+                tipos = (QEvent.ApplicationPaletteChange, QEvent.PaletteChange, QEvent.StyleChange, QEvent.ThemeChange,)
 
                 try:
                     tipos = tipos + (QEvent.ColorSchemeChange,)
