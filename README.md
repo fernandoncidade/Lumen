@@ -10,14 +10,14 @@
 
 ## <a id="ptbr"></a>🇧🇷 Português (BR)
 
-> **Observação:** Este repositório refere-se à versão **v2026.1.12.0** do 📚 Projeto Lúmen. Apoie o projeto e adquira a versão paga através do link: [Instalar via Microsoft Store](https://apps.microsoft.com/detail/9N70CLLMVRPN)
+> **Observação:** Este repositório refere-se à versão **v2026.1.13.0** do 📚 Projeto Lúmen. Apoie o projeto e adquira a versão paga através do link: [Instalar via Microsoft Store](https://apps.microsoft.com/detail/9N70CLLMVRPN)
 
 <details>
 <summary>Clique para expandir o README em português</summary>
 
 # 📚 Lúmen
 
-Versão: v2026.1.12.0  
+Versão: v2026.1.13.0  
 Autor: Fernando Nillsson Cidade
 
 - Manual de Utilização (PT‑BR): [MANUAL.md — Português](./MANUAL.md#ptbr)
@@ -130,14 +130,14 @@ Consulte assets/RELEASE/RELEASE\ NOTES_pt_BR.txt e assets/RELEASE/RELEASE\ NOTES
 
 ## <a id="enus"></a>🇺🇸 English (US)
 
-> **Note:** This repository refers to the **v2026.1.12.0** version of the 📚 Lúmen Project. Support the project and purchase the paid version through the link: [Instalar via Microsoft Store](https://apps.microsoft.com/detail/9N70CLLMVRPN)
+> **Note:** This repository refers to the **v2026.1.13.0** version of the 📚 Lúmen Project. Support the project and purchase the paid version through the link: [Instalar via Microsoft Store](https://apps.microsoft.com/detail/9N70CLLMVRPN)
 
 <details>
 <summary>Click to expand the README in English</summary>
 
 # 📚 Lúmen
 
-Version: v2026.1.12.0  
+Version: v2026.1.13.0  
 Author: Fernando Nillsson Cidade
 
 - User Manual (EN‑US): [MANUAL.md — English](./MANUAL.md#enus)
