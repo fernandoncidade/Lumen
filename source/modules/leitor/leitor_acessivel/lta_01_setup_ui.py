@@ -266,6 +266,10 @@ def setup_ui(self):
                 logger.debug(f"Falha ao sincronizar fundo do QTextEdit via QPalette: {e}", exc_info=True)
 
         def _sync_widgets_darker_palette():
+            if getattr(self, "_palette_sync_in_progress", False):
+                return
+
+            self._palette_sync_in_progress = True
             try:
                 app = QApplication.instance()
                 if app is None:
@@ -330,6 +334,13 @@ def setup_ui(self):
             except Exception as e:
                 logger.debug(f"Falha ao sincronizar paleta dos widgets: {e}", exc_info=True)
 
+            finally:
+                try:
+                    self._palette_sync_in_progress = False
+
+                except Exception:
+                    pass
+
 
         class _PaletteThemeSyncFilter(QObject):
             def eventFilter(self, obj, event):
@@ -339,6 +350,12 @@ def setup_ui(self):
                     _sync_widgets_darker_palette()
 
                 return super().eventFilter(obj, event)
+
+        try:
+            self._palette_sync_in_progress = False
+
+        except Exception:
+            pass
 
         _sync_texto_area_background()
         _sync_widgets_darker_palette()

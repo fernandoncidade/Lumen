@@ -1,6 +1,6 @@
 NOTAS DE LANÇAMENTO — Lúmen
-Versão: 2026.1.13.0
-Data: 13 de janeiro de 2026
+Versão: 2026.1.14.0
+Data: 14 de janeiro de 2026
 Autor: Fernando Nillsson Cidade
 
 Resumo executivo
@@ -77,6 +77,83 @@ Mudanças e melhorias detalhadas
   - Múltiplos blocos try/except com logging para evitar crashes quando backends (PDF, mouse handler) não estiverem disponíveis.
   - Uso de setFrame/autoFillBackground e ajustes de altura mínima para inputs.
 
+5) Detalhamento complementar — módulos entregues/analisados
+
+  5.1) Leitor Acessível — setup UI (source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py)
+  - Controles e fluxo:
+    - Barra de playback com btn_carregar, btn_play, btn_pause (checkable), btn_stop; conexões protegidas com try/except.
+    - Sliders de velocidade (50–250 wpm) e volume (0–100) com labels reativos e handlers vinculados (_on_speed_changed, _on_volume_changed).
+    - Font selection via FontManager: leitura segura do config (size) com fallback e aplicação ao QTextDocument; combo de fontes editável porém com lineEdit em readOnly para evitar edição livre inesperada.
+  - Edição de texto e ferramentas:
+    - Aba Texto com toolbar de ações: Novo, Salvar Como, Buscar (TextFindBar integrado), Marcadores (toggle_bullets), estilo de marcador, espaçamento, recuo e margem.
+    - Export hooks (criar_texto/salvar_como) preparados para integração com utilitários de exportação do projeto.
+  - PDF / visualização:
+    - Aba PDF com PDFView e setup_pdf_toolbar; PDFFindBar integrado; conexão current_page_changed com handler protegido.
+    - Integração preguiçosa com PDFMouseHandler via handlers delegados (Ctrl+C copia seleção quando handler presente).
+  - Sincronização de paleta / temas:
+    - Implementadas rotinas _sync_texto_area_background e _sync_widgets_darker_palette para aplicar Base/AlternateBase em QTextEdit, QSpinBox e QComboBox.
+    - Filtro de evento _PaletteThemeSyncFilter instalado na QApplication para reagir a ApplicationPaletteChange/PaletteChange/ThemeChange.
+    - Aplicação defensiva (flags _palette_sync_in_progress) para evitar reentrância.
+  - Acessibilidade / Leitura assistida:
+    - Botão toggle leitura assistida (gerenciador_botoes), combo_modo_leitura (Palavras/Frases/Parágrafos) com estilo inicial e dicas; estilo inline aplicado quando ativo.
+  - Atalhos e usabilidade:
+    - Ctrl+F implementado como ApplicationShortcut que alterna findbar entre Texto ↔ PDF.
+    - Ctrl+C com contexto WidgetWithChildrenShortcut para delegar cópia do PDF ao handler.
+  - Robustez e observabilidade:
+    - Múltiplos blocos try/except com LogManager para capturar falhas em ambiente com backends ausentes (font manager, PDF backends, conexões).
+    - Ajustes visuais defensivos (setFrame, viewport autoFillBackground) e proteção ao definir lineEdits de combos (criação se ausente).
+    - Função utilitária _apply_frame_palette_from_spinbox que replica paleta de spinboxes para combos e suas views para melhor consistência visual.
+
+  5.2) Worker de Reorganização do Mapa Mental (source/modules/mapa/mp_05_ThreadMapaMental.py)
+  - Pool de processos:
+    - Implementação de ProcessPoolExecutor global com _MAX_WORKERS = max(1, cpu_count-1) e inicialização lazy via _get_process_pool().
+    - Proteção de concorrência com _PROCESS_POOL_LOCK e encerramento registrado via atexit (shutdown sem wait).
+  - Tarefa em processo filho:
+    - Função _process_reorganize_task importa ProcessadorIA dentro do processo filho para evitar dependências no processo principal.
+    - Concatenação segura dos textos recebidos e execução de pipeline leve: proc.nlp(texto_completo) → _extrair_conceitos_tfidf → _identificar_relacoes_avancadas → retorno de relacoes.
+    - Tratamento de exceções no processo filho: captura geral e retorno de lista vazia para evitar falha do pool.
+  - QObject worker para Qt:
+    - Classe MapasWorker (QObject) expõe signal reorganize_finished(relacoes, conexoes_existentes, visiveis_idx).
+    - Slot process_reorganize envia job ao pool, aguarda future.result() com timeout configurável (30s), cancela future em timeout e loga o incidente.
+    - Emissão de reorganize_finished mesmo em erro (payloads de fallback), garantindo que a GUI receba resposta e não fique pendente.
+  - Observabilidade e segurança:
+    - Logs detalhados via LogManager para timeout, exceções e tracebacks; design pensado para minimizar bloqueio da UI e controlar erros de I/O ou modelos pesados.
+
+  5.3) Inicialização principal (c:\Users\ferna\DEV\Python\Lumen\main.py)
+  - Compatibilidade Windows:
+    - Chamada multiprocessing.freeze_support() no entrypoint para suportar empacotamento/execução no Windows.
+    - Encaminhamento para iniciar_aplicacao() do inicializador central (src_01_InicializadorMain), mantendo fechamento com sys.exit().
+
+6) Melhorias e correções detectadas nos utilitários e serviços (não detalhadas anteriormente)
+- LogManager (source/utils/LogManager.py):
+  - Startup diagnostics: geração de arquivo Lumen_startup_YYYYMMDD_HHMMSS.log, ativação de faulthandler para todos os threads, escrita de argv/executable/cwd/sys.path para facilitar diagnóstico em ambientes empacotados.
+  - Unidade de fallback robusta: tentativa de criar logs em LOCALAPPDATA, fallback para diretório alternativo em caso de falha na criação do diretório padrão.
+  - Redirecionamento condicional de stdout/stderr para arquivo quando variável LUMEN_QT_DEBUG ativa (QT_DEBUG_PLUGINS), e tentativa de flushs seguros.
+  - Instalação de excepthook customizado que grava traceback no startup log e exibe MessageBoxW em Windows via ctypes (proteção adicional em falhas críticas de inicialização).
+  - Métodos utilitários: ensure_unicode, get_log_file, wrappers convenientes debug/info/warning/error/critical com suporte exc_info; supressão de logs ruidosos de comtypes ajustados a CRITICAL.
+- Gerenciador de Tradução (source/language/tr_01_gerenciadorTraducao.py):
+  - Suporte a carregamento de arquivos .qm da aplicação e das traduções do Qt (QLibraryInfo.TranslationsPath), com heurística por locale curto/longo.
+  - Uso de sys._MEIPASS para compatibilidade com pacotes empacotados (PyInstaller) ao localizar diretório de traduções.
+  - Remoção segura de tradutores previamente instalados (app.setProperty / app.removeTranslator) para evitar múltiplos tradutores ativos.
+  - Persistência de idioma em arquivo language.json no caminho de persistência; traduções de botões padrão de diálogo implementadas (traduzir_botoes_padrao).
+  - Logging detalhado em falhas e listagem do conteúdo do diretório de traduções quando arquivo faltante.
+- Eisenhower / UI helpers (source/modules/eisenhower/services/svc_01_initUI.py, svc_06_show_context_menu.py):
+  - Cálculo de alturas de widget configurável via app.widget_heights ou app.widget_height_override para consistência visual entre plataformas.
+  - CustomTimeEdit: comportamento de stepBy customizado para seção de minutos que faz wrap ao ultrapassar 00:00 / 23:59, melhorando usabilidade na edição de horários.
+  - DragDropTaskList: modo de arraste/drope robusto (MoveAction padrão), seleção única, tratamento especial quando a origem é a mesma lista (aplica super().dropEvent e persiste), e controle manual de blocos de sinais durante operações para evitar atualizações redundantes.
+  - Edição de data/horário via diálogo com:
+    - Checkboxes para vincular data/horário, calendário popup localizável e aplicação de locale efetiva (_effective_locale busca configurações via gerenciador_traducao).
+    - Aplicação de paleta no QDateEdit/QCalendarWidget para manter contraste com tema do aplicativo e evitar entradas visualmente incoerentes.
+    - Atualização dinâmica de textos do diálogo ao alterar idioma em runtime (conexão a idioma_alterado).
+  - Context menu para tarefas com ações: mover para quadrante, editar data/horário (chama diálogo acima), remover tarefa; defensivas e com logging.
+- Exibir Sobre / Manual (source/modules/mod_07_exibir_public.py):
+  - Diálogos Sobre e Manual instanciados com proteção para evitar múltiplas janelas; atualização dinâmica de conteúdo quando idioma muda (changeEvent captura LanguageChange).
+  - Manual: construção de índice/posições internas no QTextBrowser para navegação por âncoras; mapeamento id->posição para "go to section" e uso de QFontMetrics para ajustar largura de botão Fechar.
+- UI / Paleta / Consistência visual:
+  - Utilitários que copiam paletas entre widgets (spin -> combo/view) garantindo que view() de QComboBox também receba a paleta.
+  - Múltiplos filtros de evento (Palette/Style/Theme changes) instalados em QApplication para re-sincronizar backgrounds e viewports sem necessidade de reinício.
+  - Aplicação defensiva de setAutoFillBackground e setFrame em widgets que nem sempre expõem lineEdit/view, evitando exceções em backends limitados.
+
 Como testar (passos rápidos)
 1. Método Feynman:
    - Abrir aba Método Feynman → criar/editar conceito → verificar placeholders, salvar e mudanças de idioma (texts traduzidos) e mudança de tema (backgrounds atualizados).
@@ -91,6 +168,11 @@ Como testar (passos rápidos)
    - Texto: abrir/colar texto → Ctrl+F → testar busca com Aa/Palavra/Destacar → navegar (F3/Shift+F3).
    - PDF: carregar PDF compatível → toolbar habilitada → navegar páginas/zoom/fit → usar Ctrl+C para copiar seleção (quando handler disponível).
    - Alternar tema do app → confirmar paleta aplicada nos campos e barras de busca.
+5. Utilitários / inicialização:
+   - Iniciar aplicação em ambiente Windows empacotado: verificar criação de arquivo Lumen_startup_*.log, ver mensagens de startup, e que excepthook exibe diálogo em falha crítica.
+   - Trocar idioma via GerenciadorTraducao e confirmar carregamento de .qm do app e (quando disponível) traduções Qt; confirmar que botões padrão são traduzidos.
+   - Abrir diálogo de edição de data/horário e confirmar locale do calendário e paleta coerente com tema.
+   - Testar comportamento de CustomTimeEdit ao incrementar/decrementar minutos passando de 23:59 para 00:00.
 
 Arquivos alterados / adicionados (principais)
 - source/modules/feynman/fey_02_setup_ui.py
@@ -101,9 +183,17 @@ Arquivos alterados / adicionados (principais)
 - source/modules/leitor/leitor_acessivel/lta_22_pdf_toolbar.py
 - source/modules/leitor/leitor_acessivel/lta_27_pdf_findbar.py
 - source/modules/leitor/leitor_acessivel/lta_29_text_findbar.py
+- source/utils/LogManager.py
+- source/language/tr_01_gerenciadorTraducao.py
+- source/modules/eisenhower/services/svc_01_initUI.py
+- source/modules/eisenhower/services/svc_06_show_context_menu.py
+- source/modules/mapa/mp_05_ThreadMapaMental.py
+- source/modules/mod_07_exibir_public.py
 
 Observações finais
-- As alterações priorizam confiabilidade e experiência: sincronização de paleta/tema em runtime, sinais seguros entre threads/modules, melhores controles de busca e navegação no leitor, e um fluxo de tarefas/pomodoro consistente. Logs detalhados (LogManager) permitem diagnóstico sem interromper o uso do aplicativo.
+- As alterações entregues reforçam a estabilidade em runtime (paleta/tema, threads/processos, timeouts) e melhoram a experiência do usuário com controles reativos (findbars, playback, fontes) e integração segura entre processos (worker → GUI).
+- Melhorias transversais adicionais: diagnóstico de startup avançado (faulthandler, redirecionamento condicional, excepthook com aviso ao usuário), melhor gerenciamento de tradutores e compatibilidade com pacotes empacotados, utilitários de paleta que cobrem views de combos e widgets com fallbacks, e pequenas melhorias de UX (CustomTimeEdit, alturas configuráveis de widgets).
+- Estratégia geral: delegar processamento pesado para processos isolados, aplicar fallbacks e evitar exceções não tratadas na cadeia UI → worker, garantindo logs ricos via LogManager para diagnóstico.
 
 _________________________________________________
 

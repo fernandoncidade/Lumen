@@ -5,12 +5,23 @@ import atexit
 import os
 import threading
 import traceback
-
 logger = LogManager.get_logger()
 
 _MAX_WORKERS = max(1, (os.cpu_count() or 2) - 1)
-_PROCESS_POOL = concurrent.futures.ProcessPoolExecutor(max_workers=_MAX_WORKERS)
+_PROCESS_POOL = None
+_PROCESS_POOL_LOCK = threading.Lock()
 
+
+def _get_process_pool() -> concurrent.futures.ProcessPoolExecutor:
+    global _PROCESS_POOL
+    if _PROCESS_POOL is not None:
+        return _PROCESS_POOL
+
+    with _PROCESS_POOL_LOCK:
+        if _PROCESS_POOL is None:
+            _PROCESS_POOL = concurrent.futures.ProcessPoolExecutor(max_workers=_MAX_WORKERS)
+
+        return _PROCESS_POOL
 
 def _process_reorganize_task(textos):
     try:
@@ -25,14 +36,14 @@ def _process_reorganize_task(textos):
     except Exception:
         return []
 
-
 def _shutdown_process_pool():
     try:
-        _PROCESS_POOL.shutdown(wait=False)
+        pool = _PROCESS_POOL
+        if pool is not None:
+            pool.shutdown(wait=False)
 
     except Exception:
         pass
-
 
 atexit.register(_shutdown_process_pool)
 
@@ -48,7 +59,7 @@ class MapasWorker(QObject):
     @Slot(list, dict, object)
     def process_reorganize(self, textos, conexoes_existentes, visiveis_idx):
         try:
-            future = _PROCESS_POOL.submit(_process_reorganize_task, textos)
+            future = _get_process_pool().submit(_process_reorganize_task, textos)
 
             timeout_seconds = 30
 

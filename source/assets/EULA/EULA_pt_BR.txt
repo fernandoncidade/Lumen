@@ -1,5 +1,5 @@
 LICENÇA DE USO DE USUÁRIO FINAL - Lúmen
-Versão 2026.1.13.0, 13 de janeiro de 2026
+Versão 2026.1.14.0, 14 de janeiro de 2026
 
 Copyright (c) 2025 Fernando Nillsson Cidade. Todos os direitos reservados.
 

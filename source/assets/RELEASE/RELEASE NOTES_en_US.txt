@@ -1,96 +1,178 @@
 RELEASE NOTES — Lúmen
-Version: 2026.1.13.0
-Date: January 13, 2026
+Version: 2026.1.14.0
+Date: January 14, 2026
 Author: Fernando Nillsson Cidade
 
 Executive summary
-- Improvements in robustness, usability, and integration across the Feynman Method, Task Manager / Time Manager, and Accessible Reader (Text/PDF) modules. Focus on palette/theme consistency, event synchronization (pomodoro ↔ tasks), search mechanism (Text/PDF) with advanced options, and extensive protection via logging/try-except.
+- Improvements in robustness, usability and integration across the Feynman Method, Task Manager / Time Manager and Accessible Reader (Text/PDF) modules. Focus on palette/theme consistency, event synchronization (pomodoro ↔ tasks), search engine (Text/PDF) with advanced options and extensive protection via logging/try-except.
 
 Detailed changes and improvements
 
 1) Feynman Method (source/modules/feynman/fey_02_setup_ui.py, fey_03_atualizar_traducoes.py)
-- Consolidated UI with splitter layout (concept list ↔ editor) and standardized CRUD controls (btn_novo, btn_deletar, btn_salvar).
-- Consistent use of QTextEdit for input fields (title, explanation, gaps, revision) to allow rich editing.
+- Consolidated UI with splitter layout (concept list ↔ editor) and standardized CRUD controls (btn_new, btn_delete, btn_save).
+- Consistent replacement/use of QTextEdit for input fields (title, explanation, gaps, review) to allow rich editing.
 - Integration with Button Manager (gerenciador_botoes) for dynamic creation and translation of the save button.
 - Palette/theme synchronization:
   - Implemented _apply_window_as_base and event filter _PaletteThemeSyncFilter to reapply Base/AlternateBase colors to widgets and viewports when the application palette changes.
-  - Safeguards including QApplication checks and try/except blocks to avoid failures in constrained environments.
+  - Protections including QApplication checks and try/except blocks to avoid crashes in limited environments.
 - Dynamic translations:
   - atualizar_traducoes centralizes all labels, placeholders and instructional content using QCoreApplication.translate.
-  - Preserves the selected index in combo_dominio when reloading translated items.
+  - Preservation of the selected index in combo_dominio when reloading translated items.
 - Robustness:
-  - Try/except in critical points with LogManager to log failures without breaking the UI.
-  - Initial calls to atualizar_traducoes() and atualizar_lista() in setup to ensure consistent state on initialization.
+  - Try/except in critical points with LogManager to record failures without breaking the UI.
+  - Initial calls to atualizar_traducoes() and atualizar_lista() in setup for consistent startup state.
 
 2) Task Manager (Kanban) (source/modules/tempo/tmp_03_GerenciadorTarefas.py)
 - Drag & Drop and synchronization:
   - New subclass _KanbanListWidget that emits tarefas_soltadas after drop for controlled processing.
   - Connected to the model's rowsMoved signal to detect internal rearrangements and call _on_rows_moved.
-  - Implemented _sincronizar_status_pos_movimento which reconstructs mapping between QListWidgets and statuses ("Todo", "Doing", "Done") and updates Tarefa objects by consulting Qt.UserRole (id) or base text.
-  - Avoids inconsistencies when Qt attempts to apply MoveAction automatically — removal/updates are now controlled by the application.
+  - Implemented _sincronizar_status_pos_movimento that rebuilds the mapping between QListWidgets and statuses ("Todo", "Doing", "Done") and updates Task objects by reading Qt.UserRole (id) or base text.
+  - Avoids inconsistencies when Qt attempts to apply MoveAction automatically — removal/update is now controlled by the application.
 - UX and batch operations:
   - Items configured with Qt.ItemIsUserCheckable for marking and selection in batch operations (move/remove).
-  - Actions to move/remove checked tasks, move by item via dialog, and reset counters with scopes (task/column/global).
-  - Dynamic adjustment of priority combo width to avoid truncation.
+  - Actions to move/remove checked tasks, move by item through a dialog, and reset counters with scopes (task/column/global).
+  - Dynamic adjustment of the priority combo width to avoid truncation.
 - Persistence and compatibility:
-  - Save/load to tarefas.json in the path returned by obter_caminho_persistente().
-  - Robust serialization via Tarefa.to_dict/from_dict (I/O exception handling).
-- Visual polish:
-  - Application of rounded masks for columns and viewports and palette synchronization for lists/combos.
+  - Save/load in tarefas.json at the path returned by obter_caminho_persistente().
+  - Robust serialization via Task.to_dict/from_dict with I/O exception handling.
+- Visual polishing:
+  - Application of rounded masks to columns and viewports and palette synchronization for lists/combos.
 - Observability:
   - Extensive logging via LogManager at critical points (drop, rowsMoved, save, load, move).
 
 3) Time Manager / Pomodoro (source/modules/tempo/tmp_04_GerenciadorTempo.py)
 - Worker architecture for time events:
-  - _TimeWorker running in a QThread; receives signal from PomodoroTimer and re-emits pomodoro_completed to the GUI.
-  - Safe connections and thread/worker stop/cleanup in cleanup and __del__.
-- Integration with GerenciadorTarefas:
-  - When a "focus" cycle completes, registrar_pomodoro increments pomodoros_completados on tasks with status "Doing", persists and updates lists/views.
+  - _TimeWorker running in a QThread; receives signals from PomodoroTimer and re-emits pomodoro_completed to the GUI.
+  - Safe connections and stopping/cleanup of thread/worker in cleanup and __del__.
+- Integration with Task Manager:
+  - On completion of a "focus" cycle, registrar_pomodoro increments pomodoros_completados on tasks with status "Doing", persists and updates lists/views.
 - Integration with the Eisenhower Matrix via EventBus:
-  - Sends locally added tasks (when integration enabled) with an integration_id and normalized priority.
-  - Receives tasks originating from Eisenhower, prevents duplicates by integration_id, and adds them via adicionar_tarefa_externa.
+  - Sending tasks added locally (when integration enabled) with integration_id and normalized priority.
+  - Receiving tasks originating in Eisenhower, preventing duplicates by integration_id and adding via adicionar_tarefa_externa.
 - UI and theme:
-  - "In Progress" column (col_doing_timer_list) updated via GerenciadorTarefas.listas_atualizadas signal.
+  - "In Progress" column (col_doing_timer_list) updated via listas_atualizadas signal from Task Manager.
   - Toggle button for integration with dynamic labels and translated tooltip.
-  - Dynamic theme application on the list and synchronization via eventFilter.
+  - Dynamic theme applied to the list and synchronization via eventFilter.
 
 4) Accessible Reader — Text / PDF (source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py, lta_22_pdf_toolbar.py, lta_27_pdf_findbar.py, lta_29_text_findbar.py)
 - FindBars (Text and PDF):
-  - Implemented TextFindBar and PDFFindBar with options: match case (Aa), whole word only, highlight all.
+  - Implemented TextFindBar and PDFFindBar with options: case sensitive (Aa), whole word only, highlight all.
   - Shortcuts: F3/Shift+F3 to navigate occurrences, Esc to close, Ctrl+F as an ApplicationShortcut to toggle per tab (Text ↔ PDF).
   - Palette synchronization via event filters to maintain contrast and visual integration in light/dark themes.
-  - Hooks for owner._text_find_apply / _pdf_find_apply, owner._text_find_next/_prev and highlight toggles — decoupled design for reuse by the owner's search logic.
+  - Hooks for owner._text_find_apply / owner._pdf_find_apply, owner._text_find_next/_prev and highlight toggles — decoupled design for reuse by the owner's search logic.
 - PDF Toolbar:
-  - Page navigation (first/prev/next/last), page spinbox, total pages label; editable zoom combo with percent values and robust parsing.
+  - Page navigation (first/previous/next/last), page spinbox, total pages label; editable zoom combo with percent values and robust parsing.
   - Fit width / Fit page, zoom in/out with limits (0.25–5.0) and preservation of _pdf_zoom_special state.
-  - Palette synchronization for spinbox/combo and their views; installed filter to react to theme changes.
+  - Palette synchronization for spinbox/combo and their views; filter installation to react to theme changes.
   - Lazy integration with PDFMouseHandler (created when enabled) for selection/copy and hand/selection modes.
-  - Toolbar enabled/updated only after a document is loaded.
+  - Toolbar enabled/updated only after document is loaded.
 - Reader setup:
-  - Text / PDF tab structure with integrated TextFindBar and PDFFindBar.
+  - Tabs structure Text / PDF with integrated TextFindBar and PDFFindBar.
   - Playback controls (load, play, pause, stop) and speed/volume sliders with reactive labels.
   - Font configuration via FontManager with safe fallback and application to QTextEdit.
-  - Assisted reading: toggle button with styling, mode combo (Words/Sentences/Paragraphs) and translated placeholders/tooltips.
-  - Consistent application of palette to QTextEdit, combos and spinboxes; installation of eventFilter for dynamic theme updates.
-  - Additional shortcuts: Ctrl+C to copy PDF selection (delegated to PDFMouseHandler) and Find toggle (Ctrl+F) with tab context.
+  - Assisted reading: toggle button with styles, mode combo (Words/Sentences/Paragraphs) and translated placeholders/hints.
+  - Consistent application of palette to QTextEdit, combos and spinboxes; eventFilter installed for dynamic theme updates.
+  - Extra shortcuts: Ctrl+C to copy PDF selection (delegated to PDFMouseHandler) and Find toggle (Ctrl+F) with tab context.
 - Robustness:
-  - Multiple try/except blocks with logging to avoid crashes when backends (PDF, mouse handler) are unavailable.
+  - Multiple try/except blocks with logging to prevent crashes when backends (PDF, mouse handler) are unavailable.
   - Use of setFrame/autoFillBackground and minimum height adjustments for inputs.
+
+5) Additional details — delivered/analyzed modules
+
+  5.1) Accessible Reader — setup UI (source/modules/leitor/leitor_acessivel/lta_01_setup_ui.py)
+  - Controls and flow:
+    - Playback bar with btn_load, btn_play, btn_pause (checkable), btn_stop; connections protected by try/except.
+    - Speed (50–250 wpm) and volume (0–100) sliders with reactive labels and handlers (_on_speed_changed, _on_volume_changed).
+    - Font selection via FontManager: safe read of config (size) with fallback and application to QTextDocument; font combo editable but with lineEdit set to readOnly to avoid unexpected free editing.
+  - Text editing and tools:
+    - Text tab with toolbar actions: New, Save As, Search (TextFindBar integrated), Bullets toggle, bullet style, spacing, indent and margin.
+    - Export hooks (criar_texto/salvar_como) prepared for integration with project export utilities.
+  - PDF / viewing:
+    - PDF tab with PDFView and setup_pdf_toolbar; PDFFindBar integrated; current_page_changed connected to a protected handler.
+    - Lazy integration with PDFMouseHandler via delegated handlers (Ctrl+C copies selection when handler present).
+  - Palette / theme synchronization:
+    - Implemented routines _sync_texto_area_background and _sync_widgets_darker_palette to apply Base/AlternateBase to QTextEdit, QSpinBox and QComboBox.
+    - _PaletteThemeSyncFilter event filter installed on QApplication to react to ApplicationPaletteChange/PaletteChange/ThemeChange.
+    - Defensive application (flags _palette_sync_in_progress) to avoid reentrancy.
+  - Accessibility / Assisted reading:
+    - Assisted reading toggle button (gerenciador_botoes), combo_modo_leitura (Words/Sentences/Paragraphs) with initial style and hints; inline style applied when active.
+  - Shortcuts and usability:
+    - Ctrl+F implemented as an ApplicationShortcut that toggles findbar between Text ↔ PDF.
+    - Ctrl+C with WidgetWithChildrenShortcut context to delegate PDF copy to the handler.
+  - Robustness and observability:
+    - Multiple try/except blocks with LogManager to capture failures in environments with missing backends (font manager, PDF backends, connections).
+    - Defensive visual tweaks (setFrame, viewport autoFillBackground) and protection when setting combo lineEdits (create if missing).
+    - Utility function _apply_frame_palette_from_spinbox that replicates spinbox palette to combos and their views for better visual consistency.
+
+  5.2) Mental Map Reorganization Worker (source/modules/mapa/mp_05_ThreadMapaMental.py)
+  - Process pool:
+    - Global ProcessPoolExecutor implemented with _MAX_WORKERS = max(1, cpu_count-1) and lazy initialization via _get_process_pool().
+    - Concurrency protection with _PROCESS_POOL_LOCK and shutdown registered via atexit (shutdown without wait).
+  - Child-process task:
+    - Function _process_reorganize_task imports ProcessadorIA inside the child process to avoid main-process dependencies.
+    - Safe concatenation of received texts and execution of a light pipeline: proc.nlp(texto_completo) → _extrair_conceitos_tfidf → _identificar_relacoes_avancadas → return relations.
+    - Exception handling in child process: general capture and return of empty list to avoid pool failure.
+  - Qt QObject worker:
+    - MapasWorker (QObject) exposes signal reorganize_finished(relations, existing_connections, visible_idx).
+    - Slot process_reorganize submits a job to the pool, waits future.result() with configurable timeout (30s), cancels future on timeout and logs the incident.
+    - Emits reorganize_finished even on error (fallback payloads), ensuring GUI receives a response and does not remain pending.
+  - Observability and safety:
+    - Detailed logs via LogManager for timeout, exceptions and tracebacks; design aims to minimize UI blocking and control errors from I/O or heavy models.
+
+  5.3) Main startup (c:\Users\ferna\DEV\Python\Lumen\main.py)
+  - Windows compatibility:
+    - Call to multiprocessing.freeze_support() in the entrypoint to support packaging/execution on Windows.
+    - Forwarding to iniciar_aplicacao() of the central initializer (src_01_InicializadorMain), maintaining exit via sys.exit().
+
+6) Improvements and fixes found in utilities and services (not previously detailed)
+- LogManager (source/utils/LogManager.py):
+  - Startup diagnostics: creation of Lumen_startup_YYYYMMDD_HHMMSS.log file, enabling faulthandler for all threads, writing argv/executable/cwd/sys.path to aid diagnostics in packaged environments.
+  - Robust fallback unit: attempt to create logs in LOCALAPPDATA, fallback to an alternative directory if standard directory creation fails.
+  - Conditional redirection of stdout/stderr to file when LUMEN_QT_DEBUG is active (QT_DEBUG_PLUGINS), with safe flush attempts.
+  - Installation of a custom excepthook that writes traceback to the startup log and shows a MessageBoxW on Windows via ctypes (additional protection on critical startup failures).
+  - Utility methods: ensure_unicode, get_log_file, convenient wrappers debug/info/warning/error/critical with exc_info support; suppression of noisy comtypes logs set to CRITICAL.
+- Translation Manager (source/language/tr_01_gerenciadorTraducao.py):
+  - Support for loading .qm files for the app and Qt translations (QLibraryInfo.TranslationsPath), with heuristic for short/long locale forms.
+  - Use of sys._MEIPASS for compatibility with packaged apps (PyInstaller) when locating the translations directory.
+  - Safe removal of previously installed translators (app.setProperty / app.removeTranslator) to avoid multiple translators being active.
+  - Persistence of language in language.json at the persistent path; translations for standard dialog buttons implemented (traduzir_botoes_padrao).
+  - Detailed logging on failures and listing the translations directory contents when a file is missing.
+- Eisenhower / UI helpers (source/modules/eisenhower/services/svc_01_initUI.py, svc_06_show_context_menu.py):
+  - Computation of widget heights configurable via app.widget_heights or app.widget_height_override for cross-platform visual consistency.
+  - CustomTimeEdit: custom stepBy behavior for the minutes section that wraps when passing 00:00 / 23:59, improving time editing usability.
+  - DragDropTaskList: robust drag/drop mode (default MoveAction), single selection, special handling when source is the same list (applies super().dropEvent and persists), and manual blocking of signals during operations to avoid redundant updates.
+  - Date/time editing via dialog with:
+    - Checkboxes to bind date/time, localizable calendar popup and effective locale application (_effective_locale reads settings via gerenciador_traducao).
+    - Palette application on QDateEdit/QCalendarWidget to maintain contrast with the app theme and avoid visually inconsistent inputs.
+    - Dynamic update of dialog texts when language changes at runtime (connected to idioma_alterado).
+  - Context menu for tasks with actions: move to quadrant, edit date/time (calls the dialog above), remove task; defensive and logged.
+- Show About / Manual (source/modules/mod_07_exibir_public.py):
+  - About and Manual dialogs instantiated with protection against multiple windows; dynamic content update on language change (changeEvent catches LanguageChange).
+  - Manual: building of index/inner positions in QTextBrowser for anchor navigation; mapping id->position for "go to section" and use of QFontMetrics to adjust Close button width.
+- UI / Palette / Visual consistency:
+  - Utilities that copy palettes between widgets (spin -> combo/view) ensuring that QComboBox.view() also receives the palette.
+  - Multiple event filters (Palette/Style/Theme changes) installed on QApplication to re-synchronize backgrounds and viewports without needing restart.
+  - Defensive application of setAutoFillBackground and setFrame on widgets that do not always expose lineEdit/view, avoiding exceptions in limited backends.
 
 How to test (quick steps)
 1. Feynman Method:
-   - Open the Feynman Method tab → create/edit a concept → check placeholders, save and change language (translated texts) and change theme (backgrounds updated).
+   - Open Feynman Method tab → create/edit a concept → verify placeholders, save and language changes (translated texts) and theme change (backgrounds updated).
 2. Task Manager + Pomodoro:
-   - Create multiple tasks; drag between columns; confirm only the moved task is updated.
-   - Check tasks and use batch move/remove; use reset counters in all three scopes.
-   - Start a Pomodoro (a "focus" cycle) with a task in "Doing" → confirm pomodoros_completados increments and persists.
-3. Eisenhower integration:
-   - Enable btn_eisenhower_integrado → add a task in GerenciadorTempo → verify send via EventBus (integration_id generated).
+   - Create several tasks; drag between columns; confirm only the moved task is updated.
+   - Check tasks and use move/remove in batch; use reset counters in the three scopes.
+   - Start Pomodoro (a "focus" cycle) with a task in "Doing" → confirm increment of pomodoros_completados and persistence.
+3. Integration with Eisenhower:
+   - Enable btn_eisenhower_integrado → add a task in Time Manager → verify sending via EventBus (integration_id generated).
    - Send a task originating in Eisenhower → confirm arrival and duplicate prevention.
 4. Text/PDF Reader:
    - Text: open/paste text → Ctrl+F → test search with Aa/Word/Highlight → navigate (F3/Shift+F3).
    - PDF: load a compatible PDF → toolbar enabled → navigate pages/zoom/fit → use Ctrl+C to copy selection (when handler available).
-   - Toggle app theme → confirm palette applied to fields and search bars.
+   - Toggle app theme → confirm palette applied to fields and find bars.
+5. Utilities / startup:
+   - Start the app in a packaged Windows environment: verify creation of Lumen_startup_*.log, check startup messages, and that excepthook shows a dialog on critical failure.
+   - Change language via Translation Manager and confirm loading of the app .qm and (when available) Qt translations; confirm default dialog buttons are translated.
+   - Open date/time edit dialog and confirm calendar locale and palette consistent with theme.
+   - Test CustomTimeEdit behavior when incrementing/decrementing minutes across 23:59 → 00:00.
 
 Files changed / added (main)
 - source/modules/feynman/fey_02_setup_ui.py
@@ -101,9 +183,17 @@ Files changed / added (main)
 - source/modules/leitor/leitor_acessivel/lta_22_pdf_toolbar.py
 - source/modules/leitor/leitor_acessivel/lta_27_pdf_findbar.py
 - source/modules/leitor/leitor_acessivel/lta_29_text_findbar.py
+- source/utils/LogManager.py
+- source/language/tr_01_gerenciadorTraducao.py
+- source/modules/eisenhower/services/svc_01_initUI.py
+- source/modules/eisenhower/services/svc_06_show_context_menu.py
+- source/modules/mapa/mp_05_ThreadMapaMental.py
+- source/modules/mod_07_exibir_public.py
 
 Final notes
-- Changes prioritize reliability and experience: runtime palette/theme synchronization, safe signals between threads/modules, improved search and navigation controls in the reader, and a consistent tasks/pomodoro flow. Detailed logs (LogManager) enable diagnosis without interrupting application usage.
+- Delivered changes reinforce runtime stability (palette/theme, threads/processes, timeouts) and improve user experience with reactive controls (findbars, playback, fonts) and safe integration between processes (worker → GUI).
+- Additional cross-cutting improvements: advanced startup diagnostics (faulthandler, conditional redirection, excepthook with user warning), better translator management and compatibility with packaged apps, palette utilities covering combo views and widgets with fallbacks, and small UX improvements (CustomTimeEdit, configurable widget heights).
+- Overall strategy: delegate heavy processing to isolated processes, apply fallbacks and avoid unhandled exceptions in the UI → worker chain, ensuring rich logs via LogManager for diagnosis.
 
 _________________________________________________
 

@@ -1,7 +1,6 @@
 import os
 from functools import lru_cache
 from source.utils.LogManager import LogManager
-
 logger = LogManager.get_logger()
 
 @lru_cache(maxsize=1)

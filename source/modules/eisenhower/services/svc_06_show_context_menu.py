@@ -1,13 +1,36 @@
 from PySide6.QtWidgets import (QMenu, QInputDialog, QDialog, QVBoxLayout, QHBoxLayout, 
-                               QDateEdit, QTimeEdit, QCheckBox, QDialogButtonBox, QCalendarWidget)
-from PySide6.QtGui import QAction
+                               QDateEdit, QTimeEdit, QCheckBox, QDialogButtonBox, QCalendarWidget, QApplication)
+from PySide6.QtGui import QAction, QColor, QPalette
 from PySide6.QtCore import QCoreApplication, Qt, QDate, QTime, QLocale
 from source.utils.LogManager import LogManager
-
 logger = LogManager.get_logger()
 
 def get_text(text):
     return QCoreApplication.translate("App", text)
+
+def _compute_widget_height(app, widget, name: str | None = None) -> int:
+    try:
+        if hasattr(app, "widget_heights") and isinstance(app.widget_heights, dict) and name in app.widget_heights:
+            v = int(app.widget_heights.get(name) or 0)
+            if v > 0:
+                return v
+
+        if hasattr(app, "widget_height_override") and isinstance(app.widget_height_override, int) and app.widget_height_override > 0:
+            return int(app.widget_height_override)
+
+        fm = widget.fontMetrics()
+        return max(26, int(fm.height() * 1.2))
+
+    except Exception:
+        return 28
+
+def _apply_widget_min_height(app, widget, name: str | None = None):
+    try:
+        h = _compute_widget_height(app, widget, name)
+        widget.setMinimumHeight(h)
+
+    except Exception:
+        pass
 
 def _effective_locale(app) -> QLocale:
     try:
@@ -42,6 +65,40 @@ def _apply_locale_to_dateedit(app, de: QDateEdit):
             de.setCalendarWidget(cw)
 
         cw.setLocale(loc)
+
+        try:
+            qt_app = QApplication.instance()
+            if qt_app is not None:
+                window_color = qt_app.palette().color(QPalette.Window)
+
+                def _is_light_color(col: QColor) -> bool:
+                    try:
+                        r, g, b = col.red(), col.green(), col.blue()
+                        lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0
+                        return lum >= 0.85
+
+                    except Exception:
+                        return True
+
+                if True:
+                    fill_color = QColor(window_color)
+
+                pal = de.palette()
+                pal.setColor(QPalette.Base, fill_color)
+                pal.setColor(QPalette.AlternateBase, fill_color)
+                de.setPalette(pal)
+
+                try:
+                    cw_pal = cw.palette()
+                    cw_pal.setColor(QPalette.Base, fill_color)
+                    cw_pal.setColor(QPalette.AlternateBase, fill_color)
+                    cw.setPalette(cw_pal)
+
+                except Exception:
+                    pass
+
+        except Exception:
+            pass
 
         cw.update()
         de.update()
@@ -122,7 +179,7 @@ def _edit_date_time_dialog(app, item):
         de.setCalendarPopup(True)
         de.setDisplayFormat(app.date_input.displayFormat() if hasattr(app, "date_input") else "dd/MM/yyyy")
         de.setDate(QDate.currentDate())
-
+        _apply_widget_min_height(app, de, "dialog_date_edit")
         _apply_locale_to_dateedit(app, de)
 
         if current_date_iso:
@@ -149,6 +206,35 @@ def _edit_date_time_dialog(app, item):
         te = QTimeEdit(dlg)
         te.setDisplayFormat("HH:mm")
         te.setTime(QTime.currentTime())
+        _apply_widget_min_height(app, te, "dialog_time_edit")
+
+        try:
+            qt_app = QApplication.instance()
+            if qt_app is not None:
+                window_color = qt_app.palette().color(QPalette.Window)
+
+                def _is_light_color(col: QColor) -> bool:
+                    try:
+                        r, g, b = col.red(), col.green(), col.blue()
+                        lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0
+                        return lum >= 0.85
+
+                    except Exception:
+                        return True
+
+                try:
+                    fill_color = QColor(window_color)
+
+                except Exception:
+                    fill_color = window_color
+
+                pal_te = te.palette()
+                pal_te.setColor(QPalette.Base, fill_color)
+                pal_te.setColor(QPalette.AlternateBase, fill_color)
+                te.setPalette(pal_te)
+
+        except Exception:
+            pass
 
         if current_time:
             qt = QTime.fromString(current_time, "HH:mm")
