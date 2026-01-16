@@ -1,3 +1,5 @@
+import os
+import subprocess
 from PySide6.QtGui import QIcon, QPalette, QColor
 from PySide6.QtCore import Qt, QCoreApplication, QDate, QLocale, QTime, QObject, QEvent
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QListWidget, QComboBox, QDateEdit, QCheckBox, QTimeEdit, QFrame
@@ -183,6 +185,61 @@ class DragDropTaskList(QListWidget):
             except Exception:
                 pass
 
+
+class FileDropLineEdit(QLineEdit):
+    def __init__(self, app, parent=None):
+        super().__init__(parent)
+        self._app = app
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event):
+        try:
+            md = event.mimeData()
+            if md.hasUrls():
+                event.acceptProposedAction()
+
+            else:
+                super().dragEnterEvent(event)
+
+        except Exception:
+            super().dragEnterEvent(event)
+
+    def dragMoveEvent(self, event):
+        try:
+            md = event.mimeData()
+            if md.hasUrls():
+                event.acceptProposedAction()
+
+            else:
+                super().dragMoveEvent(event)
+
+        except Exception:
+            super().dragMoveEvent(event)
+
+    def dropEvent(self, event):
+        try:
+            md = event.mimeData()
+            if md.hasUrls():
+                urls = md.urls()
+                if urls:
+                    path = urls[0].toLocalFile()
+                    if path:
+                        try:
+                            self.setText(os.path.basename(path))
+                            setattr(self._app, "_dragged_file_path", path)
+                            self.setToolTip(path)
+
+                        except Exception:
+                            pass
+
+                event.acceptProposedAction()
+                return
+
+        except Exception:
+            logger.error("Erro ao processar drop no campo de tarefa", exc_info=True)
+
+        super().dropEvent(event)
+
 def init_ui(app):
     app.main_layout = QVBoxLayout()
     input_layout_row1 = QHBoxLayout()
@@ -190,7 +247,7 @@ def init_ui(app):
 
     input_layout_row2.setAlignment(Qt.AlignLeft)
 
-    app.task_input = QLineEdit(app)
+    app.task_input = FileDropLineEdit(app, app)
     app.task_input.setPlaceholderText(get_text("Adicione uma tarefa..."))
 
     try:
@@ -429,6 +486,38 @@ def init_ui(app):
     else:
         app._root_widget = container
 
+    def _open_linked_file(app, item):
+        try:
+            if item is None:
+                return
+
+            data = item.data(Qt.UserRole) or {}
+            path = data.get("file_path")
+            if not path:
+                return
+
+            if os.path.exists(path):
+                try:
+                    if os.name == 'nt':
+                        os.startfile(path)
+
+                    else:
+                        subprocess.Popen(["xdg-open", path])
+
+                except Exception:
+                    try:
+                        subprocess.Popen([path], shell=True)
+
+                    except Exception:
+                        pass
+
+            else:
+                from PySide6.QtWidgets import QMessageBox
+                QMessageBox.warning(app, get_text("Erro"), get_text("Arquivo não encontrado."))
+
+        except Exception as e:
+            logger.error(f"Erro ao abrir arquivo vinculado: {e}", exc_info=True)
+
     app.quadrant1_list.itemChanged.connect(lambda item: app.handle_item_checked(item, app.quadrant1_list, app.quadrant1_completed_list))
     app.quadrant2_list.itemChanged.connect(lambda item: app.handle_item_checked(item, app.quadrant2_list, app.quadrant2_completed_list))
     app.quadrant3_list.itemChanged.connect(lambda item: app.handle_item_checked(item, app.quadrant3_list, app.quadrant3_completed_list))
@@ -445,6 +534,12 @@ def init_ui(app):
     ):
         lst.setContextMenuPolicy(Qt.CustomContextMenu)
         lst.customContextMenuRequested.connect(lambda point, l=lst: app.show_context_menu(point, l))
+
+        try:
+            lst.itemDoubleClicked.connect(lambda item, l=lst: _open_linked_file(app, item))
+
+        except Exception:
+            pass
 
     try:
         from PySide6.QtWidgets import QApplication

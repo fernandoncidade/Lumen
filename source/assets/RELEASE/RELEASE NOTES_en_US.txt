@@ -1,4 +1,118 @@
 RELEASE NOTES — Lúmen
+Version: 2026.1.16.0
+Date: January 16, 2026
+Author: Fernando Nillsson Cidade
+
+Executive summary
+- Delivery focused on robustness, usability and integration of the Eisenhower Matrix module (UI and services) with cross-cutting improvements in asynchronous persistence, import/export, resilient date/time parsing, integration with Time Management via EventBus and visual synchronization with the application palette. Defensive fixes and expanded logging to avoid crashes in environments with missing dependencies.
+
+Detailed changes and improvements
+
+1) UI and interaction — Eisenhower (source/modules/eisenhower/services/ui + source/modules/mod_06_eisenhower.py)
+- New layout/controls:
+  - Task field with FileDropLineEdit that accepts file drag & drop and keeps _dragged_file_path for optional linking.
+  - Quadrant combo with emoji labels and an add button with icon.
+  - Better integrated Date/Time inputs (QDateEdit with calendar popup, CustomTimeEdit with stepBy behavior that wraps between 00:00↔23:59).
+- Time-ordered insertion:
+  - insert_task_into_quadrant_list creates headers for time ranges (HH:00–HH:59), inserts headers at the correct position and sorts tasks within the group by time and text.
+  - cleanup_time_groups removes empty headers keeping lists consistent.
+- Drag & Drop and selection:
+  - DragDropTaskList with controlled MoveAction: when source != destination, selected items are moved via app.move_item_between_lists with signal blocking; when source == destination, fallback to super().dropEvent and persistence.
+  - Single-selection enforcement to avoid inconsistent states.
+- Shortcuts and opening linked files:
+  - Double-click opens linked file (os.startfile on Windows / xdg-open on Unix).
+- Dynamic placeholders:
+  - add_placeholder and logic to remove/insert placeholders (e.g., "1st Quadrant", "No Completed Tasks") when lists become empty.
+
+2) Asynchronous persistence and I/O (source/modules/mod_06_eisenhower.py, ui/ui_05_save_tasks.py, ui/ui_06_load_tasks.py)
+- QThread worker to save tasks without blocking the UI:
+  - _EisenhowerWorker exposing request_save signal that writes JSON in background; fallback to synchronous save if worker unavailable.
+  - Protections to create the destination directory when needed and emit save_finished/error.
+- Robust serialization:
+  - save_tasks / list_to_entries preserve file_path, description, priority, date/time; write with ensure_ascii=False and indent.
+- Resilient loading:
+  - load_tasks handles simple entries (string) and dicts; preserves metadata in Qt.UserRole; applies display formatting and tooltips with Date/Time/File/Description.
+  - Defensive parsing for ISO/locale formats.
+
+3) Import / Export (source/modules/eisenhower/services/svc_07_arquivo.py)
+- Excel/PDF import:
+  - .xlsx support via openpyxl (read_only) with mapping of sheets to quadrants; parsing rows and extracting date/time.
+  - .pdf support via PyPDF2: text extraction, heuristic segmentation by normalized titles and fallback by keys (quadrant1:, etc.). Robust parsing and cleaning of bullets/prefixes.
+- Save As export:
+  - .xlsx via openpyxl with headers and columns (text, date, time, file_path, description, priority).
+  - .pdf via reportlab with section layout, automatic page breaks and inclusion of metadata (priority, description, file).
+  - .json with full dump including meta (date_display_format, language) and raw_data per item.
+- Friendly error messages when external libraries are missing (openpyxl, PyPDF2, reportlab).
+
+4) Context menu and advanced editing (source/modules/eisenhower/services/svc_06_show_context_menu.py)
+- Full context menu:
+  - Actions: Add/Edit Description (rich QTextEdit dialog), Edit date/time (QDialog with QDateEdit/QTimeEdit and checkboxes to link), Move to another quadrant (submenu), Remove Task.
+- Date/time editing:
+  - Dialog with locale applied to QDateEdit and visual customization of the calendarWidget (colors consistent with palette).
+  - Dialog texts synchronized when language changes (idioma_alterado).
+  - On confirm, item is replaced preserving check state and metadata; app.save_tasks called.
+- Description:
+  - Dialog saves up to a preview (first 3 lines) in the tooltip; stored in Qt.UserRole["description"].
+
+5) Integration with Time Management / EventBus (source/modules/mod_06_eisenhower.py + utils/EventBus)
+- Sending tasks when adding if integrate_time_button is active:
+  - Payload includes integration_id (uuid4), origin, title, normalized priority (via Tarefa.normalizar_prioridade), date/time.
+- Receiving tasks from the time manager:
+  - _on_event_bus_tarefa filters origin == "tempo" and prevents duplicates by integration_id; adds the task to the corresponding quadrant.
+- Draining pending messages: use of drain_pending_tarefas in setup to avoid loss during late initialization.
+
+6) UX, locale and palette synchronization
+- Dynamic locale:
+  - _apply_locale_to_date_input adjusts displayFormat to show year as yyyy when needed and connects to idioma_alterado.
+  - _effective_locale used in display updates.
+- Visual synchronization with theme:
+  - _apply_window_as_base applies Base/AlternateBase to relevant widgets (lists, combos, date/time editors) and adjusts QComboBox.view() / viewports to maintain contrast.
+  - _PaletteThemeSyncFilter event filter installed on QApplication reacts to ApplicationPaletteChange/PaletteChange/StyleChange/ThemeChange (and ColorSchemeChange when available).
+  - Protection flags to avoid reentrancy (_eisenhower_palette_sync_in_progress).
+
+7) Robustness, logging and protections
+- Extensive try/except usage with LogManager to capture exc_info at critical points (drag&drop, I/O, parsing, workers).
+- Defensive protections:
+  - Validations of Qt.Item flags to consider only selectable items.
+  - Fallbacks when attributes (calendar_pane, gerenciador_traducao, date_input) are missing.
+  - Safe removal of temporary attributes (_dragged_file_path).
+
+How to test (quick steps)
+1. Basic UI:
+   - Add tasks with/without date and time; verify formatted display and tooltips.
+   - Drag tasks between quadrants and into "Completed" lists; confirm persistence and calendar update (if present).
+2. File Drag & Drop:
+   - Drag a file into the task field, confirm linking when prompted and verify the item's tooltip/style.
+3. Import/Export:
+   - Import .xlsx and .pdf in supported formats; save as .xlsx/.pdf/.json and validate contents.
+4. Edit via menu:
+   - Use the context menu to edit description and date/time; confirm changes persist and reflect in tooltips.
+5. Time Integration:
+   - Enable integrate_time_button and add a task; check sending via EventBus (or logs). Send a task originating from "tempo" and verify duplicate prevention by integration_id.
+6. Theme/Language:
+   - Switch app theme and language; confirm palette, date formats and dialog texts update correctly.
+7. Robustness:
+   - Run without openpyxl/PyPDF2/reportlab installed and confirm friendly messages and fallbacks without crashing.
+
+Files changed / added (main in this delivery)
+- source/modules/eisenhower/services/svc_01_initUI.py
+- source/modules/eisenhower/ui/ui_01_add_task.py
+- source/modules/eisenhower/ui/ui_03_move_item_between_lists.py
+- source/modules/eisenhower/ui/ui_05_save_tasks.py
+- source/modules/eisenhower/ui/ui_06_load_tasks.py
+- source/modules/eisenhower/services/svc_06_show_context_menu.py
+- source/modules/eisenhower/services/svc_07_arquivo.py
+- source/modules/eisenhower/services/svc_08_atualizar_itens_tarefas.py
+- source/modules/mod_06_eisenhower.py
+- utils/EventBus.py (integration and message draining)
+- Logging adjustments via source/utils/LogManager.py (intensified usage at critical points)
+
+Final notes
+- Delivery prioritizes stability and user experience: non-blocking I/O, protection against missing backends, robust date/time parsing and improved visual synchronization with themes. Functional integration tests are recommended (Eisenhower ↔ Time Management ↔ Calendar) and reviewing logs after import/export and drag&drop operations to capture parsing edge-cases and varied PDF/Excel formats.
+
+_________________________________________________
+
+RELEASE NOTES — Lúmen
 Version: 2026.1.14.0
 Date: January 14, 2026
 Author: Fernando Nillsson Cidade

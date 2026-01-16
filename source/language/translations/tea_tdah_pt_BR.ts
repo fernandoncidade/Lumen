@@ -1205,8 +1205,8 @@ Isso pode levar alguns minutos.</translation>
     </message>
 
     <message>
-        <source>Editar data/horário</source>
-        <translation>Editar data/horário</translation>
+        <source>Editar data/horário...</source>
+        <translation>Editar data/horário...</translation>
     </message>
 
     <message>
@@ -2068,6 +2068,51 @@ Defina 0 para repetir imediatamente após o áudio terminar.</translation>
     <message>
       <source>Selecione o tipo de marcador a aplicar no texto</source>
       <translation>Selecione o tipo de marcador a aplicar no texto</translation>
+    </message>
+
+    <message>
+        <source>Arquivo não encontrado.</source>
+        <translation>Arquivo não encontrado.</translation>
+    </message>
+
+    <message>
+        <source>Descrição da Tarefa</source>
+        <translation>Descrição da Tarefa</translation>
+    </message>
+
+    <message>
+        <source>Adicione uma descrição para a tarefa:</source>
+        <translation>Adicione uma descrição para a tarefa:</translation>
+    </message>
+
+    <message>
+        <source>Data</source>
+        <translation>Data</translation>
+    </message>
+
+    <message>
+        <source>Horário</source>
+        <translation>Horário</translation>
+    </message>
+
+    <message>
+        <source>Descrição</source>
+        <translation>Descrição</translation>
+    </message>
+
+    <message>
+        <source>Adicionar/Editar Descrição...</source>
+        <translation>Adicionar/Editar Descrição...</translation>
+    </message>
+
+    <message>
+        <source>Vincular Arquivo</source>
+        <translation>Vincular Arquivo</translation>
+    </message>
+
+    <message>
+        <source>Deseja vincular o arquivo a esta tarefa?</source>
+        <translation>Deseja vincular o arquivo a esta tarefa?</translation>
     </message>
 
   </context>

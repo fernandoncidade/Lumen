@@ -1,4 +1,118 @@
 NOTAS DE LANÇAMENTO — Lúmen
+Versão: 2026.1.16.0
+Data: 16 de janeiro de 2026
+Autor: Fernando Nillsson Cidade
+
+Resumo executivo
+- Entrega focada em robustez, usabilidade e integração do módulo Matriz de Eisenhower (UI e serviços) com melhorias transversais em persistência assíncrona, import/export, parsing resiliente de datas/horários, integração com Gestão de Tempo via EventBus e sincronia visual com a paleta do aplicativo. Correções defensivas e logging ampliado para evitar crashes em ambientes com dependências ausentes.
+
+Mudanças e melhorias detalhadas
+
+1) UI e interação — Eisenhower (source/modules/eisenhower/services/ui + source/modules/mod_06_eisenhower.py)
+- Novo layout/controles:
+  - Campo de tarefa com FileDropLineEdit que aceita drag&drop de arquivos e mantém _dragged_file_path para vinculação opcional.
+  - Combo de quadrantes com labels emoji e botão de adicionar com ícone.
+  - Date/Time inputs melhor integrados (QDateEdit com calendar popup, CustomTimeEdit com comportamento de stepBy que faz wrap entre 00:00↔23:59).
+- Inserção ordenada por horário:
+  - insert_task_into_quadrant_list cria cabeçalhos por faixa horária (HH:00–HH:59), insere headers na posição correta e ordena tarefas dentro do grupo por horário e texto.
+  - cleanup_time_groups remove cabeçalhos vazios mantendo listas consistentes.
+- Drag & Drop e seleção:
+  - DragDropTaskList com MoveAction controlado: quando origem != destino, items selecionados são movidos via app.move_item_between_lists com bloqueio de sinais; quando origem == destino, fallback para super().dropEvent e persistência.
+  - Seleção single-selection reforçada para evitar estados inconsistentes.
+- Atalhos e abertura de arquivo vinculado:
+  - Duplo clique abre arquivo vinculado (os.startfile no Windows / xdg-open em Unix).
+- Placeholders dinâmicos:
+  - add_placeholder e lógica de limpeza/insere placeholders (ex.: "1º Quadrante", "Nenhuma Tarefa Concluída") quando listas ficam vazias.
+
+2) Persistência assíncrona e I/O (source/modules/mod_06_eisenhower.py, ui/ui_05_save_tasks.py, ui/ui_06_load_tasks.py)
+- Worker em QThread para salvar tasks sem bloquear a UI:
+  - _EisenhowerWorker expondo request_save signal que grava JSON em background; fallback para salvar síncrono caso worker indisponível.
+  - Proteções para criar diretório destino quando necessário e emitir save_finished/error.
+- Serialização robusta:
+  - save_tasks / list_to_entries preservam file_path, description, priority, date/time; escrita com ensure_ascii=False e indent.
+- Carregamento resiliente:
+  - load_tasks trata entradas simples (string) e dicts; preserva metadados em Qt.UserRole; aplica formatação de exibição e tooltips com Data/Horário/Arquivo/Descrição.
+  - Parsing defensivo para formatos ISO/locale.
+
+3) Importação / Exportação (source/modules/eisenhower/services/svc_07_arquivo.py)
+- Import de Excel/PDF:
+  - Suporte a .xlsx via openpyxl (read_only) com mapeamento de folhas para quadrantes; parsing de linhas e extração de data/hora.
+  - Suporte a .pdf via PyPDF2: extração de texto, heurística de segmentos por títulos normalizados e fallback por chaves (quadrant1:, etc.). Parsing robusto e limpeza de bullets/prefixos.
+- Export Save As:
+  - .xlsx via openpyxl com cabeçalhos e colunas (text, date, time, file_path, description, priority).
+  - .pdf via reportlab com layout por seções, quebra de página automática e inclusão de metadados (prioridade, descrição, arquivo).
+  - .json com dump completo incluindo meta (date_display_format, language) e raw_data por item.
+- Mensagens de erro amigáveis quando bibliotecas externas ausentes (openpyxl, PyPDF2, reportlab).
+
+4) Menu de contexto e edição avançada (source/modules/eisenhower/services/svc_06_show_context_menu.py)
+- Menu contextual completo:
+  - Ações: Adicionar/Editar Descrição (diálogo rich QTextEdit), Editar data/horário (QDialog com QDateEdit/QTimeEdit e checkboxes para vincular), Mover para outro quadrante (submenu), Remover Tarefa.
+- Edição de data/horário:
+  - Dialog com locale aplicado ao QDateEdit e customização visual do calendarWidget (cores coerentes com paleta).
+  - Sincronização de textos do diálogo quando idioma muda (idioma_alterado).
+  - Ao confirmar, item é substituído preservando estado de check e metadados; app.save_tasks chamado.
+- Descrição:
+  - Diálogo que grava até preview (3 primeiras linhas) no tooltip; armazenamento em Qt.UserRole["description"].
+
+5) Integração com Gestão de Tempo / EventBus (source/modules/mod_06_eisenhower.py + utils/EventBus)
+- Envio de tarefas ao adicionar quando integrate_time_button está ativo:
+  - Payload inclui integration_id (uuid4), origin, titulo, prioridade normalizada (via Tarefa.normalizar_prioridade), date/time.
+- Recebimento de tarefas do tempo:
+  - _on_event_bus_tarefa filtra origin == "tempo" e previne duplicatas por integration_id; adiciona tarefa no quadrante correspondente.
+- Drain de mensagens pendentes: uso de drain_pending_tarefas no setup para evitar perda em inicialização tardia.
+
+6) UX, locale e sincronia de paleta
+- locale dinâmico:
+  - _apply_locale_to_date_input ajusta displayFormat para yyyy quando necessário e conecta idioma_alterado.
+  - _effective_locale usado em updates de exibição.
+- Sincronização visual com tema:
+  - _apply_window_as_base aplica Base/AlternateBase nos widgets relevantes (listas, combos, date/time editors) e ajusta view() de QComboBox / viewport para manter contraste.
+  - Filtro de evento _PaletteThemeSyncFilter instalado na QApplication reage a ApplicationPaletteChange/PaletteChange/StyleChange/ThemeChange (e ColorSchemeChange quando disponível).
+  - Flags de proteção para evitar reentrância (_eisenhower_palette_sync_in_progress).
+
+7) Robustez, logging e proteções
+- Uso extensivo de try/except com LogManager para capturar exc_info nos pontos críticos (drag&drop, I/O, parsing, workers).
+- Proteções defensivas:
+  - Validações de Qt.Item flags para considerar apenas items selecionáveis.
+  - Fallbacks quando atributos (calendar_pane, gerenciador_traducao, date_input) ausentes.
+  - Remoção segura de atributos temporários (_dragged_file_path).
+
+Como testar (passos rápidos)
+1. UI básica:
+   - Adicionar tarefas com/sem data e horário; verificar exibição formatada e tooltips.
+   - Arrastar tarefas entre quadrantes e para listas "Concluídas"; confirmar persistência e atualização do calendário (se presente).
+2. Drag & Drop de arquivo:
+   - Arrastar um arquivo para campo de tarefa, confirmar vinculação quando solicitado e verificar tooltip/estilo do item.
+3. Import/Export:
+   - Importar .xlsx e .pdf em formatos compatíveis; salvar em .xlsx/.pdf/.json e validar conteúdo.
+4. Edição via menu:
+   - Usar menu contextual para editar descrição e data/horário; confirmar que mudanças persistem e são refletidas nos tooltips.
+5. Integração Tempo:
+   - Ativar integrate_time_button e adicionar tarefa; checar envio via EventBus (ou logs). Enviar tarefa originada de "tempo" e verificar prevenção de duplicatas por integration_id.
+6. Tema/Idioma:
+   - Alternar tema do app e idioma; confirmar que paleta, formatos de data e textos dos diálogos atualizam corretamente.
+7. Robustez:
+   - Executar sem openpyxl/PyPDF2/reportlab instalados e confirmar mensagens amigáveis e fallback sem crash.
+
+Arquivos alterados / adicionados (principais nesta entrega)
+- source/modules/eisenhower/services/svc_01_initUI.py
+- source/modules/eisenhower/ui/ui_01_add_task.py
+- source/modules/eisenhower/ui/ui_03_move_item_between_lists.py
+- source/modules/eisenhower/ui/ui_05_save_tasks.py
+- source/modules/eisenhower/ui/ui_06_load_tasks.py
+- source/modules/eisenhower/services/svc_06_show_context_menu.py
+- source/modules/eisenhower/services/svc_07_arquivo.py
+- source/modules/eisenhower/services/svc_08_atualizar_itens_tarefas.py
+- source/modules/mod_06_eisenhower.py
+- utils/EventBus.py (integração e drain de mensagens)
+- Ajustes de logging via source/utils/LogManager.py (uso intensificado em pontos críticos)
+
+Observações finais
+- Entrega prioriza estabilidade e experiência do usuário: I/O não bloqueante, proteção contra backends ausentes, parsing de data/hora robusto e melhor sincronia visual com temas. Recomenda-se testes funcionais integrados (Eisenhower ↔ Gestão de Tempo ↔ Calendário) e revisão dos logs após operações de import/export e drag&drop para capturar edge-cases de parsing e formatos de PDF/Excel variados.
+
+_________________________________________________
+
+NOTAS DE LANÇAMENTO — Lúmen
 Versão: 2026.1.14.0
 Data: 14 de janeiro de 2026
 Autor: Fernando Nillsson Cidade

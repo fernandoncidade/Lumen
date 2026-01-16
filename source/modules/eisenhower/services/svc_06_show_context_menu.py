@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import (QMenu, QInputDialog, QDialog, QVBoxLayout, QHBoxLayout, 
+from PySide6.QtWidgets import (QMenu, QInputDialog, QDialog, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, QLabel,
                                QDateEdit, QTimeEdit, QCheckBox, QDialogButtonBox, QCalendarWidget, QApplication)
 from PySide6.QtGui import QAction, QColor, QPalette
 from PySide6.QtCore import QCoreApplication, Qt, QDate, QTime, QLocale
@@ -170,7 +170,7 @@ def _edit_date_time_dialog(app, item):
         current_time = data.get("time")
 
         dlg = QDialog(app)
-        dlg.setWindowTitle(get_text("Editar data/horário"))
+        dlg.setWindowTitle(get_text("Editar data/horário..."))
         layout = QVBoxLayout(dlg)
 
         row_date = QHBoxLayout()
@@ -280,7 +280,7 @@ def _edit_date_time_dialog(app, item):
         try:
             if hasattr(app, "gerenciador_traducao"):
                 def _on_idioma_alterado(_=None):
-                    dlg.setWindowTitle(get_text("Editar data/horário"))
+                    dlg.setWindowTitle(get_text("Editar data/horário..."))
                     cb_date.setText(get_text("Vincular data"))
                     cb_time.setText(get_text("Vincular horário"))
                     _apply_locale_to_dateedit(app, de)
@@ -418,13 +418,171 @@ def mostrar_menu_contexto(app, point, list_widget):
 
         menu = QMenu(list_widget)
 
-        mover_acao = QAction(get_text("Mover para outro quadrante"), app)
-        mover_acao.triggered.connect(lambda: _move_to_quadrant(app, item, list_widget))
-        menu.addAction(mover_acao)
+        try:
+            def _edit_description():
+                try:
+                    class DescriptionDialog(QDialog):
+                        def __init__(self, parent=None, initial_text=""):
+                            super().__init__(parent or app)
+                            self.setModal(True)
+                            self.setWindowTitle(get_text("Descrição da Tarefa") or "Descrição da Tarefa")
+                            layout = QVBoxLayout(self)
+                            layout.addWidget(QLabel(get_text("Adicione uma descrição para a tarefa:")))
+                            self.text = QTextEdit(self)
+                            self.text.setPlainText(initial_text or "")
+                            self.text.setMinimumSize(400, 150)
+                            layout.addWidget(self.text)
+                            btns = QHBoxLayout()
+                            btns.addStretch(1)
+                            btn_cancel = QPushButton(get_text("Cancelar") or "Cancelar")
+                            btn_ok = QPushButton(get_text("OK") or "OK")
+                            btn_cancel.clicked.connect(self.reject)
+                            btn_ok.clicked.connect(self.accept)
+                            btns.addWidget(btn_cancel)
+                            btns.addWidget(btn_ok)
+                            layout.addLayout(btns)
 
-        editar_data_acao = QAction(get_text("Editar data/horário"), app)
+                        def get_text(self):
+                            return self.text.toPlainText()
+
+                    current_data = item.data(Qt.UserRole) or {}
+                    existing = current_data.get("description", "")
+                    dlg = DescriptionDialog(parent=app, initial_text=existing)
+                    if dlg.exec() == QDialog.Accepted:
+                        desc = dlg.get_text().strip()
+                        data = dict(current_data) if isinstance(current_data, dict) else {}
+                        if desc:
+                            data["description"] = desc
+
+                        else:
+                            data.pop("description", None)
+
+                        try:
+                            list_widget.blockSignals(True)
+
+                        except Exception:
+                            pass
+
+                        try:
+                            item.setData(Qt.UserRole, data)
+
+                            tooltip_lines = []
+                            try:
+                                date_val = data.get("date")
+                                time_val = data.get("time")
+                                if date_val:
+                                    qd = QDate.fromString(date_val, Qt.ISODate)
+                                    if qd.isValid() and hasattr(app, "date_input"):
+                                        date_human = qd.toString(app.date_input.displayFormat())
+                                        tooltip_lines.append(f"{get_text('Data') or 'Data'}: {date_human}")
+                                        if time_val:
+                                            tooltip_lines.append(f"{get_text('Horário') or 'Horário'}: {time_val}")
+
+                            except Exception:
+                                pass
+
+                            try:
+                                fp = data.get("file_path")
+                                if fp:
+                                    tooltip_lines.append((get_text("Arquivo") or "Arquivo") + f": {fp}")
+
+                            except Exception:
+                                pass
+
+                            try:
+                                desc_full = data.get("description")
+                                if desc_full:
+                                    preview_lines = [ln for ln in desc_full.splitlines() if ln.strip()]
+                                    preview = "\n".join(preview_lines[:3])
+                                    if preview:
+                                        tooltip_lines.append((get_text("Descrição") or "Descrição") + ":")
+                                        tooltip_lines.append(preview)
+
+                            except Exception:
+                                pass
+
+                            if tooltip_lines:
+                                item.setToolTip("\n".join(tooltip_lines))
+
+                        finally:
+                            try:
+                                list_widget.blockSignals(False)
+
+                            except Exception:
+                                pass
+
+                        try:
+                            app.save_tasks()
+
+                        except Exception:
+                            pass
+
+                except Exception as e:
+                    logger.error(f"Erro no diálogo de descrição: {e}", exc_info=True)
+
+            descricao_acao = QAction(get_text("Adicionar/Editar Descrição...") or "Adicionar/Editar Descrição...", app)
+            descricao_acao.triggered.connect(_edit_description)
+            menu.addAction(descricao_acao)
+
+        except Exception:
+            pass
+
+        editar_data_acao = QAction(get_text("Editar data/horário..."), app)
         editar_data_acao.triggered.connect(lambda: _edit_date_time_dialog(app, item))
         menu.addAction(editar_data_acao)
+
+        try:
+            opts = _quadrant_options(app)
+            mover_menu = QMenu(get_text("Mover para outro quadrante"), app)
+
+            for idx, label in enumerate(opts):
+                a = QAction(label, app)
+                def _make_handler(i):
+                    def _handler():
+                        try:
+                            keep_completed = _is_completed_list(app, list_widget)
+                            target = _target_list_for_quadrant(app, i, keep_completed=keep_completed)
+                            if target is None or target is list_widget:
+                                return
+
+                            new_state = Qt.Checked if keep_completed else Qt.Unchecked
+
+                            list_widget.blockSignals(True)
+                            target.blockSignals(True)
+                            try:
+                                app.move_item_between_lists(item, list_widget, target, new_state)
+
+                            finally:
+                                list_widget.blockSignals(False)
+                                target.blockSignals(False)
+
+                            try:
+                                app.save_tasks()
+
+                            except Exception:
+                                pass
+
+                            try:
+                                if hasattr(app, "calendar_pane") and app.calendar_pane:
+                                    app.calendar_pane.calendar_panel.update_task_list()
+
+                            except Exception:
+                                pass
+
+                        except Exception as e:
+                            logger.error(f"Erro ao mover tarefa de quadrante via submenu: {e}", exc_info=True)
+
+                    return _handler
+
+                a.triggered.connect(_make_handler(idx))
+                mover_menu.addAction(a)
+
+            menu.addMenu(mover_menu)
+
+        except Exception:
+            mover_acao = QAction(get_text("Mover para outro quadrante"), app)
+            mover_acao.triggered.connect(lambda: _move_to_quadrant(app, item, list_widget))
+            menu.addAction(mover_acao)
 
         menu.addSeparator()
 
