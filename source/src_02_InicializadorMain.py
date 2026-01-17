@@ -60,8 +60,8 @@ def iniciar_aplicacao():
         app_icon = configurar_icone_aplicacao(app)
         window = criar_janela_principal()
         # from source.utils.TrialManager import TrialManager
-        # TrialManager.enforce_trial()
-        # TrialManager.delete_first_run_timestamp()
+        # TrialManager.enforce_trial()  # Descomente esta linha para forçar o uso da versão de avaliação
+        # TrialManager.delete_first_run_timestamp()  # Use esta linha para testes, removendo o timestamp de primeiro uso
 
         window.show()
         configurar_icone_janela(window, app_icon)
@@ -74,3 +74,15 @@ def iniciar_aplicacao():
     except Exception as e:
         logger.critical(f"Erro fatal ao iniciar aplicação: {e}", exc_info=True)
         return 1
+
+def montar_e_mostrar_janela(app):
+    try:
+        app_icon = configurar_icone_aplicacao(app)
+        window = criar_janela_principal()
+        window.show()
+        configurar_icone_janela(window, app_icon)
+        return window
+
+    except Exception as e:
+        logger.critical(f"Erro ao montar e mostrar janela: {e}", exc_info=True)
+        raise

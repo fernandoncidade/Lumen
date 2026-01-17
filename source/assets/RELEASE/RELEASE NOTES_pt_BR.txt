@@ -1,4 +1,83 @@
 NOTAS DE LANÇAMENTO — Lúmen
+Versão: 2026.1.17.0
+Data: 17 de janeiro de 2026
+Autor: Fernando Nillsson Cidade
+
+Resumo
+- Refatoração e endurecimento do processo de inicialização da aplicação.
+- Nova tela de splash com progresso e log interno durante o carregamento.
+- Separação clara entre criação do QApplication, montagem da janela e execução.
+- Melhor tratamento e diagnóstico do ícone da aplicação e AppUserModelID no Windows.
+- Melhoria no logging de início (startup diagnostics) e instalação de hook de exceções.
+
+Principais melhorias
+- Splash screen interativa:
+  - Criada com widget customizado (imagem redimensionável, QProgressBar e QTextEdit para logs).
+  - Redimensionamento responsivo do pixmap com fallback para imagem em branco se o ícone não for válido.
+  - Progresso alimentado dinamicamente durante importações de módulos para dar feedback visual ao usuário.
+  - Uso de QTimer.singleShot para rodar o loader sem bloquear o loop de eventos.
+
+- Loader com instrumentação de importações:
+  - Hook temporário em builtins.__import__ para detectar novos módulos carregados e atualizar o progresso.
+  - Garantia de restauração do import original em finally, evitando efeitos colaterais.
+
+- Inicialização modular e mais robusta (source/src_02_InicializadorMain.py):
+  - Funções separadas: configurar_windows_app_id, configurar_aplicacao, configurar_icone_aplicacao, criar_janela_principal, configurar_icone_janela, iniciar_aplicacao, montar_e_mostrar_janela.
+  - Carregamento do ícone com verificações: existência do caminho, validação de QIcon (isNull) e verificação de tamanhos disponíveis antes de aplicar.
+  - Logging detalhado em cada etapa (debug/info/warning/error/critical).
+  - Tratamento de exceções com exc_info quando aplicável e retorno de código de erro consistente.
+
+- Logging e diagnósticos:
+  - main.py ativa diagnósticos de startup e instala hook de exceção via LogManager antes de iniciar SplashAppStarter.
+  - Mensagens de log trazem contexto (caminho do ícone, tamanhos, progresso de import, falhas específicas).
+
+- Compatibilidade e suporte ao Windows:
+  - Função configurar_windows_app_id encapsula chamada a ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID com tratamento de falhas e logging.
+  - multiprocessing.freeze_support() chamado em SplashAppStarter.start para compatibilidade com builds/pacotes Windows.
+
+Correções de bugs
+- Evita crashes quando:
+  - Ícone não existe ou é inválido (pixmap/isNull): fallback para imagem branca e log de erro.
+  - app_icon nulo: não tenta aplicar ícone na janela sem verificação.
+- Evita leaks no hook de import: restauração garantida.
+- Trata encerramento do splash em exceções, garantindo que a UI principal seja ativada/raised quando possível.
+- Prevê falhas na configuração do AppUserModelID sem interromper a aplicação.
+
+Impacto para usuários
+- Inicialização mais informativa e resiliente.
+- Menos falhas ao abrir a aplicação em ambientes sem o ícone esperado.
+- Logs de inicialização mais detalhados para diagnóstico de problemas.
+
+Notas para desenvolvedores
+- Arquivos principais alterados / a revisar:
+  - source/src_01_SplashAppStarter.py — implementação do splash, loader, hook de import e rotina start().
+  - source/src_02_InicializadorMain.py — modularização da inicialização, carregamento de ícone, AppUserModelID e montagem/execução da janela.
+  - main.py — ativa diagnósticos e inicia o SplashAppStarter.
+- Pontos de atenção:
+  - Confirme que source.utils.LogManager exporta enable_startup_diagnostics() e install_exception_hook().
+  - Confirme que source.utils.IconUtils.get_icon_path retorna caminho correto para "autismo.ico".
+  - Testar em Windows para validar SetCurrentProcessExplicitAppUserModelID (permissões/contexto).
+  - Se adicionar funcionalidades que importem muitos módulos no loader, ajustar limites de progresso e mensagens conforme necessário.
+
+Testes recomendados
+- Iniciar aplicação em ambiente de desenvolvimento e produção (Windows).
+- Testar comportamento com o ícone presente e com o ícone ausente/corrompido.
+- Verificar logs gerados pelo LogManager durante toda a inicialização.
+- Simular exceções em criar_janela_principal para validar fechamento do splash e logging critical.
+- Validar que builtins.__import__ é restaurado após inicialização.
+
+Compatibilidade e requisitos
+- Requer PySide6.
+- Mantém compatibilidade com Windows (melhorias específicas de AppUserModelID).
+- Nenhuma alteração na API pública da janela principal (criar_janela_principal/EstudoAcessivel) prevista — revisão recomendada se houver mudanças em módulos importados.
+
+Observações finais
+- Arquitetura preparada para futura instrumentação (tracing/evaluation) e para adição de etapas de inicialização sem bloquear a UI.
+- Recomenda-se manter logs de startup habilitados em builds de diagnóstico para facilitar investigações de suporte.
+
+_________________________________________________
+
+NOTAS DE LANÇAMENTO — Lúmen
 Versão: 2026.1.16.0
 Data: 16 de janeiro de 2026
 Autor: Fernando Nillsson Cidade

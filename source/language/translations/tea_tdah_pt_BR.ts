@@ -2115,5 +2115,55 @@ Defina 0 para repetir imediatamente após o áudio terminar.</translation>
         <translation>Deseja vincular o arquivo a esta tarefa?</translation>
     </message>
 
+    <message>
+      <source>Iniciando carregamento...</source>
+      <translation>Iniciando carregamento...</translation>
+    </message>
+
+    <message>
+      <source>Importado:</source>
+      <translation>Importado:</translation>
+    </message>
+
+    <message>
+      <source>Importado: {m}</source>
+      <translation>Importado: {m}</translation>
+    </message>
+
+    <message>
+      <source>Configurando AppUserModelID...</source>
+      <translation>Configurando AppUserModelID...</translation>
+    </message>
+
+    <message>
+      <source>AppUserModelID configurado</source>
+      <translation>AppUserModelID configurado</translation>
+    </message>
+
+    <message>
+      <source>Falha AppUserModelID:</source>
+      <translation>Falha ao configurar AppUserModelID:</translation>
+    </message>
+
+    <message>
+      <source>Falha AppUserModelID: {e}</source>
+      <translation>Falha ao configurar AppUserModelID: {e}</translation>
+    </message>
+
+    <message>
+      <source>Finalizando inicialização...</source>
+      <translation>Finalizando inicialização...</translation>
+    </message>
+
+    <message>
+      <source>Erro ao carregar aplicação:</source>
+      <translation>Erro ao carregar aplicação:</translation>
+    </message>
+
+    <message>
+      <source>Erro ao carregar aplicação: {e}</source>
+      <translation>Erro ao carregar aplicação: {e}</translation>
+    </message>
+
   </context>
 </TS>

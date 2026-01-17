@@ -79,7 +79,7 @@ if __name__ == '__main__':
     try:
         multiprocessing.freeze_support()
 
-        from source.src_01_InicializadorMain import iniciar_aplicacao
+        from source.src_02_InicializadorMain import iniciar_aplicacao
 
         sys.exit(iniciar_aplicacao())
 
