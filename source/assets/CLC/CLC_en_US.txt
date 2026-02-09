@@ -1,0 +1,96 @@
+COMMERCIAL LICENSE AGREEMENT — Lúmen
+Version: 2025.11.26.0
+Date: November 26, 2025
+
+This Commercial License Agreement ("Agreement") is entered into between:
+
+LICENSOR: Fernando Nillsson Cidade, hereinafter "LICENSOR".
+LICENSEE: the natural or legal person who acquires a commercial license for the software "Lúmen", hereinafter "LICENSEE".
+
+Preamble
+This Agreement supplements the terms of the End User License Agreement (EULA) included in the package (assets/EULA/EULA_pt_BR.txt) and governs commercial licensing modalities, support, updates and liabilities related to the Lúmen — an application intended to support study and organization for neurodivergent people, with features documented in the package (accessible reader TTS, persistent typographic settings, focus ruler, audio player, Eisenhower Matrix, Pomodoro timers, mind‑map tools and support for the Feynman Technique, local data import/export, among others).
+
+1. OBJECT
+1.1 Grant of a license to use the software Lúmen according to the chosen commercial modality.
+1.2 The LICENSEE receives the right to use the provided executable and documentation; source code distribution is available only if specifically contracted and subject to an additional agreement.
+
+2. LICENSING MODALITIES
+2.1 Individual License
+  a) Installation on up to 2 (two) devices owned by the same LICENSEE.
+  b) Updates and fixes for 1 (one) year from the date of purchase (when applicable).
+  c) Basic technical support (ticket / email) for 1 (one) year.
+2.2 Small Business License
+  a) Installation on up to 10 (ten) workstations within the same organization.
+  b) Updates for 1 (one) year.
+  c) Priority support by email and phone for 1 (one) year.
+  d) Basic customization (textual branding and icons) subject to technical evaluation and a supplementary agreement.
+2.3 Enterprise License
+  a) Unlimited installation as agreed commercially.
+  b) Updates for 2 (two) years or as agreed.
+  c) Premium support (SLA) including remote support and priority fixes.
+  d) Options for integration, training and customization subject to a commercial annex.
+
+3. PAYMENT AND INVOICING
+3.1 Prices, terms and payment methods will be specified in the commercial proposal signed by the parties.
+3.2 Late payments: default interest of 1% per month and a penalty of 2% on the outstanding amount, plus collection costs.
+3.3 Non‑payment may result in suspension of support until regularization.
+
+4. TERM AND RENEWAL
+4.1 The Agreement is effective for the period specified in the purchased modality.
+4.2 Renewal of support/updates is subject to payment of the prevailing fee; continued use of the software is not conditioned on renewal unless contractually stipulated otherwise.
+
+5. SUPPORT, DELIVERY AND UPDATES
+5.1 The LICENSOR delivers the installer/executable and technical documentation. The LICENSEE is responsible for local installation and compliance with the target environment.
+5.2 Support covers guidance for installing the executable, use of documented features and correction of defects that impair expected operation, as described in the proposal.
+5.3 Corrective and evolutionary updates will be made available according to the release policy and the contracted modality; critical security updates may be provided regardless of modality at the LICENSOR’s discretion.
+
+6. DATA STORAGE AND PRIVACY
+6.1 User data (tasks, mind maps, history, settings, temporary audio files and logs) is stored locally at the default path:
+    %LOCALAPPDATA%\TEA_TDAH_Dislexia
+6.2 The standard software does not send telemetry automatically. Any transmission of diagnostics or data to third parties will depend on explicit authorization and informed consent from the user.
+6.3 Processing of personal data will follow applicable law (LGPD) and the Privacy Policy included in the package:
+    assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt
+
+7. THIRD‑PARTY COMPONENTS
+7.1 The project uses third‑party libraries (e.g., PySide6 and other dependencies listed in requirements.txt). Those components remain subject to their original licenses.
+7.2 Redistribution obligations related to LGPL/third‑party components (e.g., when bundled in the executable) shall be satisfied by the LICENSOR in accordance with legal requirements; license texts and notices accompany the distribution package in assets/NOTICES and assets/EULA.
+
+8. LIMITATIONS OF LIABILITY
+8.1 The software is provided "as is". The LICENSOR does not guarantee specific results from use of the software.
+8.2 To the maximum extent permitted by law, the LICENSOR shall not be liable for indirect damages, loss of profits or other consequential losses arising from use of the software.
+8.3 The total liability, where admitted, shall be limited to the amount actually paid by the LICENSEE or BRL 5.00, whichever is greater, unless otherwise required by law.
+
+9. CONFIDENTIALITY
+9.1 The parties undertake to keep confidential technical and commercial information exchanged under this Agreement for 5 (five) years, except as required by law or with express authorization.
+
+10. TERMINATION
+10.1 This Agreement may be terminated for breach of its clauses, financial default or by mutual agreement.
+10.2 In case of termination for fault by the LICENSEE, amounts paid will not be refunded, unless otherwise agreed in writing.
+
+11. TRANSFER AND RESTRICTIONS
+11.1 The LICENSEE may not sublicense, resell or redistribute the executable without express authorization from the LICENSOR, except as permitted by the purchased modality and under a specific agreement.
+11.2 Modifications that remove copyright notices, trademarks or license statements are prohibited.
+
+12. ACCESSIBILITY AND STORE DISTRIBUTION
+12.1 Inclusion in digital stores (e.g., Microsoft Store) may require additional accessibility and compliance documentation; such documents, when applicable, accompany the distribution.
+12.2 Declarations of compliance do not alter the responsibilities set forth in this Agreement, unless otherwise agreed in writing.
+
+13. GOVERNING LAW AND JURISDICTION
+13.1 This Agreement shall be governed by the laws of the Federative Republic of Brazil.
+13.2 The courts of the District of São José dos Pinhais, State of Paraná, Brazil, are chosen for dispute resolution, unless otherwise required by law.
+
+14. GENERAL PROVISIONS
+14.1 This Agreement supplements the EULA and Privacy Policy provided with the software; the integrated terms constitute the complete agreement between the parties.
+14.2 Requests for commercial licensing, customization, integration or use of the "TEA_TDAH_Dislexia" brand must be formalized in writing and may require a contractual amendment.
+
+Contact for commercial inquiries, support and requests:
+- Author / LICENSOR: Fernando Nillsson Cidade
+- Contact and privacy email: linceu_lighthouse@outlook.com
+- Repository, issues and contact information: consult the project README.
+
+Signed electronically:
+_____________________________________
+Fernando Nillsson Cidade — LICENSOR
+
+_____________________________________
+LICENSEE (name and signature)

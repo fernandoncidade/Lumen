@@ -1,0 +1,79 @@
+END USER LICENSE AGREEMENT - Lúmen
+Version 2025.11.26.0, November 26, 2025
+
+Copyright (c) 2025 Fernando Nillsson Cidade. All rights reserved.
+
+By installing, copying or using the Software distributed as an executable or as source code, you agree to be bound by the terms of this License. If you do not agree to the terms, do not install or use the Software.
+
+1. DEFINITIONS
+   "Licensor": Fernando Nillsson Cidade, copyright holder of the Software.
+   "Software" or "Lúmen": the application intended to support study and organization for neurodivergent people — including the executable, scripts, embedded resources and associated documentation.
+   "Licensee" or "You": the natural or legal person who installs or uses the Software.
+
+2. SCOPE OF DISTRIBUTION
+   The Software may be distributed as:
+   - Source code (repository) for use, study and contribution under the terms of this repository.
+   - Packaged executable for Windows. Dependencies may be bundled into the executable.
+
+3. LICENSE GRANT
+   Subject to these terms, the Licensor grants the Licensee a limited, non-exclusive, non-transferable and revocable license to:
+   - Use the Software for personal, educational or professional purposes, according to the chosen modality (free or commercial).
+   - Modify the source code for internal use; contributions to the project must follow the repository rules (pull requests, attribution).
+
+4. RESTRICTIONS
+   The Licensee shall not:
+   a) Distribute the executable or modified code as their own without the Licensor’s explicit authorization, except where separately licensed.
+   b) Reverse engineer, decompile or attempt to extract source code from the executable, except where permitted by applicable law.
+   c) Remove or alter copyright notices, trademarks or license notices present in the Software.
+   d) Use the Software for illegal purposes or in violation of applicable regulations.
+
+5. FEATURES AND DATA STORAGE
+   - The Software provides features to support study: accessible reader (TTS), persistent typographic settings, focus ruler, audio player, Eisenhower Matrix, Pomodoro timers, mind‑map tools and support for the Feynman Technique, local data import/export, among others.
+   - Generated data (tasks, mind maps, history, settings, temporary audio files and logs) are stored locally at:
+     %LOCALAPPDATA%\TEA_TDAH_Dislexia
+   - Supported export formats via the interface: PDF, JSON and text formats; exported files are saved to a location chosen by the user.
+   - The Software does not send telemetry automatically. Any diagnostic collection or data transmission will occur only upon explicit user action and prior notice.
+
+6. THIRD‑PARTY COMPONENTS
+   - The Software uses third‑party libraries (for example, PySide6 and others listed in requirements.txt). Those components remain subject to their original licenses.
+   - Third‑party license texts and notices accompany the distribution package (folders assets/EULA, assets/NOTICES and assets/PRIVACY_POLICY when applicable).
+
+7. UPDATES AND SUPPORT
+   - The Licensor may provide updates, fixes or future versions as available.
+   - Technical support may be offered through channels indicated in the repository/distribution; terms and availability depend on the chosen channel (free/commercial).
+
+8. LIMITED WARRANTY AND DISCLAIMER
+   - The Software is provided "AS IS", without warranties of any kind, express or implied, except as required by applicable law.
+   - To the maximum extent permitted by law, the Licensor shall not be liable for direct, indirect, incidental, special, consequential damages or lost profits arising out of or in connection with the use or inability to use the Software.
+   - The Licensor’s total liability, if any, shall be limited to the amount actually paid for the Software (where applicable) or to BRL 5.00, whichever is greater.
+
+9. PRIVACY AND DATA PROTECTION
+   - The Software stores files locally; the Licensor declares not to collect automatic telemetry in the default distribution.
+   - Any transmission of data for diagnostics, crash reports or feedback will occur only with the user's explicit consent.
+   - Processing of personal data (if carried out by user action) will follow the Privacy Policy included in the package:
+     assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt
+
+10. EXPORT AND USE
+    - The Licensee is responsible for ensuring that use and export of the Software comply with applicable local laws and regulations.
+    - The Software does not replace clinical or professional advice; critical decisions should be validated with appropriate professionals.
+
+11. TERMINATION
+    - This License may be terminated in case of breach of its terms. Upon termination, the Licensee shall cease use and remove the Software as applicable.
+
+12. GOVERNING LAW AND JURISDICTION
+    - This License shall be governed by the laws of the Federative Republic of Brazil.
+    - For dispute resolution, the courts of the District of São José dos Pinhais, State of Paraná, Brazil, are elected, unless otherwise required by law.
+
+13. ACCESSIBILITY AND STORE DISTRIBUTION
+    - Compliance or accessibility documentation (if applicable) may be included in the distribution package. Inclusion of such documentation does not alter the terms of this License.
+
+14. ENTIRE AGREEMENT
+    - This License, together with the Privacy Policy and third‑party licenses provided with the package, constitutes the entire agreement between the parties.
+
+Contact for information and support:
+- Author: Fernando Nillsson Cidade
+- Contact and privacy email: linceu_lighthouse@outlook.com
+- Repository / issues / contributions: see the project README.
+
+Final notice:
+- Use Lúmen as a tool to support study and organization. Verify critical results and decisions by independent methods or with professional assistance.

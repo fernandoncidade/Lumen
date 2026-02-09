@@ -1,0 +1,75 @@
+NOTAS DE LANÇAMENTO — Lúmen
+Versão: 2025.11.26.0
+Data: 26 de novembro de 2025
+Autor: Fernando Nillsson Cidade
+
+Resumo do lançamento
+- Versão inicial alfa/experimental do projeto Lúmen. Ferramenta desktop para apoiar jovens e adultos neurodivergentes (TEA, TDAH, Dislexia) em leitura, organização e revisão ativa do estudo. Substitui referências a projetos anteriores (ex.: Economia APP) e alinha artefatos do pacote (EULA, PRIVACY_POLICY, NOTICES, COPYRIGHT, CLC) ao novo escopo.
+
+Principais funcionalidades incluídas
+- Leitor acessível (TTS) com seleção de voz, controle de velocidade e volume; reprodutor de áudio para textos sintetizados.
+- Ajustes tipográficos persistentes (tamanho e família de fonte) para legibilidade.
+- Régua de foco (highlight móvel) para facilitar acompanhamento visual linha a linha.
+- Matriz de Eisenhower para priorização de tarefas com salvamento local.
+- Temporizador Pomodoro e gerenciador de sessões de estudo.
+- Ferramentas para criação e revisão de mapas mentais e suporte ao Método Feynman.
+- Importação/exportação local de dados: PDF, JSON e formatos de texto.
+- Localização: pt-BR e en-US (arquivos .ts incluídos; gerar .qm antes do empacotamento).
+
+Arquivos e recursos incluídos neste pacote
+- Código: pasta source/
+- Utilitários: pasta utils/ (logging, caminhos e helpers)
+- Assets: pasta assets/ (ABOUT, EULA, NOTICES, COPYRIGHT, CLC, PRIVACY_POLICY, RELEASE)
+- Traduções: language/translations/*.ts (pt_BR, en_US) — gerar .qm com pyside6-lrelease
+- Documentação: assets/ABOUT/*.txt, assets/EULA/*.txt, assets/NOTICES/*.txt, assets/COPYRIGHT/*.txt, assets/CLC/*.txt
+
+Instalação (Windows — desenvolvimento)
+1. Instale Python 3.10+.
+2. No PowerShell:
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+3. Executar em desenvolvimento:
+   python main.py
+
+Empacotamento para distribuição (dicas)
+- Recomenda-se PyInstaller, Nuitka para gerar executável Windows. Incluir assets/ e language/translations/ nas 'datas' do .spec.
+- Incluir arquivos de licença e avisos (assets/EULA, assets/NOTICES, assets/COPYRIGHT, assets/CLC, assets/PRIVACY_POLICY).
+- Se empacotar bibliotecas PySide6, documente procedimentos de conformidade LGPL conforme assets/NOTICES/NOTICE_pt_BR.txt.
+- Garanta que arquivos .qm de tradução estejam presentes no bundle.
+
+Local de armazenamento de dados
+- Configurações, histórico, arquivos temporários e logs são salvos em:
+  %LOCALAPPDATA%\TEA_TDAH_Dislexia
+- Observação: o armazenamento local é padrão; o aplicativo não envia telemetria automaticamente (ver assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt).
+
+Notas técnicas e dependências
+- Dependência principal: PySide6 (LGPL v3 conforme versão).
+- Verifique requirements.txt para dependências adicionais.
+- Logging: utils/LogManager.py (logs em %LOCALAPPDATA%\TEA_TDAH_Dislexia).
+- Testes: versão atual com testes manuais; recomenda‑se adicionar testes unitários para leitura/TTS, exportação e gerenciamento de tarefas.
+
+Problemas conhecidos (versão atual)
+- Algumas telas e fluxos UI ainda possuem stubs a completar (source/ui, source/services).
+- Traduções requerem compilação (.qm) antes do empacotamento.
+- Validação de entradas requer reforço (campos vazios, separador decimal, limites negativos).
+
+Roadmap / próximos passos
+- Completar e testar todos os módulos UI e serviços com cobertura de testes automatizados.
+- Melhorar exportação PDF e layout de relatórios.
+- Automatizar processo de build e geração de instalador Windows.
+- Implementar telemetria opt‑in para diagnóstico (apenas com consentimento explícito).
+- Revisar e atualizar documentação de licenças e notices quando componentes adicionais forem incluídos.
+
+Suporte e contato
+- Autor: Fernando Nillsson Cidade
+- Bugs, issues e contribuições: abrir issue / pull request no repositório do projeto (ver README).
+- E‑mail para privacidade e solicitações relacionadas a licenças: linceu_lighthouse@outlook.com
+
+Notas de conformidade legal
+- Consulte os arquivos inclusos em assets/ para termos completos:
+  - EULA: assets/EULA/EULA_pt_BR.txt
+  - Política de Privacidade: assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt
+  - Notices / Licenças de terceiros: assets/NOTICES/NOTICE_pt_BR.txt
+  - Copyright / Marca: assets/COPYRIGHT/AVISO DE COPYRIGHT E MARCA REGISTRA_pt_BR.txt
+  - Contrato comercial: assets/CLC/CLC_pt_BR.txt

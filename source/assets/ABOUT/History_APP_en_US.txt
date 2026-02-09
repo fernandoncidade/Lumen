@@ -1,0 +1,28 @@
+History and Rationale for Development
+
+History
+This project, Lúmen, was born from the personal experience of the author, Fernando Nillsson Cidade, following a recent diagnosis of Autism Spectrum Disorder (ASD) and pre-existing Dyslexia, coupled with a diagnosis of ADHD. Upon confronting difficulties with reading, sustained attention, and the organization of reasoning in an academic setting—despite above-average intellectual functioning—the need emerged for tools that accommodate these cognitive differences and support young people and adults in their study and organization routines.
+
+Rationale
+Clinical and neuropsychological reports indicate a comorbidity that specifically affects processing speed, working memory, and executive functions. These vulnerabilities make routine academic tasks (reading long texts, organizing ideas, planning tasks) more demanding, even when verbal comprehension and nonverbal reasoning are preserved or elevated. The application was conceived to mitigate these obstacles through practical features: an accessible reader with neural voices and typographic adjustments, a focus ruler, task organizers (Eisenhower Matrix), Pomodoro timers, and tools for active explanation (Feynman Technique and mind maps).
+
+Objectives
+- Reduce the cognitive load associated with reading through assisted reading, speed control, and font configuration.
+- Support time management and task prioritization with simple, adaptable interfaces.
+- Encourage explicit articulation and review of knowledge (Feynman Technique; mind maps) to improve written production and the organization of thought.
+- Provide a configurable environment that respects profiles with high cognitive variability (peaks and valleys of performance).
+
+Target Audience
+Neurodivergent youth and adults (ASD, ADHD, Dyslexia) and their educators, family members, or support professionals—especially high school and university students who require cognitive accommodations to optimize studying and academic output.
+
+Design Principles
+- Clarity and predictability: interfaces with legible text, visual cues and clear feedback.
+- Flexibility: multiple ways to access information (voice, text, time‑grouping).
+- Minimization of executive effort: automations and flows that reduce the need to plan fine‑grained steps.
+- Privacy and simplicity: local storage and import/export options.
+
+Expected Impact
+Improved focus on study activities, increased autonomy in personal organization, and reduced time wasted on administrative tasks, with a positive reflection on academic performance and users’ quality of life.
+
+Clinical References
+Development was guided by the attached neuropsychological reports and recommendations, which describe the triple comorbidity profile (Dyslexia, ADHD, ASD) and emphasize the usefulness of compensatory measures and complementary assessments (for example, GAI/GAI‑equivalents and Raven's Matrices) when interpreting heterogeneous cognitive performance.

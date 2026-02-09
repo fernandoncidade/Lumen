@@ -1,0 +1,50 @@
+COPYRIGHT AND TRADEMARK NOTICE — Lúmen
+Version 2025.11.26.0, November 26, 2025
+======================================
+
+Copyright (C) 2025–2026 Fernando Nillsson Cidade. All rights reserved.
+
+Intellectual property
+- The software "Lúmen" and all associated documentation — including source code, user interface, texts, manuals, visual assets (icons, logos) and other resources provided with the project — are the intellectual property of Fernando Nillsson Cidade, except where expressly indicated otherwise for third‑party components.
+
+Trademarks
+- "Lúmen" is a trademark owned by Fernando Nillsson Cidade.
+- Unauthorized use of the trade name, logo or any distinctive elements of the project is prohibited without the owner's written permission.
+
+Permissions and usage restrictions
+- Use of the Software is permitted for personal, educational and professional purposes in accordance with the terms of the included EULA:
+  assets/EULA/EULA_pt_BR.txt
+- Redistribution of the executable or source code (original or modified) must comply with the EULA restrictions; in particular:
+  - Do not claim authorship of others' work.
+  - Do not remove or alter copyright notices, trademarks or license notices.
+  - Comply with licensing obligations of third‑party components (for example LGPL) when applicable.
+- To reuse parts of the code in other projects, retain the original copyright and attribution notices and follow the applicable license terms.
+
+Third‑party components and license compliance
+- Third‑party libraries and tools used by the project (e.g., PySide6 and other dependencies listed in requirements.txt) remain subject to their original licenses.
+- A summary list and information can be found at:
+  assets/NOTICES/NOTICE_pt_BR.txt
+- Full texts of third‑party licenses and redistribution obligations (e.g., providing source code or notices for LGPL components) accompany the distribution package in assets/NOTICES, assets/EULA and/or LICENSES.txt when applicable.
+
+Data transmission and privacy
+- The default executable does not send telemetry automatically to external servers.
+- User data (tasks, maps, history, settings, temporary audio files and logs) remain under the user's control and are stored locally at the default path:
+  %LOCALAPPDATA%\TEA_TDAH_Dislexia
+- For details on data handling, export, deletion and contacts, see:
+  assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt
+
+Source code requests and licensing inquiries
+- To request a copy of source code for components licensed under the LGPL used in the executable, clarifications about third‑party licenses, commercial license requests, special redistribution authorizations or trademark use, contact:
+  - Author / Responsible: Fernando Nillsson Cidade
+  - E‑mail: linceu_lighthouse@outlook.com
+
+Final notices and recommendations
+- Before redistributing or modifying the software, review the EULA, the Privacy Policy and third‑party notices included in the package.
+- Back up your data before updating the application or modifying executable libraries.
+- The software is a support tool and does not replace clinical evaluation, diagnosis or treatment. Verify critical decisions with appropriate professionals.
+
+Internal references
+- EULA: assets/EULA/EULA_pt_BR.txt
+- Privacy Policy: assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt
+- Notices / Third‑party licenses: assets/NOTICES/NOTICE_pt_BR.txt
+- Commercial agreement (when applicable): assets/CLC/CLC_pt_BR.txt

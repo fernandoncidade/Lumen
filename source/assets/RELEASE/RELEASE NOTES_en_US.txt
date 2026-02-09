@@ -1,0 +1,75 @@
+RELEASE NOTES — Lúmen
+Version: 2025.11.26.0
+Date: November 26, 2025
+Author: Fernando Nillsson Cidade
+
+Release summary
+- Initial alpha/experimental release of the Lúmen project. Desktop tool to support neurodivergent youth and adults (ASD, ADHD, Dyslexia) in reading, organization and active study review. Replaces references to previous projects (e.g., Economia APP) and aligns package artifacts (EULA, PRIVACY_POLICY, NOTICES, COPYRIGHT, CLC) with the new scope.
+
+Key features included
+- Accessible reader (TTS) with voice selection, speed and volume control; audio player for synthesized text.
+- Persistent typographic adjustments (font size and family) for readability.
+- Focus ruler (movable highlight) to facilitate line‑by‑line visual tracking.
+- Eisenhower Matrix for task prioritization with local saving.
+- Pomodoro timer and study session manager.
+- Tools for creating and reviewing mind maps and support for the Feynman Technique.
+- Local data import/export: PDF, JSON and text formats.
+- Localization: pt-BR and en-US ( .ts files included; generate .qm before packaging).
+
+Files and resources included in this package
+- Code: source/ folder
+- Utilities: utils/ folder (logging, paths and helpers)
+- Assets: assets/ folder (ABOUT, EULA, NOTICES, COPYRIGHT, CLC, PRIVACY_POLICY, RELEASE)
+- Translations: language/translations/*.ts (pt_BR, en_US) — generate .qm with pyside6-lrelease
+- Documentation: assets/ABOUT/*.txt, assets/EULA/*.txt, assets/NOTICES/*.txt, assets/COPYRIGHT/*.txt, assets/CLC/*.txt
+
+Installation (Windows — development)
+1. Install Python 3.10+.
+2. In PowerShell:
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+3. Run in development:
+   python main.py
+
+Packaging for distribution (tips)
+- PyInstaller, Nuitka is recommended to generate a Windows executable. Include assets/ and language/translations/ in the .spec 'datas'.
+- Include license and notice files (assets/EULA, assets/NOTICES, assets/COPYRIGHT, assets/CLC, assets/PRIVACY_POLICY).
+- If bundling PySide6 libraries, document LGPL compliance procedures according to assets/NOTICES/NOTICE_pt_BR.txt.
+- Ensure .qm translation files are present in the bundle.
+
+Data storage location
+- Settings, history, temporary files and logs are saved at:
+  %LOCALAPPDATA%\TEA_TDAH_Dislexia
+- Note: local storage is the default; the application does not send telemetry automatically (see assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt).
+
+Technical notes and dependencies
+- Main dependency: PySide6 (LGPL v3 as per version).
+- Check requirements.txt for additional dependencies.
+- Logging: utils/LogManager.py (logs at %LOCALAPPDATA%\TEA_TDAH_Dislexia).
+- Tests: current release uses manual tests; adding unit tests for reading/TTS, export and task management is recommended.
+
+Known issues (current release)
+- Some UI screens and flows still contain stubs to complete (source/ui, source/services).
+- Translations require compilation (.qm) before packaging.
+- Input validation needs strengthening (empty fields, decimal separator, negative limits).
+
+Roadmap / next steps
+- Complete and test all UI modules and services with automated test coverage.
+- Improve PDF export and report layout.
+- Automate build process and Windows installer generation.
+- Implement opt‑in telemetry for diagnostics (only with explicit consent).
+- Review and update license documentation and notices when additional components are included.
+
+Support and contact
+- Author: Fernando Nillsson Cidade
+- Bugs, issues and contributions: open an issue / pull request in the project repository (see README).
+- Email for privacy and license related requests: linceu_lighthouse@outlook.com
+
+Legal compliance notes
+- See the included assets/ files for full terms:
+  - EULA: assets/EULA/EULA_pt_BR.txt
+  - Privacy Policy: assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt
+  - Notices / Third‑party licenses: assets/NOTICES/NOTICE_pt_BR.txt
+  - Copyright / Trademark: assets/COPYRIGHT/AVISO DE COPYRIGHT E MARCA REGISTRA_pt_BR.txt
+  - Commercial agreement: assets/CLC/CLC_pt_BR.txt

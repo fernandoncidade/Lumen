@@ -1,0 +1,68 @@
+Project: Lúmen
+Version: 2025.11.26.0
+Authors: Fernando Nillsson Cidade
+
+Short description:
+Desktop application aimed at supporting neurodivergent youth and adults (ASD, ADHD, Dyslexia) in studying and organization. Integrates an accessible reader with neural voices, task prioritization tools, Pomodoro timers, mind maps and resources for active explanation (Feynman Technique).
+
+Detailed description:
+This project was conceived from the author's personal experience with the combination of Dyslexia, ADHD and Autism Spectrum Disorder (ASD). The focus is to reduce cognitive barriers that make academic activities exhausting — such as extensive reading, sustaining attention and organizing ideas — by offering configurable features that adapt to profiles with high cognitive variability (peaks and valleys of performance). The system prioritizes assisted reading, speed control, typographic adjustments, a focus ruler for visual tracking, task organization (Eisenhower Matrix), timers (Pomodoro), creation and review of mind maps and support for the Feynman Technique to consolidate knowledge.
+
+Key features:
+- Accessible reader with voice selection, speed and volume control.
+- Persistent font settings (size, family) for improved readability.
+- Focus ruler (movable highlight) to facilitate line‑by‑line reading.
+- Integrated audio player for synthesized text.
+- Eisenhower Matrix for task prioritization with local saving.
+- Pomodoro timer and time manager.
+- Tools for creating mind maps and space for the Feynman Technique.
+- Local import/export of data (tasks, maps).
+- Localization / translations (pt-BR and en-US).
+- Privacy options: local storage by default.
+
+Installation and distribution (Windows):
+Prerequisites: Python 3.10+ installed.
+1. Clone the repository:
+   git clone <repository>
+2. Create and activate virtual environment (PowerShell):
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+3. Install dependencies:
+   pip install -r requirements.txt
+4. Run:
+   python main.py
+Distribution: Package with PyInstaller, Nuitka or similar to generate a Windows executable (optional).
+
+System requirements:
+- Windows 10 or later (x64 recommended).
+- Python 3.10+ (if running from source).
+- 200 MB free for installation and dependencies; additional space for temporary audio files.
+- Internet connection only required for downloading remote voices (if used); basic features work offline.
+
+Quick start:
+1. Open the application (main.py or executable).
+2. Load a PDF or paste text into the reader area.
+3. Adjust font and size in the reading panel.
+4. Select voice and speed; press "Read" to start assisted reading.
+5. Use the focus ruler to follow lines; enable/disable as needed.
+6. Open the Eisenhower Matrix to add and prioritize tasks; save locally.
+7. Use Pomodoro for study sessions and the Feynman/Mind Maps module for active review.
+
+Contacts and support:
+Author: Fernando Nillsson Cidade
+E-mail: linceu_lighthouse@outlook.com
+Report issues: open an issue on the Git repository or send an email with logs attached.
+
+License and notices:
+License: (insert license here, e.g.: MIT). See LICENSE file for full terms.
+Notices:
+- Tool developed for support and does not replace clinical assessments or treatments.
+- Personal data is stored locally by default; review policies in Privacy_Policy_pt_BR.txt.
+- Some TTS features may require external services; costs and permissions depend on the provider.
+
+Final notes:
+Development was guided by neuropsychological and medical reports describing the author's comorbidity profile (Dyslexia, ADHD, ASD). The goal is to provide practical, configurable tools that increase autonomy and study efficiency. Contributions are welcome — open an issue or a pull request on the repository for suggestions and fixes.
+
+Included documentation references:
+- History_APP_pt_BR.txt / History_APP_en_US.txt (history and rationale)
+- LICENSE, NOTICE and Privacy_Policy (when present in the assets/ABOUT directory)

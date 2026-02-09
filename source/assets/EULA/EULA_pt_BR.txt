@@ -1,0 +1,79 @@
+LICENÇA DE USO DE USUÁRIO FINAL - Lúmen
+Versão 2025.11.26.0, 26 de novembro de 2025
+
+Copyright (c) 2025 Fernando Nillsson Cidade. Todos os direitos reservados.
+
+Ao instalar, copiar ou utilizar o Software distribuído como executável ou como código‑fonte, você concorda em estar vinculado pelos termos desta Licença. Se não concordar com os termos, não instale nem utilize o Software.
+
+1. DEFINIÇÕES
+   "Licenciador": Fernando Nillsson Cidade, titular dos direitos autorais do Software.
+   "Software" ou "Lúmen": aplicação destinada a apoiar estudo e organização para pessoas neurodivergentes — incluindo executável, scripts, recursos embarcados e documentação associada.
+   "Licenciado" ou "Você": a pessoa física ou jurídica que instala ou utiliza o Software.
+
+2. ÂMBITO DE DISTRIBUIÇÃO
+   O Software pode ser distribuído como:
+   - Código‑fonte (repositório) para uso, estudo e contribuição conforme termos deste repositório.
+   - Executável (empacotado) para Windows. Dependências podem estar empacotadas no executável.
+
+3. CONCESSÃO DE LICENÇA
+   Sujeito a estes termos, o Licenciador concede ao Licenciado uma licença limitada, não exclusiva, intransferível e revogável para:
+   - Usar o Software para fins pessoais, educacionais ou profissionais, conforme a modalidade (gratuita ou comercial).
+   - Modificar o código‑fonte para uso interno; contribuições ao projeto devem respeitar as regras do repositório (pull requests, atribuição de autoria).
+
+4. RESTRIÇÕES
+   O Licenciado não poderá:
+   a) Distribuir o executável ou código modificado como seu sem autorização explícita do Licenciador, exceto quando licenciado separadamente.
+   b) Realizar engenharia reversa, descompilar ou tentar extrair código‑fonte do executável, salvo quando permitido pela legislação aplicável.
+   c) Remover ou alterar avisos de direitos autorais, marcas ou avisos de licença presentes no Software.
+   d) Usar o Software para fins ilegais ou em violação a regulamentações vigentes.
+
+5. FUNCIONALIDADES E ARMAZENAMENTO DE DADOS
+   - O Software oferece funcionalidades para apoio ao estudo: leitor acessível (TTS), ajustes tipográficos persistentes, régua de foco, reprodutor de áudio, Matriz de Eisenhower, temporizadores Pomodoro, ferramentas de mapas mentais e suporte ao Método Feynman, importação/exportação local de dados, entre outras.
+   - Dados gerados (tarefas, mapas mentais, histórico, configurações, arquivos de áudio temporários e logs) são armazenados localmente em:
+     %LOCALAPPDATA%\TEA_TDAH_Dislexia
+   - Exportação suportada por interface: PDF, JSON e formatos de texto; arquivos exportados são salvos no local escolhido pelo usuário.
+   - O Software não envia telemetria automaticamente. Qualquer coleta de diagnóstico ou envio de dados só ocorrerá mediante ação explícita do usuário e aviso prévio.
+
+6. COMPONENTES DE TERCEIROS
+   - O Software utiliza bibliotecas de terceiros (por exemplo, PySide6 e outras listadas em requirements.txt). Esses componentes permanecem sujeitos às suas licenças originais.
+   - Textos de licença de terceiros e avisos acompanham o pacote de distribuição (pastas assets/EULA, assets/NOTICES e assets/PRIVACY_POLICY quando aplicáveis).
+
+7. ATUALIZAÇÕES E SUPORTE
+   - O Licenciador pode fornecer atualizações, correções ou versões futuras conforme disponibilidade.
+   - Suporte técnico pode ser oferecido mediante canais indicados no repositório/distribuição; termos e disponibilidade dependem do canal (gratuito/comercial).
+
+8. GARANTIA LIMITADA E ISENÇÃO DE RESPONSABILIDADE
+   - O Software é fornecido "NO ESTADO EM QUE SE ENCONTRA", sem garantias expressas ou implícitas, salvo as garantias legais obrigatórias.
+   - Na medida máxima permitida por lei, o Licenciador não será responsável por danos diretos, indiretos, incidentais, especiais, consequenciais ou lucros cessantes resultantes do uso ou incapacidade de uso do Software.
+   - A responsabilidade total do Licenciador, se e quando admitida por lei, ficará limitada ao valor efetivamente pago pelo Software (quando aplicável) ou a R$ 5,00, o que for maior.
+
+9. PRIVACIDADE E PROTEÇÃO DE DADOS
+   - O Software armazena arquivos localmente; o Licenciador declara não coletar telemetria automática na distribuição padrão.
+   - Qualquer envio de dados para diagnóstico, relatório de falha ou feedback só ocorrerá com consentimento explícito do usuário.
+   - Tratamento de dados pessoais (se ocorrer por ação do usuário) seguirá a Política de Privacidade incluída no pacote:
+     assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt
+
+10. EXPORTAÇÃO E USO
+    - O Licenciado é responsável por assegurar que o uso e a exportação do Software estejam em conformidade com leis e regulamentos locais aplicáveis.
+    - O Software não substitui aconselhamento clínico ou profissional; recomenda‑se validar decisões críticas com profissionais adequados.
+
+11. RESCISÃO
+    - Esta Licença pode ser rescindida em caso de violação de suas cláusulas. Em caso de rescisão, o Licenciado deverá cessar o uso e remover o Software conforme aplicável.
+
+12. LEI APLICÁVEL E FORO
+    - Esta Licença será regida pelas leis da República Federativa do Brasil.
+    - Para dirimir controvérsias, fica eleito o foro da Comarca de São José dos Pinhais, Estado do Paraná, Brasil, salvo disposição legal em contrário.
+
+13. ACESSIBILIDADE E DISTRIBUIÇÃO EM LOJAS
+    - Documentação de conformidade ou acessibilidade (se aplicável) pode ser incluída no pacote de distribuição. A inclusão de documentação não altera os termos desta Licença.
+
+14. ACORDO INTEGRAL
+    - Esta Licença, juntamente com a Política de Privacidade e as licenças de terceiros fornecidas com o pacote, constitui o acordo integral entre as partes.
+
+Contato para informações e suporte:
+- Autor: Fernando Nillsson Cidade
+- E‑mail de contato e privacidade: linceu_lighthouse@outlook.com
+- Repositório / issues / contribuições: ver README no repositório do projeto.
+
+Aviso final:
+- Use o Lúmen como ferramenta de apoio ao estudo e organização. Verifique resultados e decisões críticas por meio de métodos independentes ou com apoio de profissionais.

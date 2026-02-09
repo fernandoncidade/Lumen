@@ -1,0 +1,96 @@
+CONTRATO DE LICENCIAMENTO COMERCIAL — Lúmen
+Versão: 2025.11.26.0
+Data: 26 de novembro de 2025
+
+Este Contrato de Licenciamento Comercial ("Contrato") é celebrado entre:
+
+LICENCIADOR: Fernando Nillsson Cidade, doravante "LICENCIADOR".
+LICENCIADO: a pessoa física ou jurídica que adquire a licença comercial do software "Lúmen", doravante "LICENCIADO".
+
+PREÂMBULO
+O presente Contrato complementa os termos da Licença de Uso de Usuário Final (EULA) inclusa no pacote (assets/EULA/EULA_pt_BR.txt) e regula as modalidades comerciais de licença, suporte, atualizações e responsabilidades relativas ao software Lúmen — aplicação destinada a apoiar estudo e organização para pessoas neurodivergentes, com funcionalidades documentadas no pacote (leitor acessível TTS, ajustes tipográficos persistentes, régua de foco, player de áudio, Matriz de Eisenhower, temporizadores Pomodoro, ferramentas de mapa mental e suporte à Técnica de Feynman, importação/exportação local de dados, entre outras).
+
+1. OBJETO
+1.1 Concessão de licença de uso do software Lúmen conforme a modalidade comercial escolhida.
+1.2 O LICENCIADO recebe o direito de uso do executável e documentação fornecidos; a distribuição de código‑fonte só ocorre se contratada especificamente e mediante termo adicional.
+
+2. MODALIDADES DE LICENCIAMENTO
+2.1 Licença Individual
+  a) Instalação em até 2 (dois) dispositivos de propriedade do mesmo LICENCIADO.
+  b) Atualizações e correções por 1 (um) ano a partir da data de aquisição (quando aplicáveis).
+  c) Suporte técnico básico (ticket / e-mail) por 1 (um) ano.
+2.2 Licença Small Business
+  a) Instalação em até 10 (dez) estações dentro da mesma organização.
+  b) Atualizações por 1 (um) ano.
+  c) Suporte prioritário por e-mail e telefone por 1 (um) ano.
+  d) Personalização básica (branding textual e ícones) mediante avaliação técnica e contrato complementar.
+2.3 Licença Enterprise
+  a) Instalação ilimitada conforme acordo comercial.
+  b) Atualizações por 2 (dois) anos ou conforme acordo.
+  c) Suporte premium (SLA) incluindo suporte remoto e prioridades de correção.
+  d) Opções de integração, treinamento e customização mediante anexo comercial.
+
+3. PAGAMENTO E FATURAMENTO
+3.1 Valores, prazos e formas de pagamento serão especificados na proposta comercial assinada entre as partes.
+3.2 Pagamentos em atraso: juros de mora de 1% ao mês e multa de 2% sobre o valor devido, além de custos de cobrança.
+3.3 Não pagamento pode acarretar suspensão de suporte até regularização.
+
+4. PRAZO E RENOVAÇÃO
+4.1 O Contrato vigora pelo período especificado na modalidade adquirida.
+4.2 Renovação de suporte/atualizações mediante pagamento do valor vigente; uso contínuo do software não é condicionado à renovação, salvo disposição contratual em contrário.
+
+5. SUPORTE, ENTREGA E ATUALIZAÇÕES
+5.1 O LICENCIADOR entrega o instalador/executável e documentação técnica. O LICENCIADO é responsável pela instalação local e conformidade com o ambiente alvo.
+5.2 O suporte cobre orientação de instalação do executável, uso das funcionalidades documentadas e correção de defeitos que prejudiquem a operação esperada, conforme níveis descritos na proposta.
+5.3 Atualizações corretivas e evolutivas serão disponibilizadas conforme política de versões e modalidade contratada; atualizações de segurança críticas poderão ser fornecidas independentemente da modalidade, a critério do LICENCIADOR.
+
+6. ARMAZENAMENTO DE DADOS E PRIVACIDADE
+6.1 Dados do usuário (tarefas, mapas mentais, histórico, configurações, arquivos temporários de áudio e logs) são armazenados localmente no caminho padrão:
+    %LOCALAPPDATA%\TEA_TDAH_Dislexia
+6.2 O software padrão não envia telemetria automática. Qualquer envio de diagnóstico ou dados para terceiros dependerá de autorização explícita e consentimento informado do usuário.
+6.3 Tratamento de dados pessoais seguirá a legislação aplicável (LGPD) e a Política de Privacidade incluída no pacote:
+    assets/PRIVACY_POLICY/Privacy_Policy_pt_BR.txt
+
+7. COMPONENTES DE TERCEIROS
+7.1 O projeto utiliza bibliotecas de terceiros (ex.: PySide6 e demais dependências listadas em requirements.txt). Esses componentes permanecem sujeitos às suas licenças originais.
+7.2 Obrigações de redistribuição relativas a componentes LGPL/terceiros (ex.: quando empacotados no executável) deverão ser satisfeitas pelo LICENCIADOR conforme requisitos legais; textos de licença e avisos acompanham o pacote de distribuição em assets/NOTICES e assets/EULA.
+
+8. LIMITAÇÕES DE RESPONSABILIDADE
+8.1 O software é fornecido "no estado em que se encontra". O LICENCIADOR não garante resultados específicos decorrentes do uso do software.
+8.2 Na medida máxima permitida por lei, o LICENCIADOR não será responsável por danos indiretos, lucros cessantes ou outras perdas consequenciais decorrentes do uso do software.
+8.3 A responsabilidade total, quando admitida, será limitada ao valor efetivamente pago pelo LICENCIADO ou a R$ 5,00, o que for maior, salvo disposição legal em contrário.
+
+9. CONFIDENCIALIDADE
+9.1 As partes comprometem‑se a manter sigilo sobre informações técnicas e comerciais confidenciais trocadas em razão deste Contrato por 5 (cinco) anos, salvo disposição legal em contrário ou autorização expressa.
+
+10. RESCISÃO
+10.1 Este Contrato poderá ser rescindido por violação de suas cláusulas, inadimplemento financeiro ou por mútuo acordo.
+10.2 Em caso de rescisão por culpa do LICENCIADO, valores pagos não serão reembolsados, salvo acordo diverso por escrito.
+
+11. TRANSFERÊNCIA E RESTRIÇÕES
+11.1 O LICENCIADO não poderá sublicenciar, revender ou redistribuir o executável sem autorização expressa do LICENCIADOR, exceto conforme permitido na modalidade adquirida e mediante contrato específico.
+11.2 Alterações que removam avisos de copyright, marcas ou licenças são proibidas.
+
+12. ACESSIBILIDADE E DISTRIBUIÇÃO EM LOJAS
+12.1 A inclusão em lojas digitais (ex.: Microsoft Store) pode requerer documentação adicional de acessibilidade e conformidade; tais documentos, quando aplicáveis, acompanham a distribuição.
+12.2 Declarações de conformidade não alteram as responsabilidades previstas neste Contrato, salvo acordo escrito em contrário.
+
+13. LEI APLICÁVEL E FORO
+13.1 Este Contrato será regido pelas leis da República Federativa do Brasil.
+13.2 Fica eleito o foro da Comarca de São José dos Pinhais, Estado do Paraná, Brasil, para dirimir controvérsias, salvo norma legal em contrário.
+
+14. DISPOSIÇÕES GERAIS
+14.1 Este Contrato complementa o EULA e a Política de Privacidade fornecidos com o software; os termos integrados formam o acordo completo entre as partes.
+14.2 Pedidos de licença comercial, personalização, integração ou uso da marca "TEA_TDAH_Dislexia" devem ser formalizados por escrito e poderão exigir aditivo contratual.
+
+Contato para comercialização, suporte e solicitações:
+- Autor / LICENCIADOR: Fernando Nillsson Cidade
+- E‑mail de contato e privacidade: linceu_lighthouse@outlook.com
+- Repositório, issues e informações de contato: consultar README no repositório do projeto.
+
+Assinam eletronicamente:
+_____________________________________
+Fernando Nillsson Cidade — LICENCIADOR
+
+_____________________________________
+LICENCIADO (nome e assinatura)
