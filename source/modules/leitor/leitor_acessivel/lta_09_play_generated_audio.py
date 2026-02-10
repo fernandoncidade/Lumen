@@ -32,20 +32,35 @@ def _play_generated_audio(self, path):
 
         self._generated_queue.append(path)
 
-        if self.player.playbackState() != QMediaPlayer.PlayingState:
+        playing_state = None
+        try:
+            if hasattr(self, "player") and self.player is not None:
+                playing_state = self.player.playbackState()
+
+        except Exception:
+            playing_state = None
+
+        from PySide6.QtMultimedia import QMediaPlayer
+
+        if playing_state == QMediaPlayer.PlayingState:
+            return
+
+        if playing_state == QMediaPlayer.PausedState or getattr(self, "_is_paused", False):
+            return
+
+        try:
+            next_path = self._generated_queue.pop(0)
+            self._current_generated = next_path
+            self.player.setSource(QUrl.fromLocalFile(next_path))
+            self.player.play()
+
+        except Exception as e:
+            logger.error(f"Erro ao iniciar reprodução do chunk: {e}", exc_info=True)
             try:
-                next_path = self._generated_queue.pop(0)
-                self._current_generated = next_path
-                self.player.setSource(QUrl.fromLocalFile(next_path))
-                self.player.play()
+                self.leitura_finalizada()
 
             except Exception as e:
-                logger.error(f"Erro ao iniciar reprodução do chunk: {e}", exc_info=True)
-                try:
-                    self.leitura_finalizada()
-
-                except Exception as e:
-                    logger.error(f"Erro ao finalizar leitura após falha na reprodução do chunk: {e}", exc_info=True)
+                logger.error(f"Erro ao finalizar leitura após falha na reprodução do chunk: {e}", exc_info=True)
 
     except Exception as e:
         logger.error(f"Erro ao adicionar áudio gerado à fila: {str(e)}", exc_info=True)

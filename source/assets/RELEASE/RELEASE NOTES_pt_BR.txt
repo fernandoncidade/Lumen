@@ -1,4 +1,42 @@
 NOTAS DE LANÇAMENTO — Lúmen
+Versão: 2025.11.29.0
+Data: 29 de novembro de 2025
+Autor: Fernando Nillsson Cidade
+
+Resumo rápido
+- Correção no comportamento do Leitor Acessível (TTS): ao clicar em "⏸️ Pausar" a reprodução agora permanece pausada e novos chunks gerados permanecem enfileirados, evitando que o leitor avance automaticamente para o próximo chunk.
+
+Detalhamento das mudanças
+- Arquivo alterado: source/modules/leitor/leitor_acessivel/lta_09_play_generated_audio.py
+  - Comportamento de pausa corrigido:
+    - Antes: quando o usuário pausava a reprodução, novos arquivos de áudio (chunks) gerados podiam iniciar automaticamente, fazendo o leitor pular a pausa.
+    - Agora: a função _play_generated_audio verifica explicitamente o estado do player (QMediaPlayer.PausedState) e a flag interna _is_paused. Se o player estiver pausado, novos chunks NÃO iniciam automaticamente — eles são apenas adicionados à fila (_generated_queue) para reprodução posterior.
+  - Proteções adicionais:
+    - Preservação de chunks durante troca de voz: se _changing_voice estiver ativo, chunks gerados são descartados de forma segura (tentativa de remoção do arquivo) e ignorados.
+    - Controle de duplicatas: os caminhos dos arquivos gerados são registrados em _generated_files para evitar reprocessamento duplicado.
+    - Verificação de estado de reprodução: não tenta iniciar novo áudio se já estiver em PlayingState; respeita PausedState.
+  - Robustez e logging:
+    - Tratamento de exceções expandido para evitar falhas silenciosas e garantir que leitura_finalizada() seja chamada quando apropriado.
+    - Mensagens de log documentam erros ao iniciar reprodução de chunks e falhas na limpeza de arquivos gerados.
+
+Impacto e comportamento esperado
+- Usuário pausa a narração com o botão "⏸️ Pausar": playback interrompe; novos chunks gerados pelo mecanismo TTS são enfileirados e NÃO começam a tocar até que o usuário retome manualmente (▶️ Continuar) ou o player esteja em um estado que permita reprodução automática.
+- Troca de voz durante geração: chunks criados durante a troca de voz são descartados de forma segura para evitar reprodução com voz antiga.
+
+Como testar (passos rápidos)
+1. Iniciar Leitor Acessível com uma voz que use geração por chunks (Edge TTS ou similar).
+2. Iniciar leitura.
+3. Enquanto estiver reproduzindo, clicar em "⏸️ Pausar".
+4. Confirmar que a reprodução para e que novos chunks gerados (por exemplo, textos longos) não iniciam automaticamente.
+5. Clicar em "▶️ Continuar" e confirmar que a fila é consumida normalmente e a reprodução prossegue.
+
+Notas técnicas
+- A correção foca em _play_generated_audio e interage com QMediaPlayer.playbackState() e a flag interna _is_paused.
+- Mantida compatibilidade com os fluxos existentes de geração de áudio e limpeza de arquivos temporários.
+
+_________________________________________________
+
+NOTAS DE LANÇAMENTO — Lúmen
 Versão: 2025.11.26.0
 Data: 26 de novembro de 2025
 Autor: Fernando Nillsson Cidade

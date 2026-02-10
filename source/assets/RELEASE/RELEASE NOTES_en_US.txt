@@ -1,4 +1,42 @@
 RELEASE NOTES — Lúmen
+Version: 2025.11.29.0
+Date: November 29, 2025
+Author: Fernando Nillsson Cidade
+
+Quick summary
+- Fix in the Accessible Reader (TTS) behavior: when clicking "⏸️ Pause" playback now remains paused and newly generated chunks are kept queued, preventing the reader from automatically advancing to the next chunk.
+
+Detailed changes
+- Modified file: source/modules/leitor/leitor_acessivel/lta_09_play_generated_audio.py
+  - Pause behavior fixed:
+    - Before: when the user paused playback, newly generated audio files (chunks) could start automatically, causing the reader to skip the pause.
+    - Now: the _play_generated_audio function explicitly checks the player state (QMediaPlayer.PausedState) and the internal _is_paused flag. If the player is paused, new chunks do NOT start automatically — they are only added to the queue (_generated_queue) for later playback.
+  - Additional protections:
+    - Preservation of chunks during voice change: if _changing_voice is active, generated chunks are safely discarded (attempt to remove the file) and ignored.
+    - Duplicate control: generated file paths are recorded in _generated_files to avoid duplicate reprocessing.
+    - Playback state check: does not attempt to start new audio if already in PlayingState; respects PausedState.
+  - Robustness and logging:
+    - Expanded exception handling to avoid silent failures and ensure leitura_finalizada() is called when appropriate.
+    - Log messages document errors when starting chunk playback and failures when cleaning up generated files.
+
+Impact and expected behavior
+- User pauses narration with the "⏸️ Pause" button: playback stops; newly generated chunks from the TTS mechanism are queued and do NOT start playing until the user manually resumes (▶️ Continue) or the player is in a state that allows automatic playback.
+- Voice change during generation: chunks created during a voice change are safely discarded to avoid playback with the old voice.
+
+How to test (quick steps)
+1. Start Accessible Reader with a voice that uses chunked generation (Edge TTS or similar).
+2. Start reading.
+3. While playing, click "⏸️ Pause".
+4. Confirm playback stops and that newly generated chunks (e.g., for long texts) do not start automatically.
+5. Click "▶️ Continue" and confirm the queue is consumed normally and playback resumes.
+
+Technical notes
+- The fix focuses on _play_generated_audio and interacts with QMediaPlayer.playbackState() and the internal _is_paused flag.
+- Compatibility with existing audio generation and temporary file cleanup flows is preserved.
+
+_________________________________________________
+
+RELEASE NOTES — Lúmen
 Version: 2025.11.26.0
 Date: November 26, 2025
 Author: Fernando Nillsson Cidade
