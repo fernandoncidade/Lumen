@@ -1,4 +1,88 @@
 NOTAS DE LANÇAMENTO — Lúmen
+Versão: 2025.12.2.0
+Data: 2 de dezembro de 2025
+Autor: Fernando Nillsson Cidade
+
+Resumo rápido
+- Sistema de alarme do Pomodoro aprimorado: escolha de campainha, preview, persistência, repetição configurável e reprodução robusta.
+- Correções e melhorias na reprodução do alarme: repetição respeita a duração do arquivo + intervalo configurado; alarme toca imediatamente ao fim do ciclo e repete até o usuário fechar a janela de alerta.
+- Interface de configuração de som adicionada ao menu de Configurações com visualização de duração e cálculo do tempo total entre repetições.
+- Melhoria na confiabilidade da reprodução de som (recriação do QSoundEffect) para evitar falhas após stop/preview.
+
+Detalhamento das mudanças
+- Arquivo alterado: source/utils/SoundManager.py
+  - Novo gerenciador de som centralizado (singleton) que expõe: instance(), play(), play_repeating(), stop(), preview(), get_duration_for_path(), get_available_sounds(), get_alarm_interval(), set_alarm_interval().
+  - Deteção de duração de arquivos WAV via módulo wave do Python (método _get_wav_duration_ms) para obter duração confiável em ms.
+  - Lógica de repetição: play_repeating() toca o áudio, calcula próximo acionamento como (duração do áudio) + (intervalo configurado) e agenda com QTimer.
+  - Recriação limpa do QSoundEffect em _prepare_effect() antes de cada reprodução para evitar comportamento onde som só toca uma vez.
+  - Persistência da campainha e do intervalo em QSettings (chaves: "pomodoro/sound_path" e "pomodoro/alarm_interval").
+  - Métodos de preview e stop aprimorados; fallback de duração padrão (3000ms) quando não detectada.
+
+- Arquivo alterado: source/gui/gui_23_sound_config_dialog.py
+  - Novo diálogo "🔔 Configurar Som do Pomodoro" com:
+    - Combobox para seleção de campainha (lista de WAVs em assets/sound).
+    - Botão ▶️ Tocar para preview.
+    - SpinBox para definir intervalo (segundos) entre repetições (0–60).
+    - Exibição da duração do arquivo selecionado e do tempo total até a próxima repetição (duração + intervalo).
+  - Ao salvar, grava a campainha e o intervalo nas QSettings via SoundManager.
+
+- Arquivo alterado: source/gui/gui_03_setup_menubar.py
+  - Adicionada ação "🔔 Som..." no menu "⚙️ Configurações" que abre o diálogo de configuração de som.
+  - Atualiza módulos após confirmação do diálogo (chamada a atualizar_modulos quando disponível).
+
+- Arquivo alterado: source/modules/tempo/tmp_02_PomodoroTimer.py
+  - Integração com SoundManager.instance() para tocar alarmes ao finalizar foco/descanso.
+  - Método _executar_alerta exibe QMessageBox e inicia o alarme repetitivo (play_repeating) antes de mostrar a caixa; conecta fechamento da caixa para parar o alarme (stop).
+  - Correção para que o som toque imediatamente quando o ciclo termina e continue repetindo até o fechamento manual da janela de alerta.
+  - Logging e tratamento de exceções adicionados.
+
+- Arquivo alterado: source/gui/gui_08_atualizar_menu.py
+  - Garantia de que a label/ação "🔔 Som..." seja atualizada quando o idioma for alterado.
+
+Impacto e comportamento esperado
+- Ao terminar um ciclo de foco ou de descanso:
+  - A janela de alerta (QMessageBox) aparece imediatamente.
+  - O alarme toca imediatamente e repete até que o usuário feche a janela.
+  - A repetição respeita a duração do arquivo de áudio: próximo toque ocorre somente após (duração do áudio) + (intervalo configurado pelo usuário).
+- Escolha de campainha e intervalo são persistidos em configurações locais (QSettings).
+- Preview permite ouvir a campainha sem ativar repetição.
+
+Como testar (passos rápidos)
+1. Abrir Aplicação e ir em ⚙️ Configurações → 🔔 Som...
+2. Selecionar uma campainha (WAV) e usar ▶️ Tocar para preview.
+3. Ajustar "Intervalo entre repetições" (ex.: 5s) e verificar o rótulo "Repetição a cada: X.XX segundos" (duração do arquivo + intervalo).
+4. Salvar e executar um Pomodoro curto (ou pular ciclo) até que finalizar_ciclo dispare.
+5. Confirmar que:
+   - O som toca imediatamente com a janela de alerta.
+   - O som repete após (duração do WAV) + (intervalo configurado).
+   - Ao fechar a janela de alerta o som para imediatamente.
+6. Repetir para ciclo de descanso; testar alteração de campainha entre ciclos.
+
+Notas técnicas
+- Implementação utiliza PySide6.QtMultimedia.QSoundEffect para reprodução local (compatível com WAV). Para medir duração de WAV, usa-se módulo padrão wave do Python (sem dependências externas).
+- Configurações persistidas via QSettings namespace "Lumen"/"LumenApp".
+- Recomendado ter PySide6 com suporte a multimedia (FFmpeg) no ambiente.
+- Caso use arquivos que não sejam WAV, a função de duração terá fallback (3s). Suporte a MP3/OUTROS pode exigir QMediaPlayer ou bibliotecas adicionais.
+
+Arquivos principais alterados
+- source/utils/SoundManager.py (novo / modificado)
+- source/gui/gui_23_sound_config_dialog.py (novo diálogo de configuração)
+- source/gui/gui_03_setup_menubar.py (integração do diálogo no menu)
+- source/modules/tempo/tmp_02_PomodoroTimer.py (integração e controle de alarme)
+- source/gui/gui_08_atualizar_menu.py (traduções do menu)
+
+Problemas conhecidos
+- Duração exata só é calculada para arquivos WAV via wave; outros formatos poderão usar fallback. Se desejar suporte completo (MP3, OGG), recomenda-se usar QMediaPlayer para extração de metadados ou bibliotecas externas (pydub, mutagen).
+- Arquivos WAV muito grandes podem aumentar o custo de leitura; a rotina é simples e síncrona.
+- Traduções: strings do diálogo e labels devem ser recompiladas em .qm (pyside6-lrelease) após alterações no .ts para surtir efeito.
+
+Suporte e contato
+- Autor: Fernando Nillsson Cidade
+- Issues/PRs: abrir no repositório do projeto.
+
+_________________________________________________
+
+NOTAS DE LANÇAMENTO — Lúmen
 Versão: 2025.11.29.0
 Data: 29 de novembro de 2025
 Autor: Fernando Nillsson Cidade

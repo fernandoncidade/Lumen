@@ -1,4 +1,4 @@
-Version 2025.11.29.0, November 29, 2025
+Version 2025.12.2.0, December 2, 2025
 
 Third‑Party Software Licenses and Attribution Notice — Lúmen
 
