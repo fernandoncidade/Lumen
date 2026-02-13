@@ -2,8 +2,8 @@ import os
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import QCoreApplication
-from source.utils.LogManager import LogManager
 from source.language.tr_01_gerenciadorTraducao import GerenciadorTraducao
+from source.utils.LogManager import LogManager
 from source.utils.IconUtils import get_icon_path
 from source.utils.CaminhoPersistenteUtils import obter_caminho_persistente
 
@@ -21,6 +21,7 @@ try:
 
 except Exception as e:
     logger.error(f"Erro ao obter caminho persistente: {e}", exc_info=True)
+
 
 class EstudoAcessivel(QMainWindow):
     def __init__(self):
@@ -41,11 +42,16 @@ class EstudoAcessivel(QMainWindow):
 
             try:
                 icon_path = get_icon_path("autismo.ico")
-                if icon_path:
-                    self.setWindowIcon(QIcon(icon_path))
+                if icon_path and os.path.exists(icon_path):
+                    window_icon = QIcon(icon_path)
+                    self.setWindowIcon(window_icon)
+                    logger.debug(f"Ícone da janela configurado: {icon_path}")
+
+                else:
+                    logger.warning(f"Caminho do ícone 'autismo.ico' não encontrado ou inválido: {icon_path}")
 
             except Exception as e:
-                logger.error(f"Erro ao carregar ícone da aplicação: {e}", exc_info=True)
+                logger.error(f"Erro ao carregar ícone da janela: {e}", exc_info=True)
 
         except Exception as e:
             logger.critical(f"Erro crítico ao inicializar EstudoAcessivelApp: {str(e)}", exc_info=True)

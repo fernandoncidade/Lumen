@@ -116,19 +116,24 @@ class PomodoroTimer(QWidget):
 
     def atualizar_traducoes(self):
         try:
-            ciclo_atual = (self.ciclos_completados % 4) + 1
-
             if self.em_foco:
+                ciclo_atual = (self.ciclos_completados % 4) + 1
                 self.label_status.setText(QCoreApplication.translate("App", "🎯 Modo: Foco | Ciclo: {ciclo}/4").format(ciclo=ciclo_atual))
 
             else:
+                ciclo_concluido = self.ciclos_completados % 4
+                if ciclo_concluido == 0 and self.ciclos_completados > 0:
+                    ciclo_concluido = 4
+
+                elif ciclo_concluido == 0 and self.ciclos_completados == 0:
+                    ciclo_concluido = 1
+
                 tipo_descanso = QCoreApplication.translate("App", "Longo") if self.ciclos_completados % 4 == 0 else QCoreApplication.translate("App", "Curto")
-                self.label_status.setText(QCoreApplication.translate("App", "☕ Modo: Descanso {tipo} | Ciclo: {ciclo}/4").format(tipo=tipo_descanso, ciclo=ciclo_atual))
+                self.label_status.setText(QCoreApplication.translate("App", "☕ Modo: Descanso {tipo} | Ciclo: {ciclo}/4").format(tipo=tipo_descanso, ciclo=ciclo_concluido))
 
             texto_iniciar = (QCoreApplication.translate("App", "⏸️ Pausar") if self.timer_ativo else QCoreApplication.translate("App", "▶️ Iniciar"))
 
             self.gerenciador_botoes.set_button_text(self.btn_iniciar, texto_iniciar)
-
             self.gerenciador_botoes.set_button_text(self.btn_resetar, QCoreApplication.translate("App", "⏱️ Resetar Relógio"))
             self.gerenciador_botoes.set_button_text(self.btn_pular, QCoreApplication.translate("App", "⏭️ Pular"))
 
@@ -257,8 +262,11 @@ class PomodoroTimer(QWidget):
                     tipo_descanso = QCoreApplication.translate("App", "Curto")
 
                 self.em_foco = False
-                ciclo_atual = (self.ciclos_completados % 4) + 1
-                self.label_status.setText(QCoreApplication.translate("App", "☕ Modo: Descanso {tipo} | Ciclo: {ciclo}/4").format(tipo=tipo_descanso, ciclo=ciclo_atual))
+                ciclo_concluido = self.ciclos_completados % 4
+                if ciclo_concluido == 0:
+                    ciclo_concluido = 4
+
+                self.label_status.setText(QCoreApplication.translate("App", "☕ Modo: Descanso {tipo} | Ciclo: {ciclo}/4").format(tipo=tipo_descanso, ciclo=ciclo_concluido))
                 self.progress.setMaximum(self.tempo_restante)
                 self.progress.setValue(self.tempo_restante)
 

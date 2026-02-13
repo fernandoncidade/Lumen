@@ -10,6 +10,11 @@
     </message>
 
     <message>
+      <source>Lumen</source>
+      <translation>Lúmen</translation>
+    </message>
+
+    <message>
       <source>📖 Leitor Acessível</source>
       <translation>📖 Accessible Reader</translation>
     </message>
@@ -252,6 +257,36 @@
     </message>
 
     <message>
+      <source>🔴 Iniciante</source>
+      <translation>🔴 Beginner</translation>
+    </message>
+
+    <message>
+      <source>🟡 Intermediário</source>
+      <translation>🟡 Intermediate</translation>
+    </message>
+
+    <message>
+      <source>🟢 Avançado</source>
+      <translation>🟢 Advanced</translation>
+    </message>
+
+    <message>
+      <source>Iniciante</source>
+      <translation>Beginner</translation>
+    </message>
+
+    <message>
+      <source>Intermediário</source>
+      <translation>Intermediate</translation>
+    </message>
+
+    <message>
+      <source>Avançado</source>
+      <translation>Advanced</translation>
+    </message>
+
+    <message>
       <source>💾 Salvar Conceito</source>
       <translation>💾 Save Concept</translation>
     </message>
@@ -391,6 +426,16 @@ Ex: 'Shear Stress', 'Bending Moment'</translation>
     <message>
       <source>25:00</source>
       <translation>25:00</translation>
+    </message>
+
+    <message>
+      <source>Longo</source>
+      <translation>Long</translation>
+    </message>
+
+    <message>
+      <source>Curto</source>
+      <translation>Short</translation>
     </message>
 
     <message>
@@ -624,6 +669,108 @@ Let's go to the next focus cycle! 💪</translation>
     <message>
         <source>🌐 Todas as tarefas (global)</source>
         <translation>🌐 All tasks (global)</translation>
+    </message>
+
+    <message>
+      <source>Documento Principal</source>
+      <translation>Main Document</translation>
+    </message>
+
+    <message>
+      <source>Sem título</source>
+      <translation>Untitled</translation>
+    </message>
+
+    <message>
+      <source>📄 Importar Documento (IA)</source>
+      <translation>📄 Import Document (AI)</translation>
+    </message>
+
+    <message>
+      <source>🤖 Reorganizar com IA</source>
+      <translation>🤖 Reorganize with AI</translation>
+    </message>
+
+    <message>
+      <source>Importar Documento</source>
+      <translation>Import Document</translation>
+    </message>
+
+    <message>
+      <source>Documentos (*.pdf *.docx *.txt)</source>
+      <translation>Documents (*.pdf *.docx *.txt)</translation>
+    </message>
+
+    <message>
+      <source>Analisando documento com IA...
+Isso pode levar alguns minutos.</source>
+      <translation>Analyzing document with AI...
+This may take a few minutes.</translation>
+    </message>
+
+    <message>
+      <source>Carregando modelo de IA...</source>
+      <translation>Loading AI model...</translation>
+    </message>
+
+    <message>
+      <source>Extraindo texto...</source>
+      <translation>Extracting text...</translation>
+    </message>
+
+    <message>
+      <source>Analisando estrutura...</source>
+      <translation>Analyzing structure...</translation>
+    </message>
+
+    <message>
+      <source>Gerando mapa mental...</source>
+      <translation>Generating mind map...</translation>
+    </message>
+
+    <message>
+      <source>Informações associadas:</source>
+      <translation>Associated Information:</translation>
+    </message>
+
+    <message>
+      <source>Sem informações associadas.</source>
+      <translation>No associated information.</translation>
+    </message>
+
+    <message>
+      <source>➕ Integrar ao Método Feynman</source>
+      <translation>➕ Integrate with the Feynman Method</translation>
+    </message>
+
+    <message>
+      <source>Envia as notas para o Método Feynman</source>
+      <translation>Sends the notes to the Feynman Method</translation>
+    </message>
+
+    <message>
+      <source>Por favor, escreva suas notas antes de integrar ao Método Feynman!</source>
+      <translation>Please write your notes before integrating with the Feynman Method!</translation>
+    </message>
+
+    <message>
+      <source>✅ Integrado</source>
+      <translation>✅ Integrated</translation>
+    </message>
+
+    <message>
+      <source>Conceito '{titulo}' integrado ao Método Feynman com sucesso!</source>
+      <translation>Concept '{titulo}' successfully integrated with the Feynman Method!</translation>
+    </message>
+
+    <message>
+      <source>Erro ao integrar ao Método Feynman: {erro}</source>
+      <translation>Error integrating with the Feynman Method: {erro}</translation>
+    </message>
+
+    <message>
+      <source>🎯 Redefinir Nível de Domínio</source>
+      <translation>🎯 Reset Mastery Level</translation>
     </message>
 
     <!-- Botões padrão / diálogos -->

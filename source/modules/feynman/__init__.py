@@ -8,6 +8,7 @@ from .fey_07_selecionar_conceito import selecionar_conceito
 from .fey_08_deletar_conceito import deletar_conceito
 from .fey_09_atualizar_lista import atualizar_lista
 from .fey_10_salvar_conceitos import salvar_conceitos
+from .fey_11_menu_contexto import mostrar_menu_contexto, redefinir_dominio
 
 __all__ = [
     "carregar_conceitos",
@@ -19,5 +20,7 @@ __all__ = [
     "selecionar_conceito",
     "deletar_conceito",
     "atualizar_lista",
-    "salvar_conceitos"
+    "salvar_conceitos",
+    "mostrar_menu_contexto",
+    "redefinir_dominio"
 ]
