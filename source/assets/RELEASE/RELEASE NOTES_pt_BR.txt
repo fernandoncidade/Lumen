@@ -1,4 +1,100 @@
 NOTAS DE LANÇAMENTO — Lúmen
+Versão: 2025.12.18.0
+Data: 18 de dezembro de 2025
+Autor: Fernando Nillsson Cidade
+
+Resumo rápido
+- Correção no fluxo do botão "🤖 Reorganizar com IA": ao reorganizar, o mapa não é mais "destruído" quando a estrutura foi importada de documento (ex.: PDF); a hierarquia existente é preservada.
+- Ampliação da paleta de cores por nível (cores_nivel) com gradação semântica (tronco/galhos/folhas) e fallback automático por HSV para suportar profundidade ilimitada de subníveis sem erro de índice.
+- Consolidação do pipeline de importação de documentos e geração de mapa hierárquico com enriquecimento informacional (resumos, conceitos, ideias), layout recursivo e navegação hierárquica.
+
+Detalhamento das mudanças
+
+🗺️ Mapa Mental (source/modules/mapa/mp_03_MapaMental.py)
+
+1) Reorganização com IA — preservação da hierarquia existente
+- Método alterado: reorganizar_com_ia
+  - Detecta quando já existe hierarquia ativa (_hierarquia_root e _hierarquia_children).
+  - Para mapas gerados por importação (PDF, DOCX), converte a hierarquia baseada em objetos NoConceito para uma hierarquia por índices (raiz/filhos/niveis) e reaplica somente o layout em árvore via _aplicar_layout_arvore(...).
+  - Atualiza visibilidade das conexões (_atualizar_visibilidade_linhas()) e mantém o foco visual no nó raiz (animate_focus_on) quando presente.
+  - Evita reconfigurar a hierarquia por índices nesse caminho para prevenir ocultação indevida de nós.
+
+2) Cores por níveis hierárquicos — suporte a muitos subníveis
+- Método alterado: _gerar_mapa_de_hierarquia
+  - Mantida e organizada a paleta cores_nivel para representar tronco → galhos → ramos → folhas.
+  - Implementado fallback: para níveis além da paleta, gera cor procedimentalmente com QColor.fromHsv(...), garantindo cores distintas para profundidades arbitrárias.
+
+3) Geração de mapa hierárquico a partir de documentos — enriquecimento visual e informacional
+- Métodos: importar_documento_ia + _gerar_mapa_de_hierarquia
+  - Importação com QProgressDialog mostrando etapas: carregar IA, extrair texto, analisar estrutura, gerar mapa.
+  - Geração recursiva de nós com:
+    - Escala dinâmica por profundidade (setScale decrescente).
+    - Conexões com espessura variável conforme nível.
+    - Construção e armazenamento de info_associada (resumo, conceitos, ideias, estatísticas, estrutura).
+    - Badge informativo nos nós (_badge) quando há informação associada.
+
+4) Navegação hierárquica (expandir/recolher) e visibilidade de conexões
+- Métodos: _habilitar_navegacao_hierarquia, _clicar_no_para_expandir_hierarquia, _aplicar_visibilidade_por_foco, _atualizar_visibilidade_linhas, _instalar_handlers_nos
+  - Modo de navegação hierárquica por clique (expandir/recolher).
+  - Linhas de conexão (LinhaConexao) respeitam visibilidade de nós (linhas ocultas se algum nó estiver oculto).
+  - Handlers de clique instalados preservam comportamento original do nó e adicionam regras para modo de conexão e navegação hierárquica.
+
+5) Layout visual e usabilidade do canvas
+- Classes/funcionalidades: MapaScene, SmoothGraphicsView
+  - Fundo com gradiente, grid visual (linhas leves a cada 40px e linhas fortes a cada 200px).
+  - Snap-to-grid via MapaScene.snap(...) aplicado na criação de nós e após reorganização.
+  - Zoom suave com limites, pan por arrastar, e animação de foco (animate_focus_on).
+
+🤖 Processamento IA (source/modules/mapa/mp_04_ProcessadorIA.py)
+
+1) Pipeline de análise hierárquica profunda de documentos
+- Método principal: analisar_estrutura(texto)
+  - Detecção de idioma (pt/en) por heurística.
+  - Extração avançada de seções/títulos (Parte/Capítulo/Subcapítulos), incluindo robustez a erros de OCR e numeração (1.0, 1.1, 1.1.1).
+  - Construção de árvore hierárquica com relações pai-filho e processamento recursivo para extrair:
+    - Conceitos semânticos (entidades, termos técnicos, conceitos).
+    - Ideias principais com scoring.
+    - Resumos contextuais multinível.
+  - Aplicação de TF-IDF global para refinar importâncias de conceitos.
+  - Identificação de relações semânticas por análise de dependências/contexto.
+
+2) Robustez na extração de texto e pré-processamento
+- Extração de PDF via pdfplumber com normalização (unicodedata.normalize) e heurísticas para correção de padrões e recomposição de títulos quebrados.
+
+Impacto e comportamento esperado
+
+✅ Reorganização com IA preserva mapas importados
+- Ao importar um documento e gerar mapa, "🤖 Reorganizar com IA" reposiciona respeitando a hierarquia existente, evitando recalcular uma árvore que colapse a visualização.
+
+🎨 Cores para subníveis ilimitados
+- Níveis além da paleta recebem cor gerada automaticamente (HSV), evitando erros de índice e mantendo distinção visual.
+
+Como testar (passos rápidos)
+
+🧪 Teste 1: Preservação do mapa importado ao reorganizar
+1. Abrir Mapa Mental.
+2. Importar PDF via "📄 Importar Documento (IA)".
+3. Clicar em "🤖 Reorganizar com IA".
+4. Verificar que a estrutura não some e a hierarquia importada é preservada.
+
+🧪 Teste 2: Profundidade alta e cores
+1. Importar documento com muitos níveis (ou simular estrutura).
+2. Confirmar que níveis além da paleta recebem cores geradas automaticamente e permanecem distinguíveis.
+
+Arquivos principais alterados
+- source/modules/mapa/mp_03_MapaMental.py
+- source/modules/mapa/mp_04_ProcessadorIA.py
+
+Notas técnicas e dependências
+- spaCy 3.x (pt_core_news_lg / en_core_web_lg recomendados)
+- scikit-learn (TfidfVectorizer)
+- PySide6 6.x (QGraphicsScene, QtMultimedia)
+- PyMuPDF / pdfplumber para extração de PDF
+- python-docx para DOCX
+
+_________________________________________________
+
+NOTAS DE LANÇAMENTO — Lúmen
 Versão: 2025.12.13.0
 Data: 13 de dezembro de 2025
 Autor: Fernando Nillsson Cidade

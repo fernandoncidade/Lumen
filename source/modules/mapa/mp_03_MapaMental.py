@@ -100,6 +100,13 @@ class MapaMental(QWidget):
             self.no_origem = None
             self.nos = []
             self.processador_ia = None
+
+            self._modo_navegacao_hierarquia = False
+            self._hierarquia_root = None
+            self._hierarquia_parent = {}
+            self._hierarquia_children = {}
+            self._nos_expandidos = set()
+
             self.setup_ui()
             app = QCoreApplication.instance()
             if app:
@@ -109,6 +116,149 @@ class MapaMental(QWidget):
 
         except Exception as e:
             self.logger.error(f"Erro ao inicializar MapaMental: {str(e)}", exc_info=True)
+
+    def _atualizar_visibilidade_linhas(self):
+        try:
+            for item in self.scene.items():
+                if isinstance(item, LinhaConexao):
+                    a = getattr(item, "no_inicio", None)
+                    b = getattr(item, "no_fim", None)
+                    if a is None or b is None:
+                        item.setVisible(True)
+                        continue
+
+                    item.setVisible(a.isVisible() and b.isVisible())
+
+        except Exception as e:
+            self.logger.error(f"Erro ao atualizar visibilidade das linhas: {e}", exc_info=True)
+
+    def _instalar_handlers_nos(self):
+        try:
+            for no in self.nos:
+                if not hasattr(no, "_lumen_mousePressEvent_original"):
+                    no._lumen_mousePressEvent_original = no.mousePressEvent
+
+                def _handler(event, n=no):
+                    try:
+                        if event.button() == Qt.LeftButton:
+                            if self.modo_conexao:
+                                self.clicar_no_para_conectar(event, n)
+                                return
+
+                            if self._modo_navegacao_hierarquia:
+                                self._clicar_no_para_expandir_hierarquia(n)
+
+                        return n._lumen_mousePressEvent_original(event)
+
+                    except Exception as ex:
+                        self.logger.error(f"Erro no handler de clique do nó: {ex}", exc_info=True)
+                        return n._lumen_mousePressEvent_original(event)
+
+                no.mousePressEvent = _handler
+
+        except Exception as e:
+            self.logger.error(f"Erro ao instalar handlers nos nós: {e}", exc_info=True)
+
+    def _aplicar_visibilidade_por_foco(self, foco, abrir_foco: bool):
+        if not self._hierarquia_root:
+            return
+
+        visiveis = set()
+        visiveis.add(self._hierarquia_root)
+
+        for no_exp in self._nos_expandidos:
+            if no_exp not in visiveis:
+                n = no_exp
+                while n is not None:
+                    visiveis.add(n)
+                    n = self._hierarquia_parent.get(n)
+
+            for filho in self._hierarquia_children.get(no_exp, []):
+                visiveis.add(filho)
+
+        for no in self.nos:
+            no.setVisible(no in visiveis)
+
+        self._atualizar_visibilidade_linhas()
+
+    def _clicar_no_para_expandir_hierarquia(self, no):
+        try:
+            if no in self._nos_expandidos:
+                self._nos_expandidos.discard(no)
+
+                def remover_descendentes(n):
+                    for filho in self._hierarquia_children.get(n, []):
+                        self._nos_expandidos.discard(filho)
+                        remover_descendentes(filho)
+
+                remover_descendentes(no)
+
+            else:
+                self._nos_expandidos.add(no)
+
+            self._aplicar_visibilidade_por_foco(no, abrir_foco=False)
+
+        except Exception as e:
+            self.logger.error(f"Erro ao expandir/recolher hierarquia: {e}", exc_info=True)
+
+    def _habilitar_navegacao_hierarquia(self, raiz_no):
+        try:
+            self._modo_navegacao_hierarquia = True
+            self._hierarquia_root = raiz_no
+            self._nos_expandidos = set()
+
+            self._instalar_handlers_nos()
+
+            for no in self.nos:
+                no.setVisible(no == raiz_no)
+
+            self._atualizar_visibilidade_linhas()
+
+            if hasattr(self.view, "animate_focus_on"):
+                self.view.animate_focus_on(raiz_no)
+
+        except Exception as e:
+            self.logger.error(f"Erro ao habilitar navegação hierárquica: {e}", exc_info=True)
+
+    def _configurar_hierarquia_por_indices(self, hierarquia: Dict):
+        try:
+            if not hierarquia or "raiz" not in hierarquia:
+                return
+
+            raiz_idx = hierarquia["raiz"]
+            pais_idx = hierarquia.get("pais", {})
+            filhos_idx = hierarquia.get("filhos", {})
+
+            if not (0 <= raiz_idx < len(self.nos)):
+                return
+
+            self._hierarquia_parent = {}
+            self._hierarquia_children = {}
+
+            raiz = self.nos[raiz_idx]
+            self._hierarquia_parent[raiz] = None
+            self._hierarquia_children.setdefault(raiz, [])
+
+            for pai_i, lista_filhos in filhos_idx.items():
+                if not (0 <= pai_i < len(self.nos)):
+                    continue
+
+                pai_no = self.nos[pai_i]
+                self._hierarquia_children.setdefault(pai_no, [])
+
+                for fi in lista_filhos:
+                    if not (0 <= fi < len(self.nos)):
+                        continue
+
+                    filho_no = self.nos[fi]
+                    self._hierarquia_parent[filho_no] = pai_no
+                    self._hierarquia_children[pai_no].append(filho_no)
+                    self._hierarquia_children.setdefault(filho_no, [])
+
+            self._habilitar_navegacao_hierarquia(raiz)
+
+        except Exception as e:
+            self.logger.error(f"Erro ao configurar hierarquia por índices: {e}", exc_info=True)
 
     def setup_ui(self):
         try:
@@ -249,14 +399,13 @@ class MapaMental(QWidget):
                 self.btn_conectar.setStyleSheet("background-color: #28a745; color: white;")
                 self.view.setDragMode(QGraphicsView.NoDrag)
 
-                for no in self.nos:
-                    no.mousePressEvent = lambda event, n=no: self.clicar_no_para_conectar(event, n)
-
             else:
                 self.btn_conectar.setText(QCoreApplication.translate("App", "🔗 Conectar Conceitos"))
                 self.btn_conectar.setStyleSheet("")
                 self.view.setDragMode(QGraphicsView.ScrollHandDrag)
                 self.no_origem = None
+
+            self._instalar_handlers_nos()
 
         except Exception as e:
             self.logger.error(f"Erro ao alternar modo de conexão: {str(e)}", exc_info=True)
@@ -477,6 +626,12 @@ class MapaMental(QWidget):
             self.nos.clear()
             self.no_origem = None
 
+            self._modo_navegacao_hierarquia = False
+            self._hierarquia_root = None
+            self._hierarquia_parent = {}
+            self._hierarquia_children = {}
+            self._nos_expandidos = set()
+
         except Exception as e:
             self.logger.error(f"Erro ao limpar mapa: {str(e)}", exc_info=True)
 
@@ -595,7 +750,14 @@ class MapaMental(QWidget):
             QApplication.processEvents()
             self.limpar_mapa()
 
-            self._gerar_mapa_de_hierarquia(hierarquia)
+            self._hierarquia_parent = {}
+            self._hierarquia_children = {}
+            self._modo_navegacao_hierarquia = False
+            self._hierarquia_root = None
+
+            raiz_no = self._gerar_mapa_de_hierarquia(hierarquia)
+            if raiz_no:
+                self._habilitar_navegacao_hierarquia(raiz_no)
 
             progress.close()
             self.logger.info(f"Mapa mental gerado com sucesso de: {arquivo}")
@@ -608,22 +770,77 @@ class MapaMental(QWidget):
     def _gerar_mapa_de_hierarquia(self, hierarquia: Dict, x=0, y=0, nivel=0, pai=None):
         try:
             cores_nivel = [
-                QColor("#8B4513"),  # Marrom - Tronco (Documento)
-                QColor("#228B22"),  # Verde escuro - Galhos (Capítulos)
-                QColor("#32CD32"),  # Verde médio - Ramos (Subcapítulos)
-                QColor("#90EE90"),  # Verde claro - Sub-ramos
-                QColor("#FFD700"),  # Amarelo - Folhas (Ideias)
+                QColor("#8B4513"),  # 0  Tronco (Documento) - marrom
+                QColor("#A0522D"),  # 1  sienna
+                QColor("#CD853F"),  # 2  peru
+                QColor("#D2B48C"),  # 3  tan
+
+                QColor("#1B5E20"),  # 4  verde bem escuro
+                QColor("#2E7D32"),  # 5
+                QColor("#388E3C"),  # 6
+                QColor("#43A047"),  # 7
+                QColor("#4CAF50"),  # 8
+                QColor("#66BB6A"),  # 9
+                QColor("#81C784"),  # 10
+                QColor("#A5D6A7"),  # 11
+                QColor("#C8E6C9"),  # 12
+
+                QColor("#0D47A1"),  # 13 azul profundo
+                QColor("#1565C0"),  # 14
+                QColor("#1976D2"),  # 15
+                QColor("#1E88E5"),  # 16
+                QColor("#42A5F5"),  # 17
+                QColor("#90CAF9"),  # 18
+
+                QColor("#4A148C"),  # 19 roxo profundo
+                QColor("#6A1B9A"),  # 20
+                QColor("#7B1FA2"),  # 21
+                QColor("#8E24AA"),  # 22
+                QColor("#AB47BC"),  # 23
+                QColor("#CE93D8"),  # 24
+
+                QColor("#F9A825"),  # 25 amarelo/âmbar
+                QColor("#FBC02D"),  # 26
+                QColor("#FFD54F"),  # 27
+                QColor("#FFE082"),  # 28
+                QColor("#FFD700"),  # 29 folhas (Ideias) - dourado
+
+                QColor("#D84315"),  # 30 laranja queimado
+                QColor("#FF6F00"),  # 31
+                QColor("#FF8F00"),  # 32
+                QColor("#FFB300"),  # 33
+
+                QColor("#B71C1C"),  # 34 vermelho profundo
+                QColor("#C62828"),  # 35
+                QColor("#E53935"),  # 36
+                QColor("#EF5350"),  # 37
             ]
 
             titulo = hierarquia.get('titulo', 'Conceito')
             nivel_hierarquico = hierarquia.get('nivel', nivel)
             tipo_no = hierarquia.get('tipo', 'secao')
-            cor_no = cores_nivel[min(nivel, len(cores_nivel) - 1)]
+
+            if nivel < len(cores_nivel):
+                cor_no = cores_nivel[nivel]
+
+            else:
+                hue = (nivel * 37) % 360
+                cor_no = QColor.fromHsv(hue, 150, 230)
+
             escala = max(1.2 - (nivel * 0.15), 0.5)
             no_principal = NoConceito(x, y, titulo, cor_no)
             no_principal.setScale(escala)
             self.scene.addItem(no_principal)
             self.nos.append(no_principal)
+
+            if pai is None:
+                self._hierarquia_parent[no_principal] = None
+
+            else:
+                self._hierarquia_parent[no_principal] = pai
+                self._hierarquia_children.setdefault(pai, []).append(no_principal)
+
+            self._hierarquia_children.setdefault(no_principal, [])
 
             if pai:
                 linha = LinhaConexao(pai, no_principal)
@@ -745,6 +962,10 @@ class MapaMental(QWidget):
                     no_ideia = NoConceito(x_ideia, y_ideia, f"💡 {texto_resumido}", cor_folha)
                     no_ideia.setScale(0.7)
 
+                    self._hierarquia_parent[no_ideia] = no_principal
+                    self._hierarquia_children.setdefault(no_principal, []).append(no_ideia)
+                    self._hierarquia_children.setdefault(no_ideia, [])
+
                     info_folha = []
 
                     bloco_header = []
@@ -809,7 +1030,7 @@ class MapaMental(QWidget):
                     x_filho = x + raio * math.cos(math.radians(angulo))
                     y_filho = y + raio * math.sin(math.radians(angulo))
 
-                    self._gerar_mapa_de_hierarquia(filho, x_filho, y_filho, nivel + 1, pai=no_principal )
+                    self._gerar_mapa_de_hierarquia(filho, x_filho, y_filho, nivel + 1, pai=no_principal)
 
             return no_principal
 
@@ -845,6 +1066,58 @@ class MapaMental(QWidget):
                 self.logger.warning("Nenhum conceito para reorganizar")
                 return
 
+            if self._hierarquia_root is not None and isinstance(self._hierarquia_children, dict) and self._hierarquia_children:
+                idx_por_no = {no: i for i, no in enumerate(self.nos)}
+
+                raiz_idx = idx_por_no.get(self._hierarquia_root, 0)
+
+                filhos_idx = {i: [] for i in range(len(self.nos))}
+                for pai_no, lista_filhos in self._hierarquia_children.items():
+                    pai_i = idx_por_no.get(pai_no)
+                    if pai_i is None:
+                        continue
+
+                    for filho_no in (lista_filhos or []):
+                        fi = idx_por_no.get(filho_no)
+                        if fi is None:
+                            continue
+
+                        filhos_idx[pai_i].append(fi)
+
+                niveis = {raiz_idx: 0}
+                fila = [raiz_idx]
+                visitados = {raiz_idx}
+                while fila:
+                    atual = fila.pop(0)
+                    for viz in filhos_idx.get(atual, []):
+                        if viz in visitados:
+                            continue
+
+                        visitados.add(viz)
+                        niveis[viz] = niveis[atual] + 1
+                        fila.append(viz)
+
+                for i in range(len(self.nos)):
+                    if i not in visitados:
+                        filhos_idx.setdefault(raiz_idx, []).append(i)
+                        niveis[i] = 1
+
+                hierarquia_existente = {
+                    "raiz": raiz_idx,
+                    "filhos": filhos_idx,
+                    "niveis": niveis,
+                    "pais": {}
+                }
+
+                self._aplicar_layout_arvore(hierarquia_existente)
+                self._atualizar_visibilidade_linhas()
+
+                if hasattr(self.view, "animate_focus_on") and self._hierarquia_root is not None:
+                    self.view.animate_focus_on(self._hierarquia_root)
+
+                self.logger.info("Mapa reorganizado preservando a hierarquia existente (PDF)")
+                return
+
             if self.processador_ia is None:
                 self.processador_ia = ProcessadorIA()
 
@@ -859,9 +1132,10 @@ class MapaMental(QWidget):
 
             self._aplicar_layout_arvore(hierarquia)
             self._criar_relacoes_ia(relacoes)
+            self._configurar_hierarquia_por_indices(hierarquia)
 
             if self.nos and hasattr(self.view, "animate_focus_on"):
-                self.view.animate_focus_on(self.nos[0])
+                self.view.animate_focus_on(self.nos[hierarquia.get("raiz", 0)] if hierarquia else self.nos[0])
 
             self.logger.info("Mapa reorganizado em formato de árvore com sucesso")
 

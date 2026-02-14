@@ -1,8 +1,9 @@
 import spacy
-import fitz
+import pdfplumber
 from docx import Document
 from typing import List, Dict, Tuple
 import re
+import unicodedata
 from collections import defaultdict
 from sklearn.feature_extraction.text import TfidfVectorizer
 from source.utils.LogManager import LogManager
@@ -46,7 +47,9 @@ class ProcessadorIA:
                     self.logger.warning("Usando modelo pequeno pt_core_news_sm")
 
             self.nlp.max_length = 2_000_000
-            self.logger.info(f"NLP configurado: idioma={self.idioma_detectado}, max_length={self.nlp.max_length}")
+            self.logger.info(
+                f"NLP configurado: idioma={self.idioma_detectado}, max_length={self.nlp.max_length}"
+            )
 
         except Exception as e:
             self.logger.error(f"Erro ao carregar modelo spaCy: {e}", exc_info=True)
@@ -65,17 +68,93 @@ class ProcessadorIA:
 
     def extrair_texto_pdf(self, caminho: str) -> str:
         try:
-            texto = ""
-            doc = fitz.open(caminho)
-            for pagina in doc:
-                texto += pagina.get_text()
+            partes = []
+            with pdfplumber.open(caminho) as pdf:
+                for page in pdf.pages:
+                    page_text = page.extract_text(
+                        x_tolerance=2,
+                        y_tolerance=3,
+                        layout=True,
+                        x_density=7.25,
+                        y_density=13
+                    ) or ""
 
-            doc.close()
-            return texto
+                    page_text = unicodedata.normalize('NFKC', page_text)
+                    page_text = page_text.strip()
+
+                    if page_text:
+                        partes.append(page_text)
+
+            texto_completo = "\n\n".join(partes)
+            texto_completo = self._corrigir_caracteres_extraidos(texto_completo)
+
+            return texto_completo
 
         except Exception as e:
-            self.logger.error(f"Erro ao extrair texto do PDF: {e}", exc_info=True)
+            self.logger.error(f"Erro ao extrair texto do PDF (pdfplumber): {e}", exc_info=True)
             return ""
+
+    def _corrigir_caracteres_extraidos(self, texto: str) -> str:
+        try:
+            linhas = texto.split('\n')
+            linhas_corrigidas = []
+
+            for i, linha in enumerate(linhas):
+                linha_corrigida = linha
+
+                if i > 0 and linhas[i-1].strip():
+                    linha_anterior = linhas[i-1].strip()
+
+                    if len(linha_anterior) <= 15 and linha_anterior.isupper():
+                        if linha.strip() and (linha.strip()[0].isupper() or linha.strip().isupper()):
+                            possivel_titulo = f"{linha_anterior} {linha.strip()}"
+
+                            if re.match(r'(?:PARTE|PART|CAPÍTULO|CHAPTER)', possivel_titulo, re.IGNORECASE):
+                                if linhas_corrigidas and linhas_corrigidas[-1] == linhas[i-1]:
+                                    linhas_corrigidas.pop()
+                                    linha_corrigida = possivel_titulo
+
+                linha_corrigida = self._corrigir_palavras_conhecidas(linha_corrigida)
+                linhas_corrigidas.append(linha_corrigida)
+
+            return '\n'.join(linhas_corrigidas)
+
+        except Exception as e:
+            self.logger.error(f"Erro ao corrigir caracteres extraídos: {e}", exc_info=True)
+            return texto
+
+    def _corrigir_palavras_conhecidas(self, linha: str) -> str:
+        try:
+            correcoes = {
+                # Português
+                r'\barte\s+(I{1,3}|IV|V|VI{0,3}|IX|X|[0-9]+)\b': r'Parte \1',
+                r'\bARTE\s+(I{1,3}|IV|V|VI{0,3}|IX|X|[0-9]+)\b': r'PARTE \1',
+                r'\bapítulo\s+(I{1,3}|IV|V|VI{0,3}|IX|X|[0-9]+|\d+)\b': r'Capítulo \1',
+                r'\bAPÍTULO\s+(I{1,3}|IV|V|VI{0,3}|IX|X|[0-9]+|\d+)\b': r'CAPÍTULO \1',
+                r'\bSTILO\b': 'ESTILO',
+                r'\bstilo\b': 'estilo',
+                r'\bSeção\b': 'Seção',
+                r'\bEÇÃO\b': 'SEÇÃO',
+                
+                # Inglês
+                r'\bart\s+(I{1,3}|IV|V|VI{0,3}|IX|X|[0-9]+)\b': r'Part \1',
+                r'\bART\s+(I{1,3}|IV|V|VI{0,3}|IX|X|[0-9]+)\b': r'PART \1',
+                r'\bhapter\s+(I{1,3}|IV|V|VI{0,3}|IX|X|[0-9]+|\d+)\b': r'Chapter \1',
+                r'\bHAPTER\s+(I{1,3}|IV|V|VI{0,3}|IX|X|[0-9]+|\d+)\b': r'CHAPTER \1',
+            }
+
+            linha_corrigida = linha
+            for padrao, substituicao in correcoes.items():
+                linha_corrigida = re.sub(padrao, substituicao, linha_corrigida, flags=re.IGNORECASE)
+
+            if re.match(r'^(arte|apítulo|art|hapter)\s+', linha_corrigida, re.IGNORECASE):
+                linha_corrigida = linha_corrigida[0].upper() + linha_corrigida[1:]
+
+            return linha_corrigida
+
+        except Exception as e:
+            self.logger.error(f"Erro ao corrigir palavras conhecidas: {e}", exc_info=True)
+            return linha
 
     def extrair_texto_docx(self, caminho: str) -> str:
         try:
@@ -141,61 +220,308 @@ class ProcessadorIA:
             self.logger.error(f"Erro ao analisar estrutura: {e}", exc_info=True)
             return {"titulo": "Documento", "conceitos": [], "ideias_principais": [], "relacoes": [], "filhos": []}
 
+    def _preprocessar_linhas(self, texto: str) -> List[str]:
+        try:
+            t = unicodedata.normalize('NFKC', texto or "")
+            t = t.replace('\xa0', ' ')  # NBSP -> espaço
+            t = t.replace('–', '-').replace('—', '-')  # EN/EM dash -> '-'
+            t = re.sub(r'[ \t]+', ' ', t)
+            return [ln.strip() for ln in t.split('\n')]
+
+        except Exception:
+            return [ln.strip() for ln in (texto or "").split('\n')]
+
+    def _linha_parece_sumario(self, linha: str) -> bool:
+        if re.search(r'\.{4,}\s*\d{1,4}$', linha):
+            return True
+
+        return False
+
+    def _proximo_titulo(self, linhas: List[str], idx: int) -> str:
+        for j in range(idx + 1, min(idx + 6, len(linhas))):
+            cand = linhas[j].strip()
+            if not cand:
+                continue
+
+            if self._e_titulo_maiusculas(cand, linhas, j) or self._e_titulo_isolado(cand, linhas, j):
+                return cand
+
+            if 5 <= len(cand) <= 120 and re.match(r'^[A-ZÁÉÍÓÚÂÊÔÃÕÇ]', cand):
+                return cand
+
+        return ""
+
+    def _remover_acentos(self, s: str) -> str:
+        try:
+            if not s:
+                return ""
+
+            nfkd = unicodedata.normalize("NFKD", s)
+            return "".join(ch for ch in nfkd if not unicodedata.combining(ch))
+
+        except Exception:
+            return s or ""
+
+    def _variantes_para_match(self, linha: str) -> Dict[str, str]:
+        original = (linha or "").strip()
+        sem_acentos = self._remover_acentos(original)
+        condensada = re.sub(r"\s+", "", sem_acentos)
+        return {
+            "original": original,
+            "sem_acentos": sem_acentos,
+            "condensada": condensada,
+        }
+
     def _detectar_secoes_avancado(self, texto: str, idioma: str = 'pt') -> List[Dict]:
         secoes = []
-        linhas = texto.split('\n')
+        linhas = self._preprocessar_linhas(texto)
+
+        regex_parte_cond = r'^(?:PARTE|PART|arte|art)\s*([IVXLCDM\d]+)(?:[:.\-]?)(.*)$'
+        regex_capitulo_cond = r'^(?:CAPITULO|CAPÍTULO|CHAPTER|CHAP|apítulo|apitulo|hapter)\s*(\d+|[IVXLCDM]+)(?:[:.\-]?)(.*)$'
 
         padroes_pt = [
-            {'regex': r'^(?:PARTE|Parte)\s+([IVX\d]+)[\s:.\-]*(.*)$', 'nivel': 1, 'tipo': 'parte'},
-            {'regex': r'^(?:CAPÍTULO|Capítulo|CAP\.?)\s+(\d+|[IVX]+)[\s:.\-]*(.*)$', 'nivel': 2, 'tipo': 'capitulo'},
-            {'regex': r'^(\d+)\.\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ][^.!?]{5,100})$', 'nivel': 2, 'tipo': 'capitulo_numerado'},
-            {'regex': r'^(\d+\.\d+)[\s.\-]+([A-ZÁÉÍÓÚÂÊÔÃÕÇ][^.!?]{3,100})$', 'nivel': 3, 'tipo': 'subcapitulo'},
+            {'regex': r'^(?:PARTE|Parte|arte)\s+([IVXLCDM\d]+)\s*[:.\-]?\s*(.+)$', 'nivel': 1, 'tipo': 'parte_inline'},
+            {'regex': r'^(?:PARTE|Parte|arte)\s+([IVXLCDM\d]+)\s*[:.\-]?\s*$', 'nivel': 1, 'tipo': 'parte_header'},
+            {'regex': r'^(?:CAPÍTULO|Capítulo|CAP\.?|apítulo)\s+(\d+|[IVXLCDM]+)\s*[:.\-]?\s*(.*)$', 'nivel': 2, 'tipo': 'capitulo'},
+            {'regex': r'^(\d+)\.\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ][^.!?]{3,120})$', 'nivel': 2, 'tipo': 'capitulo_numerado'},
+            {'regex': r'^(\d+\.\d+)[\s.\-]+([A-ZÁÉÍÓÚÂÊÔÃÕÇ][^.!?]{3,120})$', 'nivel': 3, 'tipo': 'subcapitulo'},
             {'regex': r'^(\d+\.\d+\.\d+)[\s.\-]+(.+)$', 'nivel': 4, 'tipo': 'subsubcapitulo'},
         ]
 
         padroes_en = [
-            {'regex': r'^(?:PART|Part)\s+([IVX\d]+)[\s:.\-]*(.*)$', 'nivel': 1, 'tipo': 'parte'},
-            {'regex': r'^(?:CHAPTER|Chapter|CHAP\.?)\s+(\d+|[IVX]+)[\s:.\-]*(.*)$', 'nivel': 2, 'tipo': 'capitulo'},
-            {'regex': r'^(\d+)\.\s+([A-Z][^.!?]{5,100})$', 'nivel': 2, 'tipo': 'capitulo_numerado'},
-            {'regex': r'^(\d+\.\d+)[\s.\-]+([A-Z][^.!?]{3,100})$', 'nivel': 3, 'tipo': 'subcapitulo'},
+            {'regex': r'^(?:PART|Part|art)\s+([IVXLCDM\d]+)\s*[:.\-]?\s*(.+)$', 'nivel': 1, 'tipo': 'parte_inline'},
+            {'regex': r'^(?:PART|Part|art)\s+([IVXLCDM\d]+)\s*[:.\-]?\s*$', 'nivel': 1, 'tipo': 'parte_header'},
+            {'regex': r'^(?:CHAPTER|Chapter|CHAP\.?|hapter)\s+(\d+|[IVXLCDM]+)\s*[:.\-]?\s*(.*)$', 'nivel': 2, 'tipo': 'capitulo'},
+            {'regex': r'^(\d+)\.\s+([A-Z][^.!?]{3,120})$', 'nivel': 2, 'tipo': 'capitulo_numerado'},
+            {'regex': r'^(\d+\.\d+)[\s.\-]+([A-Z][^.!?]{3,120})$', 'nivel': 3, 'tipo': 'subcapitulo'},
             {'regex': r'^(\d+\.\d+\.\d+)[\s.\-]+(.+)$', 'nivel': 4, 'tipo': 'subsubcapitulo'},
         ]
 
         padroes = padroes_pt if idioma == 'pt' else padroes_en
 
-        for i, linha in enumerate(linhas):
-            linha_limpa = linha.strip()
+        nivel_atual = 0
+        ultima_parte = None
+
+        i = 0
+        while i < len(linhas):
+            linha_limpa = linhas[i]
+            linha_original = linha_limpa
+            i += 1
+
             if not linha_limpa or len(linha_limpa) < 3:
                 continue
 
-            for padrao in padroes:
-                match = re.match(padrao['regex'], linha_limpa, re.IGNORECASE)
-                if match:
-                    grupos = match.groups()
-                    titulo = f"{grupos[0]} {grupos[1]}".strip() if len(grupos) >= 2 else linha_limpa
+            if self._linha_parece_sumario(linha_limpa):
+                continue
 
-                    if not re.match(r'^[\d\.\s\-]+$', titulo):
-                        secoes.append({
-                            'titulo': titulo,
-                            'nivel': padrao['nivel'],
-                            'posicao': i,
-                            'tipo': padrao['tipo']
-                        })
-                        break
+            linha_limpa = self._corrigir_palavras_conhecidas(linha_limpa)
+            variantes = self._variantes_para_match(linha_limpa)
+
+            match_encontrado = False
+            for padrao in padroes:
+                tipo = padrao['tipo']
+                nivel = padrao['nivel']
+
+                m = re.match(padrao['regex'], linha_limpa, re.IGNORECASE)
+                if not m:
+                    m = re.match(padrao['regex'], variantes["original"], re.IGNORECASE)
+
+                if not m:
+                    m = re.match(padrao['regex'], variantes["sem_acentos"], re.IGNORECASE)
+
+                if not m and tipo in ("parte_inline", "parte_header"):
+                    m = re.match(regex_parte_cond, variantes["condensada"], re.IGNORECASE)
+                    if m:
+                        numero = (m.group(1) or "").strip()
+                        resto = (m.group(2) or "").strip()
+                        grupos = (numero, resto) if resto else (numero, )
+
+                    else:
+                        grupos = None
+
+                elif not m and tipo == "capitulo":
+                    m = re.match(regex_capitulo_cond, variantes["condensada"], re.IGNORECASE)
+                    if m:
+                        numero = (m.group(1) or "").strip()
+                        resto = (m.group(2) or "").strip()
+                        grupos = (numero, resto)
+
+                    else:
+                        grupos = None
+
+                else:
+                    grupos = m.groups() if m else None
+
+                if not m and not grupos:
+                    continue
+
+                titulo = linha_limpa
+
+                if tipo in ('parte_inline', 'parte_header'):
+                    numero = grupos[0] if grupos else ''
+                    subtitulo = ''
+
+                    if len(grupos) > 1 and (grupos[1] or "").strip():
+                        subtitulo = (grupos[1] or "").strip()
+
+                    else:
+                        subtitulo = self._proximo_titulo(linhas, i - 1)
+
+                    titulo = (f"Parte {numero}" if idioma == 'pt' else f"Part {numero}")
+                    if subtitulo:
+                        titulo = f"{titulo}: {subtitulo}"
+
+                elif tipo in ('capitulo', 'capitulo_numerado'):
+                    numero = grupos[0] if grupos else ''
+                    resto = (grupos[1] or '').strip() if (grupos and len(grupos) > 1) else ''
+                    if idioma == 'pt':
+                        titulo = f"Capítulo {numero}" + (f": {resto}" if resto else "")
+
+                    else:
+                        titulo = f"Chapter {numero}" + (f": {resto}" if resto else "")
+
+                else:
+                    if grupos and len(grupos) >= 2:
+                        titulo = f"{grupos[0]} {grupos[1]}".strip()
+
+                    elif grupos and len(grupos) == 1:
+                        titulo = grupos[0].strip()
+
+                if re.match(r'^[\d\.\s\-]+$', titulo):
+                    continue
+
+                secoes.append({
+                    'titulo': titulo.strip(),
+                    'nivel': nivel,
+                    'posicao': i - 1,
+                    'tipo': tipo
+                })
+
+                self.logger.debug(f"Detectado título: nivel={nivel}, tipo={tipo}, titulo='{titulo[:80]}'")
+                nivel_atual = nivel
+                if nivel == 1:
+                    ultima_parte = len(secoes) - 1
+
+                match_encontrado = True
+                break
+
+            if match_encontrado:
+                continue
+
+            if self._e_titulo_maiusculas(linha_limpa, linhas, i - 1):
+                nivel = self._inferir_nivel_titulo(linha_limpa, nivel_atual, ultima_parte is not None)
+                secoes.append({'titulo': linha_limpa, 'nivel': nivel, 'posicao': i - 1, 'tipo': 'titulo_maiusculas'})
+                nivel_atual = nivel
+                continue
+
+            if self._e_titulo_isolado(linha_limpa, linhas, i - 1):
+                nivel = min(nivel_atual + 1, 4) if nivel_atual > 0 else 3
+                secoes.append({'titulo': linha_limpa, 'nivel': nivel, 'posicao': i - 1, 'tipo': 'titulo_isolado'})
+                nivel_atual = nivel
+                continue
 
         secoes.sort(key=lambda x: x['posicao'])
         return self._ajustar_niveis_relativos(secoes)
 
     def _ajustar_niveis_relativos(self, secoes: List[Dict]) -> List[Dict]:
-        if not secoes:
+        try:
+            if not secoes:
+                return secoes
+
+            nivel_minimo = min(s['nivel'] for s in secoes)
+            for secao in secoes:
+                secao['nivel'] = secao['nivel'] - nivel_minimo + 1
+
+            niveis_ajustados = []
+            nivel_anterior = 0
+
+            for secao in secoes:
+                nivel_atual = secao['nivel']
+
+                if nivel_atual > nivel_anterior + 1:
+                    secao['nivel'] = nivel_anterior + 1
+                    self.logger.debug(
+                        f"Ajustando nível de '{secao['titulo'][:30]}' "
+                        f"de {nivel_atual} para {secao['nivel']}"
+                    )
+
+                nivel_anterior = secao['nivel']
+                niveis_ajustados.append(secao)
+
+            return niveis_ajustados
+
+        except Exception as e:
+            self.logger.error(f"Erro ao ajustar níveis: {e}", exc_info=True)
             return secoes
 
-        nivel_min = min(s['nivel'] for s in secoes)
+    def _e_titulo_maiusculas(self, linha: str, linhas: List[str], idx: int) -> bool:
+        if not linha or len(linha) < 10 or len(linha) > 150:
+            return False
 
-        for secao in secoes:
-            secao['nivel'] = secao['nivel'] - nivel_min + 1
+        letras = [c for c in linha if c.isalpha()]
+        if not letras:
+            return False
 
-        return secoes
+        maiusculas = sum(1 for c in letras if c.isupper())
+        taxa_maiusculas = maiusculas / len(letras)
+
+        if taxa_maiusculas < 0.7:
+            return False
+
+        if linha.endswith((',', ';', '-')):
+            return False
+
+        linha_anterior = linhas[idx - 1].strip() if idx > 0 else ""
+        linha_posterior = linhas[idx + 1].strip() if idx < len(linhas) - 1 else ""
+
+        if not linha_anterior or not linha_posterior:
+            return True
+
+        if len(linha_posterior) > 0:
+            primeira_letra_posterior = next((c for c in linha_posterior if c.isalpha()), None)
+            if primeira_letra_posterior and primeira_letra_posterior.islower():
+                return True
+
+        return False
+
+    def _e_titulo_isolado(self, linha: str, linhas: List[str], idx: int) -> bool:
+        if not linha or len(linha) < 15 or len(linha) > 120:
+            return False
+
+        primeira_letra = next((c for c in linha if c.isalpha()), None)
+        if not primeira_letra or not primeira_letra.isupper():
+            return False
+
+        if re.match(r'^[\d\.\s\-]+$', linha):
+            return False
+
+        if linha.endswith('.'):
+            return False
+
+        linha_anterior = linhas[idx - 1].strip() if idx > 0 else ""
+        linha_posterior = linhas[idx + 1].strip() if idx < len(linhas) - 1 else ""
+
+        if linha_anterior and len(linha_anterior) > 10:
+            return False
+
+        if linha_posterior:
+            primeira_posterior = next((c for c in linha_posterior if c.isalpha()), None)
+            if primeira_posterior and primeira_posterior.islower():
+                return False
+
+        return True
+
+    def _inferir_nivel_titulo(self, titulo: str, nivel_anterior: int, tem_parte: bool) -> int:
+        if re.match(r'(?:PARTE|PART)', titulo, re.IGNORECASE):
+            return 1
+
+        if tem_parte:
+            if nivel_anterior == 1:
+                return 2
+
+            return min(nivel_anterior + 1, 4)
+
+        return 2
 
     def _construir_arvore_hierarquica(self, texto: str, secoes_raw: List[Dict]) -> Dict:
         try:
@@ -206,7 +532,7 @@ class ProcessadorIA:
                 'nivel': 0,
                 'posicao_inicio': 0,
                 'posicao_fim': len(linhas),
-                'texto_puro': '',
+                'texto_puro': texto,
                 'conceitos': [],
                 'ideias_principais': [],
                 'filhos': [],
@@ -214,7 +540,6 @@ class ProcessadorIA:
             }
 
             if not secoes_raw:
-                raiz['texto_puro'] = texto
                 return raiz
 
             nos_secoes = []
@@ -251,12 +576,6 @@ class ProcessadorIA:
                 pai = stack[-1]
                 pai['filhos'].append(no)
                 stack.append(no)
-
-            if nos_secoes:
-                raiz['texto_puro'] = '\n'.join(linhas[:nos_secoes[0]['posicao_inicio']])
-
-            else:
-                raiz['texto_puro'] = texto
 
             return raiz
 
@@ -307,7 +626,7 @@ class ProcessadorIA:
                 3: {'num_sentencas': 4, 'max_chars': 500},   # Subcapítulos
                 4: {'num_sentencas': 3, 'max_chars': 350},   # Sub-subcapítulos
             }
-            
+
             cfg = config_resumo.get(nivel, {'num_sentencas': 3, 'max_chars': 350})
             sentencas_list = list(doc.sents)
 
@@ -377,10 +696,12 @@ class ProcessadorIA:
                     'resumindo', 'conclui-se', 'portanto', 'assim', 'dessa forma',
                     'principal', 'fundamental', 'essencial', 'importante', 'em suma'
                 }
+
                 palavras_resumo_en = {
                     'summarizing', 'concluding', 'therefore', 'thus', 'in conclusion',
                     'main', 'fundamental', 'essential', 'important', 'in summary'
                 }
+
                 palavras_resumo = palavras_resumo_pt | palavras_resumo_en
                 sent_lower = sent_texto.lower()
 
@@ -482,10 +803,12 @@ class ProcessadorIA:
             'importante', 'fundamental', 'essencial', 'principal', 'crucial', 
             'necessário', 'deve', 'pode', 'permite', 'define', 'caracteriza'
         }
+
         palavras_indicadoras_en = {
             'important', 'fundamental', 'essential', 'main', 'crucial',
             'necessary', 'must', 'can', 'allows', 'defines', 'characterizes'
         }
+
         palavras_indicadoras = palavras_indicadoras_pt | palavras_indicadoras_en
         paragrafos = texto.split('\n\n')
 
