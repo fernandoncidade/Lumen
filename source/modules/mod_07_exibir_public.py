@@ -134,7 +134,7 @@ def exibir_sobre(app):
 
         cabecalho_fixo = (
             f"<h3>{app_title}</h3>"
-            f"<p><b>{version_label}</b> 2025.12.18.0</p>"
+            f"<p><b>{version_label}</b> 2025.12.19.0</p>"
             f"<p><b>{authors_label}</b> Fernando Nillsson Cidade</p>"
             f"<p><b>{description_label}</b> {description_text}</p>"
         )
